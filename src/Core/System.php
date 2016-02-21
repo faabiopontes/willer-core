@@ -143,7 +143,7 @@ namespace Core {
                 }
             }
 
-            throw new WF_Exception(vsprintf('request "%s" not found in url.php',[$request_uri,]));
+            throw new WF_Exception(vsprintf('request "%s" not found in Url.php',[$request_uri,]));
         }
     }
 }
