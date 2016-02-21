@@ -1,16 +1,17 @@
 <?php
 
 namespace Core {
-    use \Core\Exception\WF_Exception;
+    use Core\Exception\WF_Exception;
+    use Core\Util;
 
     class System {
-        public function __construct($url) {
-            $this->readyApp($url);
+        public function __construct() {
+            $this->readyApp();
         }
 
-        private function readyApp($url) {
+        private function readyApp() {
             $this->readyErrorHandler();
-            $this->readyUrlRoute($url,REQUEST_URI);
+            $this->readyUrlRoute(REQUEST_URI);
         }
 
         private function readyErrorHandler() {
@@ -96,10 +97,6 @@ namespace Core {
             $application = vsprintf('Application\\%s\\Controller\\%s',[$application,$controller]);
             $application_file = vsprintf('%s/%s.php',[ROOT_PATH,str_replace('\\','/',$application)]);
 
-            if (!file_exists($application_file)) {
-                throw new WF_Exception(vsprintf('application file not found in "%s"',[$application_file,]));
-            }
-
             $new_application = new $application($request_method);
 
             if (empty(method_exists($new_application,$controller_action))) {
@@ -113,13 +110,31 @@ namespace Core {
             return $new_application->$controller_action(...$matche);
         }
 
-        private function readyUrlRoute($url,$request_uri) {
+        private function readyUrlRoute($request_uri) {
             $request_uri = str_replace(URL_PREFIX,'',$request_uri);
 
             $request_uri_strstr = strstr($request_uri,'?',true);
 
             if (!empty($request_uri_strstr)) {
                 $request_uri = $request_uri_strstr;
+            }
+
+            $json_config_load = Util::load('Config');
+
+            if (!array_key_exists('app',$json_config_load)) {
+                throw new WF_Exception(vsprintf('file app.json not found in directory "%s/Config"',[ROOT_PATH,]));
+            }
+
+            $url = [];
+
+            foreach ($json_config_load['app'] as $app) {
+                $app_url_class = vsprintf('\Application\%s\Url',[$app]);
+
+                if (!class_exists($app_url_class,true)) {
+                    throw new WF_Exception(vsprintf('class "%s" not found',[$app_url_class,]));
+                }
+
+                $url += $app_url_class::url();
             }
 
             foreach ($url as $url_er => $application_route) {

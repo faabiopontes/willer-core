@@ -36,7 +36,7 @@ namespace Core {
 			$scandir_application = null;
 
 			if (!empty($application_path)) {
-				$scandir_application = array_diff(scandir(vsprintf('%s/Application/%s',[ROOT_PATH,$application_path])),$exclude_list);
+				$scandir_application = array_diff(scandir(vsprintf('%s/%s',[ROOT_PATH,$application_path])),$exclude_list);
 			}
 
 			$load_var = [];
@@ -56,9 +56,9 @@ namespace Core {
 					$spl_file_info = new SplFileInfo($file);
 
 					if ($spl_file_info->getExtension() == 'json') {
-						$key = vsprintf('%s_%s',[$application_path,$spl_file_info->getBasename('.json')]);
+						$key = $spl_file_info->getBasename('.json');
 
-						$load_var[$key] = json_decode(file_get_contents(vsprintf('%s/Application/%s/%s',[ROOT_PATH,$application_path,$file])),true);
+						$load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s/%s',[ROOT_PATH,$application_path,$file])),true);
 					}
 				}
 			}

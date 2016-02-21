@@ -1,8 +1,8 @@
 <?php
 
 namespace Core {
-    use \Core\Util;
-    use \Core\Exception\WF_Exception;
+    use Core\Util;
+    use Core\Exception\WF_Exception;
 
     abstract class Controller {
         public function __construct($request_method = null) {

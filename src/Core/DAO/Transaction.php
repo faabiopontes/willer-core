@@ -4,7 +4,7 @@ namespace Core\DAO {
     use \PDO as PDO;
     use \Exception as Exception;
     use \PDOException as PDOException;
-    use \Core\Exception\WF_Exception;
+    use Core\Exception\WF_Exception;
 
     class Transaction {
         private $resource;

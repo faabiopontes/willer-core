@@ -1,8 +1,8 @@
 <?php
 
 namespace Core {
-    use \Core\DAO\DataManipulationLanguage;
-    use \Core\Exception\WF_Exception;
+    use Core\DAO\DataManipulationLanguage;
+    use Core\Exception\WF_Exception;
 
     abstract class Model extends DataManipulationLanguage {
         public function __construct($transaction = null) {
