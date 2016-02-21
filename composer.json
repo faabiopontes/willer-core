@@ -1,6 +1,6 @@
 {
     "name": "wborba/willer-core",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "php framework - core for willer framework",
     "keywords": ["orm", "active record", "framework", "core"],
     "homepage": "http://williamborba.github.io/willer-core",
