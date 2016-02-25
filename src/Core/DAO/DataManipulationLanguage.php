@@ -19,6 +19,8 @@ namespace Core\DAO {
         private $where_unique_value;
         private $where;
         private $where_value;
+        private $like;
+        private $like_value;
         private $query;
 
         private $flag_getnotest;
@@ -155,6 +157,22 @@ namespace Core\DAO {
 
         private function setWhereValue($where_value) {
             $this->where_value = $where_value;
+        }
+
+        private function getLike() {
+            return $this->like;
+        }
+
+        private function setLike($like) {
+            $this->like = $like;
+        }
+
+        private function getLikeValue() {
+            return $this->like_value;
+        }
+
+        private function setLikeValue($like_value) {
+            $this->like_value = $like_value;
         }
 
         private function getQuery() {
@@ -348,6 +366,13 @@ namespace Core\DAO {
                     if (empty($value)) {
                         throw new WF_Exception(vsprintf('value for "%s" is null',[$key,]));
 
+                    } else if (is_string($value) || is_numeric($value)) {
+                        $like_value_list[] = $value;
+
+                        $like_value = vsprintf('%s like ?',[$key,]);
+
+                    } else {
+                        throw new WF_Exception(vsprintf('value is incorrect with type "%s", in instance of model "%s"',[gettype($value),$this->name()]));
                     }
 
                     $like_query[] = $like_value;
@@ -900,6 +925,8 @@ namespace Core\DAO {
             $table_column = $this->getTableColumn();
             $get_where = $this->getWhere();
             $get_where_value = $this->getWhereValue();
+            $get_like = $this->getLike();
+            $get_like_value = $this->getLikeValue();
             $order_by = $this->getOrderBy();
             $limit = $this->getLimit();
             $related = $this->related($this,[],$join);
@@ -938,6 +965,15 @@ namespace Core\DAO {
                 $query_value = array_merge($query_value,$get_where_value);
             }
 
+            if (empty($get_like)) {
+                $like = '';
+
+            } else {
+                $like = vsprintf('where %s',[implode(' and ',$get_like),]);
+
+                $query_value = array_merge($query_value,$get_like_value);
+            }
+
             if (empty($order_by)) {
                 $order_by = '';
 
@@ -945,11 +981,27 @@ namespace Core\DAO {
                 $order_by = vsprintf('order by %s',[implode(',',$order_by),]);
             }
 
-            $query_total = vsprintf('select count(1) total from %s %s %s',[$table_name_with_escape,$related_join,$where]);
+            $query_total = vsprintf('select count(1) total from %s %s %s %s',[$table_name_with_escape,$related_join,$where,$like]);
+
+            print '<br/>===============<br/>';
+            print $query_total;
+            print '<br/>===============<br/>';
+
+            print '<br/>===============<br/>';
+            print $query_value;
+            print '<br/>===============<br/>';
 
             $this->setQuery($query_total,$query_value);
 
-            $query = vsprintf('select %s from %s %s %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where,$order_by,$limit]);
+            $query = vsprintf('select %s from %s %s %s %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where,$like,$order_by,$limit]);
+
+            print '<br/>===============<br/>';
+            print $query;
+            print '<br/>===============<br/>';
+
+            print '<br/>===============<br/>';
+            print $query_value;
+            print '<br/>===============<br/>';
 
             $this->setQuery($query,$query_value);
 
