@@ -23,8 +23,6 @@ namespace Core {
             $whoops_pretty_page_handler = new \Whoops\Handler\PrettyPageHandler();
             $whoops_json_response_handler = new \Whoops\Handler\JsonResponseHandler();
 
-            $whoops_json_response_handler->onlyForAjaxRequests(true);
-
             $whoops_run->pushHandler($whoops_pretty_page_handler);
             $whoops_run->pushHandler(function ($exception,$inspector,$whoops_run) {
                 $inspector->getFrames()->map(function ($frame) {
@@ -48,9 +46,9 @@ namespace Core {
                 });
             });
 
-            $whoops_run->pushHandler($whoops_json_response_handler);
-
-            $whoops_run->register();
+            if (\Whoops\Util\Misc::isAjaxRequest()) {
+                $whoops_run->pushHandler($whoops_json_response_handler);
+            }
 
             $whoops_pretty_page_handler->addDataTable('Willer Contants',array(
                 'URL_PREFIX' => URL_PREFIX,
@@ -58,6 +56,8 @@ namespace Core {
                 'ROOT_PATH' => ROOT_PATH,
                 'DATABASE_PATH' => DATABASE_PATH,
                 'DATABASE' => DATABASE,));
+
+            $whoops_run->register();
         }
 
         private function urlRoute($application_route,$matche) {

@@ -956,11 +956,13 @@ namespace Core\DAO {
 
             $query_value = [];
 
+            $where_implicit = 'where';
+
             if (empty($get_where)) {
                 $where = '';
 
             } else {
-                $where = vsprintf('where %s',[implode(' and ',$get_where),]);
+                $where = vsprintf('%s',[implode(' and ',$get_where),]);
 
                 $query_value = array_merge($query_value,$get_where_value);
             }
@@ -969,9 +971,18 @@ namespace Core\DAO {
                 $like = '';
 
             } else {
-                $like = vsprintf('where %s',[implode(' and ',$get_like),]);
+                if (!empty($where)) {
+                    $like = vsprintf('and %s',[implode(' and ',$get_like),]);
+
+                } else {
+                    $like = vsprintf('%s',[implode(' and ',$get_like),]);
+                }
 
                 $query_value = array_merge($query_value,$get_like_value);
+            }
+
+            if (empty($where) && empty($like)) {
+                $where_implicit = '';
             }
 
             if (empty($order_by)) {
@@ -981,27 +992,11 @@ namespace Core\DAO {
                 $order_by = vsprintf('order by %s',[implode(',',$order_by),]);
             }
 
-            $query_total = vsprintf('select count(1) total from %s %s %s %s',[$table_name_with_escape,$related_join,$where,$like]);
-
-            print '<br/>===============<br/>';
-            print $query_total;
-            print '<br/>===============<br/>';
-
-            print '<br/>===============<br/>';
-            print $query_value;
-            print '<br/>===============<br/>';
+            $query_total = vsprintf('select count(1) total from %s %s %s %s %s',[$table_name_with_escape,$related_join,$where_implicit,$where,$like]);
 
             $this->setQuery($query_total,$query_value);
 
-            $query = vsprintf('select %s from %s %s %s %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where,$like,$order_by,$limit]);
-
-            print '<br/>===============<br/>';
-            print $query;
-            print '<br/>===============<br/>';
-
-            print '<br/>===============<br/>';
-            print $query_value;
-            print '<br/>===============<br/>';
+            $query = vsprintf('select %s from %s %s %s %s %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where_implicit,$where,$like,$order_by,$limit]);
 
             $this->setQuery($query,$query_value);
 
