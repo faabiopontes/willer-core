@@ -23,7 +23,7 @@ namespace Core\Component\HtmlBlock {
             return $this->dom_document->createElement($name,$content);
         }
 
-        public function createAttribute($element,$name,$value = null) {
+        public function setAttribute($element,$name,$value = null) {
             $element_create_attribute = $element->createAttribute($name);
 
             if (!empty($value)) {
