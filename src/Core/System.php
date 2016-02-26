@@ -1,5 +1,12 @@
 <?php
-
+/**
+  *
+  * @author William Borba
+  * @package Core/System
+  * @uses Core\Exception\WF_Exception
+  * @uses Core\Util
+  * 
+  */
 namespace Core {
     use Core\Exception\WF_Exception;
     use Core\Util;
