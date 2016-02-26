@@ -5,6 +5,8 @@ namespace Core\Component\HtmlBlock {
     use Core\Exception\WException;
 
     class Table extends HtmlBlock {
+        private $table_element;
+
         public function __construct($encoding = null,$id = null,$class = null,$style = null,$value = null) {
             parent::__construct();
 
@@ -22,7 +24,13 @@ namespace Core\Component\HtmlBlock {
                 $table_element = $this->createAttribute($table_element,'style',$style);
             }
 
+            $this->table_element = $table_element;
+
             return $this;
+        }
+
+        public function render() {
+            return $this->table_element->saveHTML();
         }
     }
 }
