@@ -3,12 +3,12 @@
   *
   * @author William Borba
   * @package Core/System
-  * @uses Core\Exception\WF_Exception
+  * @uses Core\Exception\WException
   * @uses Core\Util
   * 
   */
 namespace Core {
-    use Core\Exception\WF_Exception;
+    use Core\Exception\WException;
     use Core\Util;
 
     class System {
@@ -69,32 +69,32 @@ namespace Core {
 
         private function urlRoute($application_route,$matche) {
             if (count($application_route) != 2) {
-                throw new WF_Exception(vsprintf('error in list [%s], max of two indices. Ex: ["Application/Controller/method","(GET|POST|PUT|DELETE)"]',[print_r($application_route,true)]));
+                throw new WException(vsprintf('error in list [%s], max of two indices. Ex: ["Application/Controller/method","(GET|POST|PUT|DELETE)"]',[print_r($application_route,true)]));
             }
 
             $request_method = $application_route[1];
 
             if (empty($request_method)) {
-                throw new WF_Exception(vsprintf('error in url "%s", index two is empty. Ex: "(GET|POST|PUT|DELETE)"',[$application_route[0],]));
+                throw new WException(vsprintf('error in url "%s", index two is empty. Ex: "(GET|POST|PUT|DELETE)"',[$application_route[0],]));
             }
 
             $application_route = $application_route[0];
             $application_route_list = explode('/',$application_route);
 
             if (count($application_route_list) < 3) {
-                throw new WF_Exception(vsprintf('error in application route "%s". Ex: "Application/Controller/method"',[$application_route,]));
+                throw new WException(vsprintf('error in application route "%s". Ex: "Application/Controller/method"',[$application_route,]));
             }
 
             if (empty($application_route_list[0])) {
-                throw new WF_Exception(vsprintf('application indefined in route "%s". Ex: "Application/Controller/method"',[$application_route,]));
+                throw new WException(vsprintf('application indefined in route "%s". Ex: "Application/Controller/method"',[$application_route,]));
             }
 
             if (empty($application_route_list[1])) {
-                throw new WF_Exception(vsprintf('application controller indefined in route "%s". Ex: "Application/Controller/method"',[$application_route,]));
+                throw new WException(vsprintf('application controller indefined in route "%s". Ex: "Application/Controller/method"',[$application_route,]));
             }
 
             if (empty($application_route_list[2])) {
-                throw new WF_Exception(vsprintf('controller method indefined in route "%s". Ex: "Application/Controller/method"',[$application_route,]));
+                throw new WException(vsprintf('controller method indefined in route "%s". Ex: "Application/Controller/method"',[$application_route,]));
             }
 
             $application = $application_route_list[0];
@@ -102,12 +102,11 @@ namespace Core {
             $controller_action = $application_route_list[2];
 
             $application = vsprintf('Application\\%s\\Controller\\%s',[$application,$controller]);
-            $application_file = vsprintf('%s/%s.php',[ROOT_PATH,str_replace('\\','/',$application)]);
 
             $new_application = new $application($request_method);
 
             if (empty(method_exists($new_application,$controller_action))) {
-                throw new WF_Exception(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
+                throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
             }
 
             if (!empty($matche)) {
@@ -129,7 +128,7 @@ namespace Core {
             $json_config_load = Util::load('Config');
 
             if (!array_key_exists('app',$json_config_load)) {
-                throw new WF_Exception(vsprintf('file app.json not found in directory "%s/Config"',[ROOT_PATH,]));
+                throw new WException(vsprintf('file app.json not found in directory "%s/Config"',[ROOT_PATH,]));
             }
 
             $url = [];
@@ -138,7 +137,7 @@ namespace Core {
                 $app_url_class = vsprintf('\Application\%s\Url',[$app]);
 
                 if (!class_exists($app_url_class,true)) {
-                    throw new WF_Exception(vsprintf('class "%s" not found',[$app_url_class,]));
+                    throw new WException(vsprintf('class "%s" not found',[$app_url_class,]));
                 }
 
                 $url += $app_url_class::url();
@@ -150,7 +149,7 @@ namespace Core {
                 }
             }
 
-            throw new WF_Exception(vsprintf('request "%s" not found in Url.php',[$request_uri,]));
+            throw new WException(vsprintf('request "%s" not found in Url.php',[$request_uri,]));
         }
     }
 }

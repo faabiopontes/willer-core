@@ -2,7 +2,7 @@
 
 namespace Core {
     use Core\DAO\DataManipulationLanguage;
-    use Core\Exception\WF_Exception;
+    use Core\Exception\WException;
 
     abstract class Model extends DataManipulationLanguage {
         public function __construct($transaction = null) {
@@ -28,7 +28,7 @@ namespace Core {
         private static function filterRule($rule_list,$value,$function_name,$function_filter) {
             if (empty($rule_list)) {
                 if ($function_name != 'boolean' && $function_name != 'integer' && empty($value)) {
-                    throw new WF_Exception(vsprintf('"%s" field value can not be null',[$function_name,]));
+                    throw new WException(vsprintf('"%s" field value can not be null',[$function_name,]));
                 }
 
             } else {
@@ -38,7 +38,7 @@ namespace Core {
 
                 foreach ($rule_list as $rule_name => $rule_value) {
                     if (!in_array($rule_name,['null','length','table'])) {
-                        throw new WF_Exception(vsprintf('"%s" field rule "%s" incorrect, possible values "null,length and table"',[$function_name,$rule_name]));
+                        throw new WException(vsprintf('"%s" field rule "%s" incorrect, possible values "null,length and table"',[$function_name,$rule_name]));
 
                     } else if ($rule_name == 'null') {
                         $rule_null = $rule_value;
@@ -53,14 +53,14 @@ namespace Core {
 
                 if (empty($rule_null)) {
                     if ($value !== 0 && empty($value)) {
-                        throw new WF_Exception(vsprintf('"%s" field value can not be null',[$function_name,]));
+                        throw new WException(vsprintf('"%s" field value can not be null',[$function_name,]));
                     }
                 }
 
                 switch ($function_name) {
                     case 'foreignKey':
                         if (empty($rule_table)) {
-                            throw new WF_Exception('foreign key field require one object');
+                            throw new WException('foreign key field require one object');
                         }
 
                         break;
@@ -68,7 +68,7 @@ namespace Core {
                     default:
                         if (empty($rule_null) && !empty($value)) {
                             if (is_object($value)) {
-                                throw new WF_Exception(vsprintf('"%s" field value can not be object',[$function_name,]));
+                                throw new WException(vsprintf('"%s" field value can not be object',[$function_name,]));
                             }
                         }
                 }
@@ -76,32 +76,32 @@ namespace Core {
                 if (!empty($rule_table)) {
                     if (empty($value)) {
                         if (empty($rule_null)) {
-                            throw new WF_Exception('foreign key field value is missing');
+                            throw new WException('foreign key field value is missing');
                         }
 
                     } else {
                         if (!is_object($rule_table)) {
-                            throw new WF_Exception('foreign key field value is not object');
+                            throw new WException('foreign key field value is not object');
                         }
 
                         if (!$value instanceof $rule_table) {
-                            throw new WF_Exception('foreign key field value is not object instance of referral');
+                            throw new WException('foreign key field value is not object instance of referral');
                         }
                     }
 
                 } else if (!empty($rule_length)) {
                     if (empty($value)) {
                         if (empty($rule_null)) {
-                            throw new WF_Exception(vsprintf('"%s" field value can not be null',[$function_name,]));
+                            throw new WException(vsprintf('"%s" field value can not be null',[$function_name,]));
                         }
 
                     } else {
                         if (!is_numeric($rule_length)) {
-                            throw new WF_Exception(vsprintf('"%s" field length is not numeric',[$function_name,]));
+                            throw new WException(vsprintf('"%s" field length is not numeric',[$function_name,]));
                         }
 
                         if (strlen($value) > $rule_length) {
-                            throw new WF_Exception(vsprintf('"%s" field length is greater than "%s"',[$function_name,$rule_length]));
+                            throw new WException(vsprintf('"%s" field length is greater than "%s"',[$function_name,$rule_length]));
                         }
                     }
                 }
@@ -131,7 +131,7 @@ namespace Core {
                     $get_primary_key = $value->getPrimaryKey();
 
                     if (empty($get_primary_key)) {
-                        throw new WF_Exception('foreignKey field error, primary key is empty');
+                        throw new WException('foreignKey field error, primary key is empty');
                     }
 
                     return $value->$get_primary_key;
@@ -156,7 +156,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('char field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('char field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -181,7 +181,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('text field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('text field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -205,7 +205,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_INT,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('integer field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('integer field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -229,7 +229,7 @@ namespace Core {
                         'flags' => FILTER_NULL_ON_FAILURE];
 
                     if (filter_var($value,FILTER_VALIDATE_BOOLEAN,$filter_var_option) === null) {
-                        throw new WF_Exception(vsprintf('boolean field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('boolean field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -254,7 +254,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('datetime field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('datetime field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -279,7 +279,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('date field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('date field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -304,7 +304,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('date field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('date field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -329,7 +329,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_FLOAT,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('float field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('float field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -353,7 +353,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_EMAIL,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('email field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('email field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -377,7 +377,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_IP,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('ip field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('ip field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;
@@ -401,7 +401,7 @@ namespace Core {
                         'flags' => []];
 
                     if (filter_var($value,FILTER_VALIDATE_URL,$filter_var_option) === false) {
-                        throw new WF_Exception(vsprintf('url field value "%s" incorrect',[$value,]));
+                        throw new WException(vsprintf('url field value "%s" incorrect',[$value,]));
                     }
 
                     return $value;

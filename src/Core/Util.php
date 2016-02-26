@@ -72,8 +72,6 @@ namespace Core {
 			$data = json_encode($data,JSON_UNESCAPED_UNICODE);
 
 			print $data;
-
-			exit();
 		}
 	}
 }
