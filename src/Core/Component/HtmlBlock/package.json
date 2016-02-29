@@ -1,0 +1,10 @@
+{
+    "dependencies":{
+        "jquery":"latest",
+        "bootstrap":"latest",
+        "bootstrap-sweetalert":"latest",
+        "font-awesome":"latest",
+        "ionicons":"latest",
+        "select2":"latest"
+    }
+}

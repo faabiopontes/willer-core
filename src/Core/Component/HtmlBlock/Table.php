@@ -2,41 +2,75 @@
 
 namespace Core\Component\HtmlBlock {
     use Core\Exception\WException;
+    use Core\Util;
 
     class Table {
-        private $table_node_element;
+        private $html_block;
+        private $table_element;
 
-        public function __construct($html_block,$id = null,$class = null,$style = null,$value = null) {
-            $dom_document = $html_block->getDomDocument();
+        public function __construct($html_block,...$kwargs) {
+            $this->setHtmlBlock($html_block);
 
-            $table_element = $dom_document->createElement('table',$value);
-            $table_node_element = $dom_document->appendChild($table_element);
-
-            if (!empty($id)) {
-                $table_node_element->setAttribute('id',$id);
+            if (!empty($kwargs)) {
+                $kwargs = $kwargs[0];
             }
 
-            if (!empty($class)) {
-                $table_node_element->setAttribute('class',$class);
+            $value = Util::get($kwargs,'value',null);
+
+            $table_element = $html_block->createElement('table',$value);
+
+            if (isset($kwargs['id']) && !empty($kwargs['id'])) {
+                $table_element->setAttribute('id',$kwargs['id']);
             }
 
-            if (!empty($style)) {
-                $table_node_element->setAttribute('style',$style);
+            if (isset($kwargs['class']) && !empty($kwargs['class'])) {
+                $table_element->setAttribute('class',$kwargs['class']);
             }
 
-            $this->table_node_element = $table_element;            
+            if (isset($kwargs['style']) && !empty($kwargs['style'])) {
+                $table_element->setAttribute('style',$kwargs['style']);
+            }
+
+            $table_tbody_element = $html_block->createElement('tbody');
+
+            $table_tbody_tr_element = $html_block->createElement('tr');
+
+            $table_tbody_tr_td_element = $html_block->createElement('td','test');
+
+            $table_tbody_tr_element->appendChild($table_tbody_tr_td_element);
+
+            $table_tbody_element->appendChild($table_tbody_tr_element);
+
+            $table_element->appendChild($table_tbody_element);
+
+            $this->setDomElement($table_element);
 
             return $this;
         }
 
+        public function getHtmlBlock() {
+            return $this->html_block;
+        }
+
+        public function setHtmlBlock($html_block) {
+            $this->html_block = $html_block;
+        }
+
         public function getDomElement() {
-            return $this->table_node_element;
+            return $this->table_element;
+        }
+
+        public function setDomElement($table_element) {
+            $this->table_element = $table_element;
         }
 
         public function renderHtml() {
-            $dom_document = $this->getDomDocument();
+            $html_block = $this->getHtmlBlock();
+            $dom_element = $this->getDomElement();
 
-            return $dom_document->saveHTML();
+            $html_block->appendElement($dom_element);
+
+            return $html_block->renderHtml();
         }
     }
 }
