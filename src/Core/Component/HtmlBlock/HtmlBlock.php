@@ -94,7 +94,7 @@ namespace Core\Component\HtmlBlock {
             return $this;
         }
 
-        public function setHeadTitleContent($head_title_content) {
+        public function setHeadTitle($head_title_content) {
             $html_node_head_title = $this->getHtmlNodeHeadTitle();
             $html_node_head_title->textContent = $head_title_content;
 
@@ -113,7 +113,7 @@ namespace Core\Component\HtmlBlock {
 
         public function addCss($url,$media = 'all') {
             $link_element = $this->createElement('link');
-            $link_element->setAttribute('type','text/css');
+            $link_element->setAttribute('rel','stylesheet');
             $link_element->setAttribute('href',$url);
             $link_element->setAttribute('media',$media);
 
@@ -125,7 +125,6 @@ namespace Core\Component\HtmlBlock {
 
         public function addJs($url) {
             $script_element = $this->createElement('script');
-            $script_element->setAttribute('type','text/javascript');
             $script_element->setAttribute('src',$url);
 
             $html_node_head = $this->getHtmlNodeHead();
@@ -173,10 +172,10 @@ namespace Core\Component\HtmlBlock {
             return $element;
         }
 
-        public function appendBodyElement($element) {
+        public function appendBody($element) {
             $html_node_body = $this->getHtmlNodeBody();
 
-            $html_node_body->appendChild($element);
+            $html_node_body->appendChild($element->getDomElement());
 
             return $this;
         }
