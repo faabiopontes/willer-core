@@ -920,8 +920,17 @@ namespace Core\DAO {
             $get_like = $this->getLike();
             $get_like_value = $this->getLikeValue();
             $order_by = $this->getOrderBy();
-            $limit = $this->getLimit();
             $related = $this->related($this,[],$join);
+            $limit = $this->getLimit();
+
+            if (empty($limit)) {
+                $limit = defined(QUERY_LIMIT) ? QUERY_LIMIT : 1000;
+
+                $this->setLimit(vsprintf('limit %s offset 0',[$limit,]));
+                $this->setLimitValue(1,$limit);
+
+                $limit = $this->getLimit();
+            }
 
             $table_name_with_escape = vsprintf('%s%s%s',[$this->db_escape,$table_name,$this->db_escape]);
 

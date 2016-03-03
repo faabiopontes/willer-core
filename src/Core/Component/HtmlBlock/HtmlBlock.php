@@ -11,6 +11,7 @@ namespace Core\Component\HtmlBlock {
         private $html_node_head;
         private $html_node_head_title;
         private $html_node_body;
+        private $html_node_body_div_container;
         private $encoding;
         private $doc_type;
 
@@ -30,6 +31,19 @@ namespace Core\Component\HtmlBlock {
             $this->setDomDocument($dom_document);
 
             $this->createHtmlElement();
+            $html_node_body = $this->getHtmlNodeBody();
+
+            if (isset($kwargs['id']) && !empty($kwargs['id'])) {
+                $html_node_body->setAttribute('id',$kwargs['id']);
+            }
+
+            if (isset($kwargs['class']) && !empty($kwargs['class'])) {
+                $html_node_body->setAttribute('class',$kwargs['class']);
+            }
+
+            if (isset($kwargs['style']) && !empty($kwargs['style'])) {
+                $html_node_body->setAttribute('style',$kwargs['style']);
+            }
 
             return $this;
         }
@@ -111,6 +125,22 @@ namespace Core\Component\HtmlBlock {
             return $this;
         }
 
+        public function getHtmlNodeBodyDivContainer() {
+            return $this->html_node_body_div_container;
+        }
+
+        public function setHtmlNodeBodyDivContainer($html_node_body_div_container) {
+            $this->html_node_body_div_container = $html_node_body_div_container;
+        }
+
+        public function getHtmlNodeBodyDivContainerRow() {
+            return $this->html_node_body_div_container_row;
+        }
+
+        public function setHtmlNodeBodyDivContainerRow($html_node_body_div_container_row) {
+            $this->html_node_body_div_container_row = $html_node_body_div_container_row;
+        }
+
         public function addCss($url,$media = 'all') {
             $link_element = $this->createElement('link');
             $link_element->setAttribute('rel','stylesheet');
@@ -143,12 +173,13 @@ namespace Core\Component\HtmlBlock {
         public function createHtmlElement() {
             $dom_document = $this->getDomDocument();
 
-            $html_element = $dom_document->createElement('html');
             $head_element = $dom_document->createElement('head');
             $title_element = $dom_document->createElement('title');
 
             $html_node_head_title = $head_element->appendChild($title_element);
             $this->setHtmlNodeHeadTitle($html_node_head_title);
+
+            $html_element = $dom_document->createElement('html');
 
             $html_node_head = $html_element->appendChild($head_element);
             $this->setHtmlNodeHead($html_node_head);
@@ -160,22 +191,39 @@ namespace Core\Component\HtmlBlock {
 
             $html_node_document = $dom_document->appendChild($html_element);
             $this->setHtmlNodeDocument($html_node_document);
+
+            $div_class_row_element = $dom_document->createElement('div');
+            $div_class_row_element->setAttribute('class','row');
+
+            $div_class_container_fluid_element = $dom_document->createElement('div');
+            $div_class_container_fluid_element->setAttribute('class','container-fluid');
+
+            $html_node_container_row = $div_class_container_fluid_element->appendChild($div_class_row_element);
+            $this->setHtmlNodeBodyDivContainerRow($html_node_container_row);
+
+            $html_node_body_div_container = $html_node_body->appendChild($div_class_container_fluid_element);
+            $this->setHtmlNodeBodyDivContainer($html_node_body_div_container);
             
             return $this;
         }
 
         public function createElement($name,$content = null) {
             $dom_document = $this->getDomDocument();
-
             $element = $dom_document->createElement($name,$content);
 
             return $element;
         }
 
-        public function appendBody($element) {
-            $html_node_body = $this->getHtmlNodeBody();
+        public function appendBodyContainer($element) {
+            $html_node_body_div_container = $this->getHtmlNodeBodyDivContainer();
+            $html_node_body_div_container->appendChild($element->getDomElement());
 
-            $html_node_body->appendChild($element->getDomElement());
+            return $this;
+        }
+
+        public function appendBodyContainerRow($element) {
+            $html_node_body_div_container_row = $this->getHtmlNodeBodyDivContainerRow();
+            $html_node_body_div_container_row->appendChild($element->getDomElement());
 
             return $this;
         }

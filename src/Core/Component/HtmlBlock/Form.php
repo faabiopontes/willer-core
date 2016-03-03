@@ -168,14 +168,12 @@ namespace Core\Component\HtmlBlock {
             $button->setAttribute('class','btn btn-default');
 
             $dom_element->appendChild($button);
-
-            $html_block->appendBody($this);
         }
 
         public function renderHtml() {
             $html_block = $this->getHtmlBlock();
 
-            $html_block->appendBody($this);
+            $html_block->appendBodyContainerRow($this);
 
             return $html_block->renderHtml();
         }
