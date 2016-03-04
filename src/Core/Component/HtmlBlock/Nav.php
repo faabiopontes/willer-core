@@ -41,7 +41,7 @@ namespace Core\Component\HtmlBlock {
             }
 
             $this->setDomElement($nav_element);
-            $this->readyModel();
+            $this->ready();
 
             return $this;
         }
@@ -143,7 +143,7 @@ namespace Core\Component\HtmlBlock {
             }
         }
 
-        private function readyModel() {
+        private function ready() {
             $html_block = $this->getHtmlBlock();
             $dom_element = $this->getDomElement();
 

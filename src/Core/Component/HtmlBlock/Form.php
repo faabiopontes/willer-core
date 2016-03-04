@@ -6,15 +6,11 @@ namespace Core\Component\HtmlBlock {
 
     class Form {
         private $html_block;
-        private $form_element;
+        private $dom_element;
         private $model;
         private $label;
-        private $title;
-        private $text;
-        private $footer;
-        private $node_div_panel_head;
-        private $node_div_panel_body;
-        private $node_div_panel_footer;
+        private $container_class;
+        private $container_style;
 
         public function __construct($html_block,...$kwargs) {
             $this->setHtmlBlock($html_block);
@@ -29,56 +25,52 @@ namespace Core\Component\HtmlBlock {
             $label = Util::get($kwargs,'label',null);
             $this->setLabel($label);
 
-            $title = Util::get($kwargs,'title',null);
-            $this->setTitle($title);
+            $container_class = Util::get($kwargs,'container_class',null);
+            $this->setContainerClass($container_class);
 
-            $text = Util::get($kwargs,'text',null);
-            $this->setText($text);
+            $container_style = Util::get($kwargs,'container_style',null);
+            $this->setContainerStyle($container_style);
 
-            $footer = Util::get($kwargs,'footer',null);
-            $this->setFooter($footer);
-
-            $form_element = $html_block->createElement('form');
+            $dom_element = $html_block->createElement('form');
 
             if (isset($kwargs['id']) && !empty($kwargs['id'])) {
-                $form_element->setAttribute('id',$kwargs['id']);
+                $dom_element->setAttribute('id',$kwargs['id']);
             }
 
             if (isset($kwargs['class']) && !empty($kwargs['class'])) {
-                $form_element->setAttribute('class',$kwargs['class']);
+                $dom_element->setAttribute('class',$kwargs['class']);
             }
 
             if (isset($kwargs['style']) && !empty($kwargs['style'])) {
-                $form_element->setAttribute('style',$kwargs['style']);
+                $dom_element->setAttribute('style',$kwargs['style']);
             }
 
             if (isset($kwargs['name']) && !empty($kwargs['name'])) {
-                $form_element->setAttribute('name',$kwargs['name']);
+                $dom_element->setAttribute('name',$kwargs['name']);
             }
 
             if (isset($kwargs['method']) && !empty($kwargs['method'])) {
-                $form_element->setAttribute('method',$kwargs['method']);
+                $dom_element->setAttribute('method',$kwargs['method']);
             }
 
             if (isset($kwargs['action']) && !empty($kwargs['action'])) {
-                $form_element->setAttribute('action',$kwargs['action']);
+                $dom_element->setAttribute('action',$kwargs['action']);
             }
 
             if (isset($kwargs['enctype']) && !empty($kwargs['enctype'])) {
-                $form_element->setAttribute('enctype',$kwargs['enctype']);
+                $dom_element->setAttribute('enctype',$kwargs['enctype']);
             }
 
             if (isset($kwargs['novalidate']) && !empty($kwargs['novalidate'])) {
-                $form_element->setAttribute('novalidate',$kwargs['novalidate']);
+                $dom_element->setAttribute('novalidate',$kwargs['novalidate']);
             }
 
             if (isset($kwargs['target']) && !empty($kwargs['target'])) {
-                $form_element->setAttribute('target',$kwargs['target']);
+                $dom_element->setAttribute('target',$kwargs['target']);
             }
 
-            $this->setDomElement($form_element);
-
-            $this->readyModel();
+            $this->setDomElement($dom_element);
+            $this->ready();
 
             return $this;
         }
@@ -107,60 +99,28 @@ namespace Core\Component\HtmlBlock {
             $this->label = $label;
         }
 
-        private function getTitle() {
-            return $this->title;
+        private function getContainerClass() {
+            return $this->container_class;
         }
 
-        private function setTitle($title) {
-            $this->title = $title;
+        private function setContainerClass($container_class) {
+            $this->container_class = $container_class;
         }
 
-        private function getText() {
-            return $this->text;
+        private function getContainerStyle() {
+            return $this->container_style;
         }
 
-        private function setText($text) {
-            $this->text = $text;
-        }
-
-        private function getFooter() {
-            return $this->footer;
-        }
-
-        private function setFooter($footer) {
-            $this->footer = $footer;
+        private function setContainerStyle($container_style) {
+            $this->container_style = $container_style;
         }
 
         public function getDomElement() {
-            return $this->form_element;
+            return $this->dom_element;
         }
 
-        private function setDomElement($form_element) {
-            $this->form_element = $form_element;
-        }
-
-        private function getNodeDivPanelHead() {
-            return $this->node_div_panel_head;
-        }
-
-        private function setNodeDivPanelHead($node_div_panel_head) {
-            $this->node_div_panel_head = $node_div_panel_head;
-        }
-
-        private function getNodeDivPanelBody() {
-            return $this->node_div_panel_body;
-        }
-
-        private function setNodeDivPanelBody($node_div_panel_body) {
-            $this->node_div_panel_body = $node_div_panel_body;
-        }
-
-        private function getNodeDivPanelFooter() {
-            return $this->node_div_panel_footer;
-        }
-
-        private function setNodeDivPanelFooter($node_div_panel_footer) {
-            $this->node_div_panel_footer = $node_div_panel_footer;
+        private function setDomElement($dom_element) {
+            $this->dom_element = $dom_element;
         }
 
         private function addFieldForeignKey($field) {
@@ -227,56 +187,26 @@ namespace Core\Component\HtmlBlock {
             return $div;
         }
 
-        private function addPanel() {
+        private function addContainer() {
             $html_block = $this->getHtmlBlock();
             $dom_element = $this->getDomElement();
-            $title = $this->getTitle();
-            $text = $this->getText();
-            $footer = $this->getFooter();
+            $container_class = $this->getContainerClass();
+            $container_style = $this->getContainerStyle();
 
-            if (empty($title) && empty($text) && empty($footer)) {
-                return false;
+            if (empty($container_class)) {
+                $container_class = 'col-md-12';
             }
 
-            $div_class_panel = $html_block->createElement('div');
-            $div_class_panel->setAttribute('class','panel panel-default');
+            $div_class_col = $html_block->createElement('div');
+            $div_class_col->setAttribute('class',$container_class);
+            $div_class_col->setAttribute('style',$container_style);
 
-            if (!empty($title)) {
-                $div_class_panel_head = $html_block->createElement('div',$title);
-                $div_class_panel_head->setAttribute('class','panel-heading');
+            $div_class_col->appendChild($dom_element);
 
-                $node_div_panel_head = $div_class_panel->appendChild($div_class_panel_head);
-                $this->setNodeDivPanelHead($node_div_panel_head);
-            }
-
-            if (!empty($text)) {
-                $div_class_panel_body = $html_block->createElement('div',$text);
-                $div_class_panel_body->setAttribute('class','panel-body');
-
-                $node_div_panel_body = $div_class_panel->appendChild($div_class_panel_body);
-                $this->setNodeDivPanelBody($node_div_panel_body);
-            }
-
-            $div_container = $html_block->createElement('div');
-            $div_container->setAttribute('class','container-fluid');
-            $div_container->setAttribute('style','padding: 5px 0px;');
-
-            $div_container->appendChild($dom_element);
-
-            $div_class_panel->appendChild($div_container);
-
-            if (!empty($footer)) {
-                $div_class_panel_footer = $html_block->createElement('div',$footer);
-                $div_class_panel_footer->setAttribute('class','panel-footer');
-
-                $node_div_panel_footer = $div_class_panel->appendChild($div_class_panel_footer);
-                $this->setNodeDivPanelFooter($node_div_panel_footer);
-            }
-
-            $this->setDomElement($div_class_panel);
+            return $div_class_col;
         }
 
-        private function readyModel() {
+        private function ready() {
             $html_block = $this->getHtmlBlock();
             $dom_element = $this->getDomElement();
             $model = $this->getModel();
@@ -305,7 +235,9 @@ namespace Core\Component\HtmlBlock {
 
             $dom_element->appendChild($button);
 
-            $this->addPanel();
+            $add_container = $this->addContainer();
+
+            $this->setDomElement($add_container);
         }
 
         public function renderHtml() {

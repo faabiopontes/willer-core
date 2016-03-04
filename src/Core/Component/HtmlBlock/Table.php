@@ -6,11 +6,13 @@ namespace Core\Component\HtmlBlock {
 
     class Table {
         private $html_block;
-        private $table_element;
+        private $dom_element;
         private $model;
         private $node_table_thead;
         private $node_table_tbody;
         private $node_table_tfoot;
+        private $container_class;
+        private $container_style;
 
         public function __construct($html_block,...$kwargs) {
             $this->setHtmlBlock($html_block);
@@ -20,39 +22,34 @@ namespace Core\Component\HtmlBlock {
             }
 
             $value = Util::get($kwargs,'value',null);
-            $table_element = $html_block->createElement('table',$value);
+            $dom_element = $html_block->createElement('table',$value);
 
             $model = Util::get($kwargs,'model',null);
             $this->setModel($model);
 
+            $container_class = Util::get($kwargs,'container_class',null);
+            $this->setContainerClass($container_class);
+
+            $container_style = Util::get($kwargs,'container_style',null);
+            $this->setContainerStyle($container_style);
+
             if (isset($kwargs['id']) && !empty($kwargs['id'])) {
-                $table_element->setAttribute('id',$kwargs['id']);
+                $dom_element->setAttribute('id',$kwargs['id']);
             }
 
             if (isset($kwargs['class']) && !empty($kwargs['class'])) {
-                $table_element->setAttribute('class',$kwargs['class']);
+                $dom_element->setAttribute('class',$kwargs['class']);
+
+            } else {
+                $dom_element->setAttribute('class','table table-striped table-bordered table-hover table-condensed');
             }
 
             if (isset($kwargs['style']) && !empty($kwargs['style'])) {
-                $table_element->setAttribute('style',$kwargs['style']);
+                $dom_element->setAttribute('style',$kwargs['style']);
             }
 
-            $table_thead_element = $html_block->createElement('thead');
-            $node_table_thead = $table_element->appendChild($table_thead_element);
-            $this->setNodeTableThead($node_table_thead);
-
-            $table_tbody_element = $html_block->createElement('tbody');
-            $node_table_tbody = $table_element->appendChild($table_tbody_element);
-            $this->setNodeTableTbody($node_table_tbody);
-
-            $table_tfoot_element = $html_block->createElement('tfoot');
-            $node_table_tfoot = $table_element->appendChild($table_tfoot_element);
-            $this->setNodeTableTfoot($node_table_tfoot);
-
-            $this->setDomElement($table_element);
-
-            $this->readyModelThead();
-            $this->readyModelTbody();
+            $this->setDomElement($dom_element);
+            $this->ready();
 
             return $this;
         }
@@ -73,12 +70,28 @@ namespace Core\Component\HtmlBlock {
             $this->model = $model;
         }
 
-        public function getDomElement() {
-            return $this->table_element;
+        private function getContainerClass() {
+            return $this->container_class;
         }
 
-        private function setDomElement($table_element) {
-            $this->table_element = $table_element;
+        private function setContainerClass($container_class) {
+            $this->container_class = $container_class;
+        }
+
+        private function getContainerStyle() {
+            return $this->container_style;
+        }
+
+        private function setContainerStyle($container_style) {
+            $this->container_style = $container_style;
+        }
+
+        public function getDomElement() {
+            return $this->dom_element;
+        }
+
+        private function setDomElement($dom_element) {
+            $this->dom_element = $dom_element;
         }
 
         private function getNodeTableThead() {
@@ -121,7 +134,7 @@ namespace Core\Component\HtmlBlock {
             }
         }
 
-        private function readyModelThead() {
+        private function addThead() {
             $html_block = $this->getHtmlBlock();
             $node_table_thead = $this->getNodeTableThead();
             $model = $this->getModel();
@@ -147,7 +160,7 @@ namespace Core\Component\HtmlBlock {
             $node_table_thead->appendChild($table_thead_tr_element);
         }
 
-        private function readyModelTbody() {
+        private function addTbody() {
             $html_block = $this->getHtmlBlock();
             $node_table_tbody = $this->getNodeTableTbody();
             $model = $this->getModel();
@@ -171,6 +184,48 @@ namespace Core\Component\HtmlBlock {
 
                 $node_table_tbody->appendChild($table_tbody_tr_element);
             }
+        }
+
+        private function addContainer() {
+            $html_block = $this->getHtmlBlock();
+            $dom_element = $this->getDomElement();
+            $container_class = $this->getContainerClass();
+            $container_style = $this->getContainerStyle();
+
+            if (empty($container_class)) {
+                $container_class = 'col-md-12';
+            }
+
+            $div_class_col = $html_block->createElement('div');
+            $div_class_col->setAttribute('class',$container_class);
+            $div_class_col->setAttribute('style',$container_style);
+
+            $div_class_col->appendChild($dom_element);
+
+            return $div_class_col;
+        }
+
+        private function ready() {
+            $html_block = $this->getHtmlBlock();
+            $dom_element = $this->getDomElement();
+
+            $table_thead_element = $html_block->createElement('thead');
+            $node_table_thead = $dom_element->appendChild($table_thead_element);
+            $this->setNodeTableThead($node_table_thead);
+
+            $table_tbody_element = $html_block->createElement('tbody');
+            $node_table_tbody = $dom_element->appendChild($table_tbody_element);
+            $this->setNodeTableTbody($node_table_tbody);
+
+            $table_tfoot_element = $html_block->createElement('tfoot');
+            $node_table_tfoot = $dom_element->appendChild($table_tfoot_element);
+            $this->setNodeTableTfoot($node_table_tfoot);
+
+            $this->addThead();
+            $this->addTbody();
+            $add_container = $this->addContainer();
+
+            $this->setDomElement($add_container);
         }
 
         public function renderHtml() {
