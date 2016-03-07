@@ -14,6 +14,7 @@ namespace Core\Component\HtmlBlock {
         private $html_node_body_div_container;
         private $encoding;
         private $doc_type;
+        private $col_md_default = 'col-md-12';
 
         public function __construct(...$kwargs) {
             if (!empty($kwargs)) {
@@ -46,6 +47,14 @@ namespace Core\Component\HtmlBlock {
             }
 
             return $this;
+        }
+
+        public function getColMdDefault() {
+            return $this->col_md_default;
+        }
+
+        public function setColMdDefault($col_md_default) {
+            $this->col_md_default = $col_md_default;
         }
 
         public function getDomDocument() {
@@ -214,16 +223,32 @@ namespace Core\Component\HtmlBlock {
             return $element;
         }
 
-        public function appendBodyContainer($element) {
+        public function appendBody($element) {
             $html_node_body_div_container = $this->getHtmlNodeBodyDivContainer();
             $html_node_body_div_container->appendChild($element->getDomElement());
 
             return $this;
         }
 
-        public function appendBodyContainerRow($element) {
+        public function appendBodyRow($class = null,$component_list) {
+            if (empty($class)) {
+                $class = $this->getColMdDefault();
+            }
+ 
+            $div_element = $this->createElement('div');
+            $div_element->setAttribute('class',$class);
+
+            if (!is_array($component_list)) {
+                throw new WException(vsprintf('Expected array, given %s',[gettype($component_list)]));
+            }
+
             $html_node_body_div_container_row = $this->getHtmlNodeBodyDivContainerRow();
-            $html_node_body_div_container_row->appendChild($element->getDomElement());
+
+            foreach ($component_list as $component) {
+                $div_element->appendChild($component->getDomElement());
+            }
+
+            $html_node_body_div_container_row->appendChild($div_element);
 
             return $this;
         }

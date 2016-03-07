@@ -6,7 +6,7 @@ namespace Core\Component\HtmlBlock {
 
     class Nav {
         private $html_block;
-        private $nav_element;
+        private $dom_element;
         private $model;
         private $title;
         private $node_div_nav_header;
@@ -26,21 +26,24 @@ namespace Core\Component\HtmlBlock {
             $title = Util::get($kwargs,'title',null);
             $this->setTitle($title);
 
-            $nav_element = $html_block->createElement('nav');
+            $dom_element = $html_block->createElement('nav');
 
             if (isset($kwargs['id']) && !empty($kwargs['id'])) {
-                $nav_element->setAttribute('id',$kwargs['id']);
+                $dom_element->setAttribute('id',$kwargs['id']);
             }
 
             if (isset($kwargs['class']) && !empty($kwargs['class'])) {
-                $nav_element->setAttribute('class',$kwargs['class']);
+                $dom_element->setAttribute('class',$kwargs['class']);
+
+            } else {
+                $dom_element->setAttribute('class','navbar navbar-inverse navbar-fixed-top');
             }
 
             if (isset($kwargs['style']) && !empty($kwargs['style'])) {
-                $nav_element->setAttribute('style',$kwargs['style']);
+                $dom_element->setAttribute('style',$kwargs['style']);
             }
 
-            $this->setDomElement($nav_element);
+            $this->setDomElement($dom_element);
             $this->ready();
 
             return $this;
@@ -63,11 +66,11 @@ namespace Core\Component\HtmlBlock {
         }
 
         public function getDomElement() {
-            return $this->nav_element;
+            return $this->dom_element;
         }
 
-        private function setDomElement($nav_element) {
-            $this->nav_element = $nav_element;
+        private function setDomElement($dom_element) {
+            $this->dom_element = $dom_element;
         }
 
         private function getTitle() {

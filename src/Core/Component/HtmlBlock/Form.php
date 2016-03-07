@@ -324,10 +324,6 @@ namespace Core\Component\HtmlBlock {
             $container_class = $this->getContainerClass();
             $container_style = $this->getContainerStyle();
  
-            if (empty($container_class)) {
-                $container_class = 'col-md-12';
-            }
- 
             $div_class_col = $html_block->createElement('div');
             $div_class_col->setAttribute('class',$container_class);
             $div_class_col->setAttribute('style',$container_style);
