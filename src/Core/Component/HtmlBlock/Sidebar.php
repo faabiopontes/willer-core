@@ -8,6 +8,11 @@ namespace Core\Component\HtmlBlock {
         private $html_block;
         private $dom_element;
         private $model;
+        private $title;
+        private $text;
+        private $footer;
+        private $container_class;
+        private $container_style;
 
         public function __construct($html_block,...$kwargs) {
             $this->setHtmlBlock($html_block);
@@ -19,7 +24,22 @@ namespace Core\Component\HtmlBlock {
             $model = Util::get($kwargs,'model',null);
             $this->setModel($model);
 
-            $dom_element = $html_block->createElement('div');
+            $title = Util::get($kwargs,'title',null);
+            $this->setTitle($title);
+
+            $text = Util::get($kwargs,'text',null);
+            $this->setText($text);
+
+            $footer = Util::get($kwargs,'footer',null);
+            $this->setFooter($footer);
+
+            $container_class = Util::get($kwargs,'container_class',null);
+            $this->setContainerClass($container_class);
+ 
+            $container_style = Util::get($kwargs,'container_style',null);
+            $this->setContainerStyle($container_style);
+
+            $dom_element = $html_block->createElement('ul');
 
             if (isset($kwargs['id']) && !empty($kwargs['id'])) {
                 $dom_element->setAttribute('id',$kwargs['id']);
@@ -29,14 +49,11 @@ namespace Core\Component\HtmlBlock {
                 $dom_element->setAttribute('class',$kwargs['class']);
 
             } else {
-                $dom_element->setAttribute('class','col-sm-3 col-md-2');
+                $dom_element->setAttribute('class','nav nav-pills nav-stacked');
             }
 
             if (isset($kwargs['style']) && !empty($kwargs['style'])) {
                 $dom_element->setAttribute('style',$kwargs['style']);
-
-            } else {
-                $dom_element->setAttribute('style','float:left;');
             }
 
             $this->setDomElement($dom_element);
@@ -61,6 +78,46 @@ namespace Core\Component\HtmlBlock {
             $this->model = $model;
         }
 
+        private function getTitle() {
+            return $this->title;
+        }
+
+        private function setTitle($title) {
+            $this->title = $title;
+        }
+
+        private function getText() {
+            return $this->text;
+        }
+
+        private function setText($text) {
+            $this->text = $text;
+        }
+
+        private function getFooter() {
+            return $this->footer;
+        }
+
+        private function setFooter($footer) {
+            $this->footer = $footer;
+        }
+
+        private function getContainerClass() {
+            return $this->container_class;
+        }
+ 
+        private function setContainerClass($container_class) {
+            $this->container_class = $container_class;
+        }
+ 
+        private function getContainerStyle() {
+            return $this->container_style;
+        }
+ 
+        private function setContainerStyle($container_style) {
+            $this->container_style = $container_style;
+        }
+
         public function getDomElement() {
             return $this->dom_element;
         }
@@ -69,13 +126,69 @@ namespace Core\Component\HtmlBlock {
             $this->dom_element = $dom_element;
         }
 
+        private function addPanel() {
+            $html_block = $this->getHtmlBlock();
+            $dom_element = $this->getDomElement();
+            $title = $this->getTitle();
+            $text = $this->getText();
+            $footer = $this->getFooter();
+ 
+            if (empty($title) && empty($text) && empty($footer)) {
+                return false;
+            }
+ 
+            $div_class_panel = $html_block->createElement('div');
+            $div_class_panel->setAttribute('class','panel panel-default');
+ 
+            if (!empty($title)) {
+                $div_class_panel_head = $html_block->createElement('div',$title);
+                $div_class_panel_head->setAttribute('class','panel-heading');
+                $node_div_panel_head = $div_class_panel->appendChild($div_class_panel_head);
+            }
+ 
+            $div_class_panel_body = $html_block->createElement('div');
+
+            if (!empty($text)) {
+                $p_text = $html_block->createElement('p',$text);
+                $div_class_panel_body->appendChild($p_text);
+            }
+
+            $div_class_panel_body->setAttribute('class','panel-body');
+            $node_div_panel_body = $div_class_panel->appendChild($div_class_panel_body);
+            $node_div_panel_body->appendChild($dom_element);
+ 
+            if (!empty($footer)) {
+                $div_class_panel_footer = $html_block->createElement('div',$footer);
+                $div_class_panel_footer->setAttribute('class','panel-footer');
+                $node_div_panel_footer = $div_class_panel->appendChild($div_class_panel_footer);
+            }
+ 
+            $this->setDomElement($div_class_panel);
+        }
+
+        private function addContainer() {
+            $html_block = $this->getHtmlBlock();
+            $dom_element = $this->getDomElement();
+            $container_class = $this->getContainerClass();
+            $container_style = $this->getContainerStyle();
+ 
+            if (empty($container_class)) {
+                $container_class = 'col-md-12';
+            }
+ 
+            $div_class_col = $html_block->createElement('div');
+            $div_class_col->setAttribute('class',$container_class);
+            $div_class_col->setAttribute('style',$container_style);
+ 
+            $div_class_col->appendChild($dom_element);
+ 
+            $this->setDomElement($div_class_col);
+        }
+
         private function ready() {
             $html_block = $this->getHtmlBlock();
             $dom_element = $this->getDomElement();
             $model = $this->getModel();
-
-            $ul_class_navbar_element = $html_block->createElement('ul');
-            $ul_class_navbar_element->setAttribute('class','nav');
 
             foreach ($model as $name => $route) {
                 $li_menu = $html_block->createElement('li');
@@ -85,10 +198,11 @@ namespace Core\Component\HtmlBlock {
 
                 $li_menu->appendChild($li_a_menu);
 
-                $ul_class_navbar_element->appendChild($li_menu);
+                $dom_element->appendChild($li_menu);
             }
 
-            $dom_element->appendChild($ul_class_navbar_element);
+            $this->addPanel();
+            $this->addContainer();
         }
 
         public function renderHtml() {
