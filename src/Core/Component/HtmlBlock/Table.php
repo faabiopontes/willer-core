@@ -11,11 +11,13 @@ namespace Core\Component\HtmlBlock {
         private $title;
         private $text;
         private $footer;
+        private $container_class;
+        private $container_style;
         private $node_table_thead;
         private $node_table_tbody;
         private $node_table_tfoot;
-        private $container_class;
-        private $container_style;
+        private $node_panel_body;
+        private $node_container;
  
         public function __construct($html_block,...$kwargs) {
             $this->setHtmlBlock($html_block);
@@ -47,6 +49,7 @@ namespace Core\Component\HtmlBlock {
  
             if (isset($kwargs['id']) && !empty($kwargs['id'])) {
                 $dom_element->setAttribute('id',$kwargs['id']);
+                $this->setId($kwargs['id']);
             }
  
             if (isset($kwargs['class']) && !empty($kwargs['class'])) {
@@ -80,6 +83,14 @@ namespace Core\Component\HtmlBlock {
  
         private function setModel($model) {
             $this->model = $model;
+        }
+
+        private function getId() {
+            return $this->id;
+        }
+
+        private function setId($id) {
+            $this->id = $id;
         }
 
         private function getTitle() {
@@ -153,6 +164,80 @@ namespace Core\Component\HtmlBlock {
         private function setNodeTableTfoot($node_table_tfoot) {
             $this->node_table_tfoot = $node_table_tfoot;
         }
+
+        private function getNodePanelBody() {
+            return $this->node_panel_body;
+        }
+
+        private function setNodePanelBody($node_panel_body) {
+            $this->node_panel_body = $node_panel_body;
+        }
+
+        private function getNodeContainer() {
+            return $this->node_container;
+        }
+
+        private function setNodeContainer($node_container) {
+            $this->node_container = $node_container;
+        }
+
+        private function addButton() {
+            $model = $this->getModel();
+
+            if (empty($model) || !is_array($model) || !isset($model['data']) || empty($model['data'])) {
+                return false;
+            }
+
+            $html_block = $this->getHtmlBlock();
+            $dom_element = $this->getDomElement();
+            $table_id = $this->getId();
+
+            $div_button_group = $html_block->createElement('div');
+            $div_button_group->setAttribute('class','btn-group');
+            $div_button_group->setAttribute('role','group');
+            $div_button_group->setAttribute('aria-label','');
+
+            $a_div_button_group = $html_block->createElement('a');
+            $a_div_button_group->setAttribute('href',vsprintf('?%s_add=1',[$table_id]));
+            $a_div_button_group->setAttribute('role','button');
+            $a_div_button_group->setAttribute('class','btn btn-default');
+
+            $span_button_div_button_group = $html_block->createElement('span');
+            $span_button_div_button_group->setAttribute('class','glyphicon glyphicon-plus');
+            $span_button_div_button_group->setAttribute('aria-hidden','true');
+
+            $a_div_button_group->appendChild($span_button_div_button_group);
+            $div_button_group->appendChild($a_div_button_group);
+
+            $a_div_button_group = $html_block->createElement('a');
+            $a_div_button_group->setAttribute('href',vsprintf('?%s_refresh=1',[$table_id]));
+            $a_div_button_group->setAttribute('role','button');
+            $a_div_button_group->setAttribute('class','btn btn-default');
+
+            $span_button_div_button_group = $html_block->createElement('span');
+            $span_button_div_button_group->setAttribute('class','glyphicon glyphicon-refresh');
+            $span_button_div_button_group->setAttribute('aria-hidden','true');
+
+            $a_div_button_group->appendChild($span_button_div_button_group);
+            $div_button_group->appendChild($a_div_button_group);
+
+            $a_div_button_group = $html_block->createElement('a');
+            $a_div_button_group->setAttribute('href',vsprintf('?%s_export=1',[$table_id]));
+            $a_div_button_group->setAttribute('role','button');
+            $a_div_button_group->setAttribute('class','btn btn-default');
+
+            $span_button_div_button_group = $html_block->createElement('span');
+            $span_button_div_button_group->setAttribute('class','glyphicon glyphicon-export');
+            $span_button_div_button_group->setAttribute('aria-hidden','true');
+
+            $a_div_button_group->appendChild($span_button_div_button_group);
+            $div_button_group->appendChild($a_div_button_group);
+
+            $p_element = $html_block->createElement('p');
+
+            $dom_element->insertBefore($div_button_group);
+            $dom_element->insertBefore($p_element);
+        }
  
         private function modelLoop($html_block,$table_tr_element,$field_name,$object,$type) {
             foreach ($object as $field => $value) {
@@ -196,8 +281,51 @@ namespace Core\Component\HtmlBlock {
                     $table_thead_tr_element->appendChild($table_thead_tr_th_element);
                 }
             }
+
+            $table_thead_tr_th_element = $html_block->createElement('th','');
+            $table_thead_tr_element->appendChild($table_thead_tr_th_element);
  
             $node_table_thead->appendChild($table_thead_tr_element);
+        }
+
+        private function addTableButton($table_tbody_tr_element,$id) {
+            $html_block = $this->getHtmlBlock();
+            $table_id = $this->getId();
+
+            $div_td_tr_tbody = $html_block->createElement('div');
+            $div_td_tr_tbody->setAttribute('class','btn-group btn-group-xs');
+            $div_td_tr_tbody->setAttribute('role','group');
+            $div_td_tr_tbody->setAttribute('aria-label','');
+
+            $a_div_td_tr_tbody = $html_block->createElement('a');
+            $a_div_td_tr_tbody->setAttribute('href',vsprintf('?%s_edit=%s',[$table_id,$id]));
+            $a_div_td_tr_tbody->setAttribute('role','button');
+            $a_div_td_tr_tbody->setAttribute('class','btn btn-default');
+
+            $span_button_div_td_tr_tbody = $html_block->createElement('span');
+            $span_button_div_td_tr_tbody->setAttribute('class','glyphicon glyphicon-edit');
+            $span_button_div_td_tr_tbody->setAttribute('aria-hidden','true');
+
+            $a_div_td_tr_tbody->appendChild($span_button_div_td_tr_tbody);
+            $div_td_tr_tbody->appendChild($a_div_td_tr_tbody);
+
+            $a_div_td_tr_tbody = $html_block->createElement('a');
+            $a_div_td_tr_tbody->setAttribute('href',vsprintf('?%s_remove=%s',[$table_id,$id]));
+            $a_div_td_tr_tbody->setAttribute('role','button');
+            $a_div_td_tr_tbody->setAttribute('class','btn btn-default');
+
+            $span_button_div_td_tr_tbody = $html_block->createElement('span');
+            $span_button_div_td_tr_tbody->setAttribute('class','glyphicon glyphicon-remove');
+            $span_button_div_td_tr_tbody->setAttribute('aria-hidden','true');
+
+            $a_div_td_tr_tbody->appendChild($span_button_div_td_tr_tbody);
+            $div_td_tr_tbody->appendChild($a_div_td_tr_tbody);
+
+            $table_tbody_tr_td_option = $html_block->createElement('td');
+            $table_tbody_tr_td_option->appendChild($div_td_tr_tbody);
+            $table_tbody_tr_element->appendChild($table_tbody_tr_td_option);
+
+            return $table_tbody_tr_element;
         }
  
         private function addTbody() {
@@ -212,6 +340,17 @@ namespace Core\Component\HtmlBlock {
             if (empty($model) || !is_array($model) || !isset($model['data']) || empty($model['data'])) {
                 return false;
             }
+
+            $field_primary_key = null;
+            $model_primary_key = $model['data'][0];
+
+            foreach ($model_primary_key->schema() as $field => $schema) {
+                if ($schema->method == 'primaryKey') {
+                    $field_primary_key = $field;
+ 
+                    break; 
+                }
+            }
  
             foreach ($model['data'] as $data) {
                 $table_tbody_tr_element = $html_block->createElement('tr');
@@ -225,6 +364,8 @@ namespace Core\Component\HtmlBlock {
                         $table_tbody_tr_element->appendChild($table_tbody_tr_td_element);
                     }
                 }
+
+                $table_tbody_tr_element = $this->addTableButton($table_tbody_tr_element,$data->$field_primary_key);
  
                 $node_table_tbody->appendChild($table_tbody_tr_element);
             }
@@ -260,6 +401,7 @@ namespace Core\Component\HtmlBlock {
             $div_class_panel_body->setAttribute('class','panel-body');
             $node_div_panel_body = $div_class_panel->appendChild($div_class_panel_body);
             $node_div_panel_body->appendChild($dom_element);
+            $this->setNodePanelBody($node_div_panel_body);
  
             if (!empty($footer)) {
                 $div_class_panel_footer = $html_block->createElement('div',$footer);
@@ -281,22 +423,110 @@ namespace Core\Component\HtmlBlock {
             $div_class_col->setAttribute('style',$container_style);
  
             $div_class_col->appendChild($dom_element);
- 
+
+            $this->setNodeContainer($div_class_col); 
             $this->setDomElement($div_class_col);
+        }
+
+        private function addPagination() {
+            $html_block = $this->getHtmlBlock();
+            $model = $this->getModel();
+
+            if (!empty($model) && isset($model['page_total']) && !empty($model['data']) && $model['register_total'] > $model['register_perpage']) {
+                $node_panel_body = $this->getNodePanelBody();
+                $node_container = $this->getNodeContainer();
+                $table_id = $this->getId();
+
+                $nav_pagination = $html_block->createElement('nav');
+                $ul_nav_pagination = $html_block->createElement('ul');
+                $ul_nav_pagination->setAttribute('class','pagination');
+
+                if ($model['page_previous'] > 1) {
+                    $li_ul_nav_pagination = $html_block->createElement('li');
+                    $a_li_ul_nav_pagination = $html_block->createElement('a');
+                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s_page=1',[$table_id]));
+                    $span_a_li_ul_nav_pagination = $html_block->createElement('span','«');
+                    $span_a_li_ul_nav_pagination->setAttribute('aria-hidden','true');
+
+                    $a_li_ul_nav_pagination->appendChild($span_a_li_ul_nav_pagination);
+                    $li_ul_nav_pagination->appendChild($a_li_ul_nav_pagination);
+
+                    $ul_nav_pagination->appendChild($li_ul_nav_pagination);
+                }
+
+                if ($model['page_previous'] < $model['page_current']) {
+                    $li_ul_nav_pagination = $html_block->createElement('li');
+                    $a_li_ul_nav_pagination = $html_block->createElement('a');
+                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s_page=%s',[$table_id,$model['page_previous']]));
+                    $span_a_li_ul_nav_pagination = $html_block->createElement('span',$model['page_previous']);
+                    $span_a_li_ul_nav_pagination->setAttribute('aria-hidden','true');
+
+                    $a_li_ul_nav_pagination->appendChild($span_a_li_ul_nav_pagination);
+                    $li_ul_nav_pagination->appendChild($a_li_ul_nav_pagination);
+
+                    $ul_nav_pagination->appendChild($li_ul_nav_pagination);
+                }
+
+                $li_ul_nav_pagination = $html_block->createElement('li');
+                $li_ul_nav_pagination->setAttribute('class','active');
+                $a_li_ul_nav_pagination = $html_block->createElement('a',$model['page_current']);
+
+                $li_ul_nav_pagination->appendChild($a_li_ul_nav_pagination);
+
+                $ul_nav_pagination->appendChild($li_ul_nav_pagination);
+
+                if ($model['page_next'] < $model['page_total']) {
+                    $li_ul_nav_pagination = $html_block->createElement('li');
+                    $a_li_ul_nav_pagination = $html_block->createElement('a');
+                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s_page=%s',[$table_id,$model['page_next']]));
+                    $span_a_li_ul_nav_pagination = $html_block->createElement('span',$model['page_next']);
+                    $span_a_li_ul_nav_pagination->setAttribute('aria-hidden','true');
+
+                    $a_li_ul_nav_pagination->appendChild($span_a_li_ul_nav_pagination);
+                    $li_ul_nav_pagination->appendChild($a_li_ul_nav_pagination);
+
+                    $ul_nav_pagination->appendChild($li_ul_nav_pagination);
+                }
+
+                if ($model['page_total'] > $model['page_current']) {
+                    $li_ul_nav_pagination = $html_block->createElement('li');
+                    $a_li_ul_nav_pagination = $html_block->createElement('a');
+                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s_page=%s',[$table_id,$model['page_total']]));
+                    $span_a_li_ul_nav_pagination = $html_block->createElement('span','»');
+                    $span_a_li_ul_nav_pagination->setAttribute('aria-hidden','true');
+
+                    $a_li_ul_nav_pagination->appendChild($span_a_li_ul_nav_pagination);
+                    $li_ul_nav_pagination->appendChild($a_li_ul_nav_pagination);
+
+                    $ul_nav_pagination->appendChild($li_ul_nav_pagination);
+                }
+
+                $nav_pagination->appendChild($ul_nav_pagination);
+
+                if (!empty($node_panel_body)) {
+                    $node_panel_body->appendChild($nav_pagination);
+
+                } else {
+                    $node_container->appendChild($nav_pagination);
+                }
+            }
         }
  
         private function ready() {
             $html_block = $this->getHtmlBlock();
             $dom_element = $this->getDomElement();
+            $model = $this->getModel();
  
             $table_tfoot_element = $html_block->createElement('tfoot');
             $node_table_tfoot = $dom_element->appendChild($table_tfoot_element);
             $this->setNodeTableTfoot($node_table_tfoot);
- 
+
+            $this->addButton(); 
             $this->addThead();
             $this->addTbody();
             $this->addPanel();
             $this->addContainer();
+            $this->addPagination();
         }
  
         public function renderHtml() {
