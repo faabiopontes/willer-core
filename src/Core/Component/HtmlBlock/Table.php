@@ -238,7 +238,7 @@ namespace Core\Component\HtmlBlock {
             $dom_element->insertBefore($div_button_group);
             $dom_element->insertBefore($p_element);
         }
- 
+
         private function modelLoop($html_block,$table_tr_element,$field_name,$object,$type) {
             foreach ($object as $field => $value) {
                 if (is_object($value)) {
@@ -253,6 +253,52 @@ namespace Core\Component\HtmlBlock {
                     $table_tr_element->appendChild($table_tbody_tr_td_or_th_element);
                 }
             }
+        }
+
+        private function addSearch() {
+            $html_block = $this->getHtmlBlock();
+            $node_table_thead = $this->getNodeTableThead();
+            $model = $this->getModel();
+
+            if (empty($model) || !is_array($model) || !isset($model['data']) || empty($model['data'])) {
+                return false;
+            }
+ 
+            $data = $model['data'][0];
+ 
+            $table_thead_tr_element = $html_block->createElement('tr');
+ 
+            foreach ($data as $field => $value) {
+                if (is_object($value)) {
+                    $this->modelLoop($html_block,$table_thead_tr_element,$field,$value,'th');
+ 
+                } else {
+                    $input = $html_block->createElement('input');
+                    $input->setAttribute('class','form-control');
+                    $input->setAttribute('type','text');
+                    $input->setAttribute('placeholder','...');
+
+                    $table_thead_tr_th_element = $html_block->createElement('th','');
+                    $table_thead_tr_th_element->appendChild($input);
+                    $table_thead_tr_element->appendChild($table_thead_tr_th_element);
+                }
+            }
+
+            $button = $html_block->createElement('button');
+            $button->setAttribute('class','btn btn-default');
+            $button->setAttribute('type','submit');
+
+            $span_button = $html_block->createElement('span');
+            $span_button->setAttribute('class','glyphicon glyphicon-search');
+            $span_button->setAttribute('aria-hidden','true');
+
+            $button->appendChild($span_button);
+
+            $table_thead_tr_th_element = $html_block->createElement('th');
+            $table_thead_tr_th_element->appendChild($button);
+            $table_thead_tr_element->appendChild($table_thead_tr_th_element);
+ 
+            $node_table_thead->appendChild($table_thead_tr_element);
         }
  
         private function addThead() {
@@ -282,7 +328,7 @@ namespace Core\Component\HtmlBlock {
                 }
             }
 
-            $table_thead_tr_th_element = $html_block->createElement('th','');
+            $table_thead_tr_th_element = $html_block->createElement('th','opções');
             $table_thead_tr_element->appendChild($table_thead_tr_th_element);
  
             $node_table_thead->appendChild($table_thead_tr_element);
@@ -523,6 +569,7 @@ namespace Core\Component\HtmlBlock {
 
             $this->addButton(); 
             $this->addThead();
+            $this->addSearch();
             $this->addTbody();
             $this->addPanel();
             $this->addContainer();
