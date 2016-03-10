@@ -8,6 +8,7 @@ namespace Core\Component\HtmlBlock {
         private $html_block;
         private $dom_element;
         private $model;
+        private $label;
         private $title;
         private $text;
         private $footer;
@@ -31,6 +32,9 @@ namespace Core\Component\HtmlBlock {
  
             $model = Util::get($kwargs,'model',null);
             $this->setModel($model);
+
+            $label = Util::get($kwargs,'label',null);
+            $this->setLabel($label);
 
             $title = Util::get($kwargs,'title',null);
             $this->setTitle($title);
@@ -83,6 +87,14 @@ namespace Core\Component\HtmlBlock {
  
         private function setModel($model) {
             $this->model = $model;
+        }
+
+        private function getLabel() {
+            return $this->label;
+        }
+ 
+        private function setLabel($label) {
+            $this->label = $label;
         }
 
         private function getId() {
@@ -240,41 +252,86 @@ namespace Core\Component\HtmlBlock {
         }
 
         private function modelLoop($html_block,$table_tr_element,$field_name,$object,$type) {
+            $table_id = $this->getId();
+            $label = $this->getLabel();
+            $flag_label = null;
+
             foreach ($object as $field => $value) {
+                $flag_label = false;
+                $field_label = $field;
+
+                if (!empty($label)) {
+                    if (!array_key_exists($field,$label[$field_name])) {
+                        continue;
+                    }
+
+                    $flag_label = true;
+                    $field_label = $label[$field_name][$field];
+                }
+
                 if (is_object($value)) {
-                    $this->modelLoop($table_tr_element,$field,$value);
+                    $this->modelLoop($html_block,$table_tr_element,$field,$value,$type);
  
                 } else {
                     if ($type == 'th') {
-                        $value = vsprintf('%s.%s',[$field_name,$field]);
+                        if (!$flag_label) {
+                            $value = vsprintf('%s.%s',[$field_label,$field]);
+
+                        } else {
+                            $value = $field_label;
+                        }
+
+                    } else if ($type == 'form') {
+                        $input = $html_block->createElement('input');
+                        $input->setAttribute('id',vsprintf('table-search-%s-%s-%s',[$table_id,$field_name,$field]));
+                        $input->setAttribute('class','form-control input-sm table-search-input');
+                        $input->setAttribute('type','text');
+                        $input->setAttribute('placeholder','...');
                     }
- 
-                    $table_tbody_tr_td_or_th_element = $html_block->createElement($type,$value);
-                    $table_tr_element->appendChild($table_tbody_tr_td_or_th_element);
+
+                    if ($type == 'th' || $type == 'td') {
+                        $table_tbody_tr_td_or_th_element = $html_block->createElement($type,$value);
+                        $table_tr_element->appendChild($table_tbody_tr_td_or_th_element);
+
+                    } else if ($type == 'form') {
+                        $table_tbody_tr_td_or_th_element = $html_block->createElement('th','');
+                        $table_tbody_tr_td_or_th_element->appendChild($input);
+                        $table_tr_element->appendChild($table_tbody_tr_td_or_th_element);
+                    }
                 }
             }
         }
 
         private function addSearch() {
-            $html_block = $this->getHtmlBlock();
-            $node_table_thead = $this->getNodeTableThead();
             $model = $this->getModel();
 
             if (empty($model) || !is_array($model) || !isset($model['data']) || empty($model['data'])) {
                 return false;
             }
+
+            $html_block = $this->getHtmlBlock();
+            $node_table_thead = $this->getNodeTableThead();
+            $label = $this->getLabel();
+            $table_id = $this->getId();
  
             $data = $model['data'][0];
- 
+
             $table_thead_tr_element = $html_block->createElement('tr');
  
             foreach ($data as $field => $value) {
+                if (!empty($label)) {
+                    if (!array_key_exists($field,$label)) {
+                        continue;
+                    }
+                }
+
                 if (is_object($value)) {
-                    $this->modelLoop($html_block,$table_thead_tr_element,$field,$value,'th');
+                    $this->modelLoop($html_block,$table_thead_tr_element,$field,$value,'form');
  
                 } else {
                     $input = $html_block->createElement('input');
-                    $input->setAttribute('class','form-control');
+                    $input->setAttribute('id',vsprintf('table-search-%s-%s',[$table_id,$field]));
+                    $input->setAttribute('class','form-control input-sm table-search-input');
                     $input->setAttribute('type','text');
                     $input->setAttribute('placeholder','...');
 
@@ -285,7 +342,8 @@ namespace Core\Component\HtmlBlock {
             }
 
             $button = $html_block->createElement('button');
-            $button->setAttribute('class','btn btn-default');
+            $button->setAttribute('id',vsprintf('table-search-button-%s',[$table_id,]));
+            $button->setAttribute('class','btn btn-default table-search-button');
             $button->setAttribute('type','submit');
 
             $span_button = $html_block->createElement('span');
@@ -305,6 +363,7 @@ namespace Core\Component\HtmlBlock {
             $html_block = $this->getHtmlBlock();
             $dom_element = $this->getDomElement();
             $model = $this->getModel();
+            $label = $this->getLabel();
  
             $table_thead_element = $html_block->createElement('thead');
             $node_table_thead = $dom_element->appendChild($table_thead_element);
@@ -319,16 +378,26 @@ namespace Core\Component\HtmlBlock {
             $table_thead_tr_element = $html_block->createElement('tr');
  
             foreach ($data as $field => $value) {
+                $field_label = $field;
+
+                if (!empty($label)) {
+                    if (!array_key_exists($field,$label)) {
+                        continue;
+                    }
+
+                    $field_label = $label[$field];
+                }
+
                 if (is_object($value)) {
                     $this->modelLoop($html_block,$table_thead_tr_element,$field,$value,'th');
  
                 } else {
-                    $table_thead_tr_th_element = $html_block->createElement('th',$field);
+                    $table_thead_tr_th_element = $html_block->createElement('th',$field_label);
                     $table_thead_tr_element->appendChild($table_thead_tr_th_element);
                 }
             }
 
-            $table_thead_tr_th_element = $html_block->createElement('th','opções');
+            $table_thead_tr_th_element = $html_block->createElement('th');
             $table_thead_tr_element->appendChild($table_thead_tr_th_element);
  
             $node_table_thead->appendChild($table_thead_tr_element);
@@ -340,6 +409,7 @@ namespace Core\Component\HtmlBlock {
 
             $div_td_tr_tbody = $html_block->createElement('div');
             $div_td_tr_tbody->setAttribute('class','btn-group btn-group-xs');
+            $div_td_tr_tbody->setAttribute('style','width: 50px;');
             $div_td_tr_tbody->setAttribute('role','group');
             $div_td_tr_tbody->setAttribute('aria-label','');
 
@@ -378,6 +448,7 @@ namespace Core\Component\HtmlBlock {
             $html_block = $this->getHtmlBlock();
             $dom_element = $this->getDomElement();
             $model = $this->getModel();
+            $label = $this->getLabel();
  
             $table_tbody_element = $html_block->createElement('tbody');
             $node_table_tbody = $dom_element->appendChild($table_tbody_element);
@@ -402,6 +473,12 @@ namespace Core\Component\HtmlBlock {
                 $table_tbody_tr_element = $html_block->createElement('tr');
  
                 foreach ($data as $field => $value) {
+                    if (!empty($label)) {
+                        if (!array_key_exists($field,$label)) {
+                            continue;
+                        }
+                    }
+
                     if (is_object($value)) {
                         $this->modelLoop($html_block,$table_tbody_tr_element,$field,$value,'td');
  
@@ -490,7 +567,8 @@ namespace Core\Component\HtmlBlock {
                 if ($model['page_previous'] > 1) {
                     $li_ul_nav_pagination = $html_block->createElement('li');
                     $a_li_ul_nav_pagination = $html_block->createElement('a');
-                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s_page=1',[$table_id]));
+                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?table-nav-%s-page=1',[$table_id,]));
+                    $a_li_ul_nav_pagination->setAttribute('id',vsprintf('table-nav-%s-page-1',[$table_id,]));
                     $span_a_li_ul_nav_pagination = $html_block->createElement('span','«');
                     $span_a_li_ul_nav_pagination->setAttribute('aria-hidden','true');
 
