@@ -210,9 +210,10 @@ namespace Core\Component\HtmlBlock {
             $div_button_group->setAttribute('aria-label','');
 
             $a_div_button_group = $html_block->createElement('a');
-            $a_div_button_group->setAttribute('href',vsprintf('?%s_add=1',[$table_id]));
+            $a_div_button_group->setAttribute('href',vsprintf('?%s-add=1',[$table_id]));
+            $a_div_button_group->setAttribute('id',vsprintf('%s-add',[$table_id]));
             $a_div_button_group->setAttribute('role','button');
-            $a_div_button_group->setAttribute('class','btn btn-default');
+            $a_div_button_group->setAttribute('class','btn btn-default btn-xs');
 
             $span_button_div_button_group = $html_block->createElement('span');
             $span_button_div_button_group->setAttribute('class','glyphicon glyphicon-plus');
@@ -222,9 +223,10 @@ namespace Core\Component\HtmlBlock {
             $div_button_group->appendChild($a_div_button_group);
 
             $a_div_button_group = $html_block->createElement('a');
-            $a_div_button_group->setAttribute('href',vsprintf('?%s_refresh=1',[$table_id]));
+            $a_div_button_group->setAttribute('href',vsprintf('?%s-refresh=1',[$table_id]));
+            $a_div_button_group->setAttribute('id',vsprintf('%s-refresh',[$table_id]));
             $a_div_button_group->setAttribute('role','button');
-            $a_div_button_group->setAttribute('class','btn btn-default');
+            $a_div_button_group->setAttribute('class','btn btn-default btn-xs');
 
             $span_button_div_button_group = $html_block->createElement('span');
             $span_button_div_button_group->setAttribute('class','glyphicon glyphicon-refresh');
@@ -234,9 +236,10 @@ namespace Core\Component\HtmlBlock {
             $div_button_group->appendChild($a_div_button_group);
 
             $a_div_button_group = $html_block->createElement('a');
-            $a_div_button_group->setAttribute('href',vsprintf('?%s_export=1',[$table_id]));
+            $a_div_button_group->setAttribute('href',vsprintf('?%s-export=1',[$table_id]));
+            $a_div_button_group->setAttribute('id',vsprintf('%s-export',[$table_id]));
             $a_div_button_group->setAttribute('role','button');
-            $a_div_button_group->setAttribute('class','btn btn-default');
+            $a_div_button_group->setAttribute('class','btn btn-default btn-xs');
 
             $span_button_div_button_group = $html_block->createElement('span');
             $span_button_div_button_group->setAttribute('class','glyphicon glyphicon-export');
@@ -283,7 +286,7 @@ namespace Core\Component\HtmlBlock {
 
                     } else if ($type == 'form') {
                         $input = $html_block->createElement('input');
-                        $input->setAttribute('id',vsprintf('table-search-%s-%s-%s',[$table_id,$field_name,$field]));
+                        $input->setAttribute('id',vsprintf('%s-search-%s-%s',[$table_id,$field_name,$field]));
                         $input->setAttribute('class','form-control input-sm table-search-input');
                         $input->setAttribute('type','text');
                         $input->setAttribute('placeholder','...');
@@ -330,7 +333,7 @@ namespace Core\Component\HtmlBlock {
  
                 } else {
                     $input = $html_block->createElement('input');
-                    $input->setAttribute('id',vsprintf('table-search-%s-%s',[$table_id,$field]));
+                    $input->setAttribute('id',vsprintf('%s-search-%s',[$table_id,$field]));
                     $input->setAttribute('class','form-control input-sm table-search-input');
                     $input->setAttribute('type','text');
                     $input->setAttribute('placeholder','...');
@@ -342,8 +345,8 @@ namespace Core\Component\HtmlBlock {
             }
 
             $button = $html_block->createElement('button');
-            $button->setAttribute('id',vsprintf('table-search-button-%s',[$table_id,]));
-            $button->setAttribute('class','btn btn-default table-search-button');
+            $button->setAttribute('id',vsprintf('%s-search-button',[$table_id,]));
+            $button->setAttribute('class','btn btn-default btn-sm table-search-button');
             $button->setAttribute('type','submit');
 
             $span_button = $html_block->createElement('span');
@@ -414,7 +417,8 @@ namespace Core\Component\HtmlBlock {
             $div_td_tr_tbody->setAttribute('aria-label','');
 
             $a_div_td_tr_tbody = $html_block->createElement('a');
-            $a_div_td_tr_tbody->setAttribute('href',vsprintf('?%s_edit=%s',[$table_id,$id]));
+            $a_div_td_tr_tbody->setAttribute('href',vsprintf('?%s-edit=%s',[$table_id,$id]));
+            $a_div_td_tr_tbody->setAttribute('id',vsprintf('%s-edit-%s',[$table_id,$id]));
             $a_div_td_tr_tbody->setAttribute('role','button');
             $a_div_td_tr_tbody->setAttribute('class','btn btn-default');
 
@@ -426,7 +430,8 @@ namespace Core\Component\HtmlBlock {
             $div_td_tr_tbody->appendChild($a_div_td_tr_tbody);
 
             $a_div_td_tr_tbody = $html_block->createElement('a');
-            $a_div_td_tr_tbody->setAttribute('href',vsprintf('?%s_remove=%s',[$table_id,$id]));
+            $a_div_td_tr_tbody->setAttribute('href',vsprintf('?%s-remove=%s',[$table_id,$id]));
+            $a_div_td_tr_tbody->setAttribute('id',vsprintf('%s-remove-%s',[$table_id,$id]));
             $a_div_td_tr_tbody->setAttribute('role','button');
             $a_div_td_tr_tbody->setAttribute('class','btn btn-default');
 
@@ -555,7 +560,7 @@ namespace Core\Component\HtmlBlock {
             $html_block = $this->getHtmlBlock();
             $model = $this->getModel();
 
-            if (!empty($model) && isset($model['page_total']) && !empty($model['data']) && $model['register_total'] > $model['register_perpage']) {
+            if (!empty($model) && is_array($model) && isset($model['page_total']) && !empty($model['data']) && $model['register_total'] > $model['register_perpage']) {
                 $node_panel_body = $this->getNodePanelBody();
                 $node_container = $this->getNodeContainer();
                 $table_id = $this->getId();
@@ -567,8 +572,8 @@ namespace Core\Component\HtmlBlock {
                 if ($model['page_previous'] > 1) {
                     $li_ul_nav_pagination = $html_block->createElement('li');
                     $a_li_ul_nav_pagination = $html_block->createElement('a');
-                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?table-nav-%s-page=1',[$table_id,]));
-                    $a_li_ul_nav_pagination->setAttribute('id',vsprintf('table-nav-%s-page-1',[$table_id,]));
+                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s-pag-page=1',[$table_id,]));
+                    $a_li_ul_nav_pagination->setAttribute('data-page','1');
                     $span_a_li_ul_nav_pagination = $html_block->createElement('span','«');
                     $span_a_li_ul_nav_pagination->setAttribute('aria-hidden','true');
 
@@ -581,7 +586,8 @@ namespace Core\Component\HtmlBlock {
                 if ($model['page_previous'] < $model['page_current']) {
                     $li_ul_nav_pagination = $html_block->createElement('li');
                     $a_li_ul_nav_pagination = $html_block->createElement('a');
-                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s_page=%s',[$table_id,$model['page_previous']]));
+                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s-pag-page=%s',[$table_id,$model['page_previous']]));
+                    $a_li_ul_nav_pagination->setAttribute('data-page',$model['page_previous']);
                     $span_a_li_ul_nav_pagination = $html_block->createElement('span',$model['page_previous']);
                     $span_a_li_ul_nav_pagination->setAttribute('aria-hidden','true');
 
@@ -594,6 +600,7 @@ namespace Core\Component\HtmlBlock {
                 $li_ul_nav_pagination = $html_block->createElement('li');
                 $li_ul_nav_pagination->setAttribute('class','active');
                 $a_li_ul_nav_pagination = $html_block->createElement('a',$model['page_current']);
+                $a_li_ul_nav_pagination->setAttribute('data-page',$model['page_current']);
 
                 $li_ul_nav_pagination->appendChild($a_li_ul_nav_pagination);
 
@@ -602,7 +609,8 @@ namespace Core\Component\HtmlBlock {
                 if ($model['page_next'] < $model['page_total']) {
                     $li_ul_nav_pagination = $html_block->createElement('li');
                     $a_li_ul_nav_pagination = $html_block->createElement('a');
-                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s_page=%s',[$table_id,$model['page_next']]));
+                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s-pag-page=%s',[$table_id,$model['page_next']]));
+                    $a_li_ul_nav_pagination->setAttribute('data-page',$model['page_next']);
                     $span_a_li_ul_nav_pagination = $html_block->createElement('span',$model['page_next']);
                     $span_a_li_ul_nav_pagination->setAttribute('aria-hidden','true');
 
@@ -615,7 +623,8 @@ namespace Core\Component\HtmlBlock {
                 if ($model['page_total'] > $model['page_current']) {
                     $li_ul_nav_pagination = $html_block->createElement('li');
                     $a_li_ul_nav_pagination = $html_block->createElement('a');
-                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s_page=%s',[$table_id,$model['page_total']]));
+                    $a_li_ul_nav_pagination->setAttribute('href',vsprintf('?%s-pag-page=%s',[$table_id,$model['page_total']]));
+                    $a_li_ul_nav_pagination->setAttribute('data-page',$model['page_total']);
                     $span_a_li_ul_nav_pagination = $html_block->createElement('span','»');
                     $span_a_li_ul_nav_pagination->setAttribute('aria-hidden','true');
 
