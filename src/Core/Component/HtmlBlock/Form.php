@@ -10,6 +10,7 @@ namespace Core\Component\HtmlBlock {
         private $dom_element;
         private $model;
         private $label;
+        private $id;
         private $title;
         private $text;
         private $footer;
@@ -48,6 +49,7 @@ namespace Core\Component\HtmlBlock {
  
             if (isset($kwargs['id']) && !empty($kwargs['id'])) {
                 $dom_element->setAttribute('id',$kwargs['id']);
+                $this->setId($kwargs['id']);
             }
  
             if (isset($kwargs['class']) && !empty($kwargs['class'])) {
@@ -112,6 +114,14 @@ namespace Core\Component\HtmlBlock {
             $this->label = $label;
         }
 
+        private function getId() {
+            return $this->id;
+        }
+
+        private function setId($id) {
+            $this->id = $id;
+        }
+
         private function getTitle() {
             return $this->title;
         }
@@ -162,17 +172,18 @@ namespace Core\Component\HtmlBlock {
  
         private function addFieldForeignKey($model,$schema,$field) {
             $html_block = $this->getHtmlBlock();
+            $element_id = $this->getId();
  
             $div = $html_block->createElement('div');
             $div->setAttribute('class','form-group');
  
             $label = $html_block->createElement('label',$field);
-            $label->setAttribute('for','id_'.$field);
+            $label->setAttribute('for',vsprintf('%s-field-%s',[$element_id,$field]));
  
             $select = $html_block->createElement('select');
             $select->setAttribute('name',$field);
             $select->setAttribute('class','form-control');
-            $select->setAttribute('id','id_'.$field);
+            $select->setAttribute('id',vsprintf('%s-field-%s',[$element_id,$field]));
  
             $db_transaction = new Transaction();
  
@@ -231,19 +242,20 @@ namespace Core\Component\HtmlBlock {
  
         private function addFieldChar($model,$field) {
             $html_block = $this->getHtmlBlock();
+            $element_id = $this->getId();
  
             $div = $html_block->createElement('div');
             $div->setAttribute('class','form-group');
  
             $label = $html_block->createElement('label',$field);
-            $label->setAttribute('for','id_'.$field);
+            $label->setAttribute('for',vsprintf('%s-field-%s',[$element_id,$field]));
  
             $input = $html_block->createElement('input');
             $input->setAttribute('name',$field);
             $input->setAttribute('value',$model->$field);
             $input->setAttribute('type','text');
             $input->setAttribute('class','form-control');
-            $input->setAttribute('id','id_'.$field);
+            $input->setAttribute('id',vsprintf('%s-field-%s',[$element_id,$field]));
  
             $div->appendChild($label);
             $div->appendChild($input);
@@ -253,6 +265,7 @@ namespace Core\Component\HtmlBlock {
  
         private function addFieldBoolean($model,$field) {
             $html_block = $this->getHtmlBlock();
+            $element_id = $this->getId();
  
             $div = $html_block->createElement('div');
             $div->setAttribute('class','checkbox');
@@ -265,7 +278,7 @@ namespace Core\Component\HtmlBlock {
             $input->setAttribute('name',$field);
             $input->setAttribute('value','1');
             $input->setAttribute('type','checkbox');
-            $input->setAttribute('id','id_'.$field);
+            $input->setAttribute('id',vsprintf('%s-field-%s',[$element_id,$field]));
  
             if (!empty($model->$field)) {
                 $input->setAttribute('checked','checked');
@@ -337,6 +350,7 @@ namespace Core\Component\HtmlBlock {
             $html_block = $this->getHtmlBlock();
             $dom_element = $this->getDomElement();
             $model = $this->getModel();
+            $element_id = $this->getId();
  
             foreach ($model->schema() as $field => $schema) {
                 if ($schema->method == 'foreignKey') {
@@ -358,6 +372,7 @@ namespace Core\Component\HtmlBlock {
  
             $button = $html_block->createElement('button','Salvar');
             $button->setAttribute('type','submit');
+            $button->setAttribute('id',vsprintf('%s-field-button-save',[$element_id,]));
             $button->setAttribute('class','btn btn-default');
  
             $dom_element->appendChild($button);
