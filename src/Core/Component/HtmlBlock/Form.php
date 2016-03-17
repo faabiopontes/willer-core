@@ -290,6 +290,112 @@ namespace Core\Component\HtmlBlock {
  
             return $div;
         }
+
+        private function addFieldText($model,$field) {
+            $html_block = $this->getHtmlBlock();
+            $element_id = $this->getId();
+ 
+            $div = $html_block->createElement('div');
+            $div->setAttribute('class','form-group');
+ 
+            $label = $html_block->createElement('label',$field);
+            $label->setAttribute('for',vsprintf('%s-field-%s',[$element_id,$field]));
+ 
+            $input = $html_block->createElement('textarea',$model->$field);
+            $input->setAttribute('rows','3');
+            $input->setAttribute('name',$field);
+            $input->setAttribute('class','form-control');
+            $input->setAttribute('id',vsprintf('%s-field-%s',[$element_id,$field]));
+ 
+            $div->appendChild($label);
+            $div->appendChild($input);
+ 
+            return $div;
+        }
+
+        private function addFieldFloat($model,$field) {
+            $html_block = $this->getHtmlBlock();
+            $element_id = $this->getId();
+ 
+            $div = $html_block->createElement('div');
+            $div->setAttribute('class','form-group');
+ 
+            $label = $html_block->createElement('label',$field);
+            $label->setAttribute('for',vsprintf('%s-field-%s',[$element_id,$field]));
+ 
+            $input = $html_block->createElement('input');
+            $input->setAttribute('name',$field);
+            $input->setAttribute('value',$model->$field);
+            $input->setAttribute('type','text');
+            $input->setAttribute('class','form-control');
+            $input->setAttribute('id',vsprintf('%s-field-%s',[$element_id,$field]));
+ 
+            $div->appendChild($label);
+            $div->appendChild($input);
+ 
+            return $div;
+        }
+
+        private function addFieldInteger($model,$field) {
+            $html_block = $this->getHtmlBlock();
+            $element_id = $this->getId();
+ 
+            $div = $html_block->createElement('div');
+            $div->setAttribute('class','form-group');
+ 
+            $label = $html_block->createElement('label',$field);
+            $label->setAttribute('for',vsprintf('%s-field-%s',[$element_id,$field]));
+ 
+            $input = $html_block->createElement('input');
+            $input->setAttribute('name',$field);
+            $input->setAttribute('value',$model->$field);
+            $input->setAttribute('type','text');
+            $input->setAttribute('class','form-control');
+            $input->setAttribute('id',vsprintf('%s-field-%s',[$element_id,$field]));
+ 
+            $div->appendChild($label);
+            $div->appendChild($input);
+ 
+            return $div;
+        }
+
+        private function addFieldDatetime($model,$field) {
+            $html_block = $this->getHtmlBlock();
+            $element_id = $this->getId();
+
+            $div = $html_block->createElement('div');
+            $div->setAttribute('class','form-group');
+ 
+            $label = $html_block->createElement('label',$field);
+            $label->setAttribute('for',vsprintf('%s-field-%s',[$element_id,$field]));
+
+            $div_group = $html_block->createElement('div');
+            $div_group->setAttribute('class','input-group');
+
+            $span_icon = $html_block->createElement('span');
+            $span_icon->setAttribute('class','glyphicon glyphicon-calendar');
+            $span_icon->setAttribute('aria-hidden','true');
+
+            $span = $html_block->createElement('span');
+            $span->setAttribute('class','input-group-addon');
+            $span->setAttribute('id',vsprintf('%s-icon-field-%s',[$element_id,$field]));
+ 
+            $input = $html_block->createElement('input');
+            $input->setAttribute('name',$field);
+            $input->setAttribute('value',$model->$field);
+            $input->setAttribute('type','text');
+            $input->setAttribute('class','form-control');
+            $input->setAttribute('id',vsprintf('%s-field-%s',[$element_id,$field]));
+
+            $span->appendChild($span_icon);
+            $div_group->appendChild($span);
+            $div_group->appendChild($input);
+ 
+            $div->appendChild($label);
+            $div->appendChild($div_group);
+ 
+            return $div;
+        }
  
         private function addPanel() {
             $html_block = $this->getHtmlBlock();
@@ -367,6 +473,26 @@ namespace Core\Component\HtmlBlock {
                     $add_field_boolean = $this->addFieldBoolean($model,$field);
  
                     $dom_element->appendChild($add_field_boolean);
+
+                } else if ($schema->method == 'text') {
+                    $add_field_text = $this->addFieldText($model,$field);
+ 
+                    $dom_element->appendChild($add_field_text);
+
+                } else if ($schema->method == 'float') {
+                    $add_field_float = $this->addFieldFloat($model,$field);
+ 
+                    $dom_element->appendChild($add_field_float);
+
+                } else if ($schema->method == 'integer') {
+                    $add_field_integer = $this->addFieldInteger($model,$field);
+ 
+                    $dom_element->appendChild($add_field_integer);
+
+                } else if ($schema->method == 'datetime') {
+                    $add_field_datetime = $this->addFieldDatetime($model,$field);
+ 
+                    $dom_element->appendChild($add_field_datetime);
                 }
             }
  
