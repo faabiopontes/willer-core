@@ -4,11 +4,13 @@
   * @author William Borba
   * @package Core/System
   * @uses Core\Exception\WException
+  * @uses Core\Request
   * @uses Core\Util
   * 
   */
 namespace Core {
     use Core\Exception\WException;
+    use Core\Request;
     use Core\Util;
 
     class System {
@@ -67,53 +69,26 @@ namespace Core {
             $whoops_run->register();
         }
 
-        private function urlRoute($application_route,$matche) {
-            if (count($application_route) != 2) {
-                throw new WException(vsprintf('error in list [%s], max of two indices. Ex: ["Application/Controller/method","(GET|POST|PUT|DELETE)"]',[print_r($application_route,true)]));
+        private function urlRoute($application_route,$match) {
+            $application_route_list = explode('\\',$application_route[0]);
+
+            if (count($application_route_list) != 3) {
+                throw new WException(vsprintf('error in application route "%s". Ex: "Application\Controller\method"',[$application_route[0],]));
             }
 
-            $request_method = $application_route[1];
+            $application = vsprintf('Application\\%s\\Controller\\%s',[$application_route_list[0],$application_route_list[1]]);
 
-            if (empty($request_method)) {
-                throw new WException(vsprintf('error in url "%s", index two is empty. Ex: "(GET|POST|PUT|DELETE)"',[$application_route[0],]));
-            }
+            $new_application = new $application($application_route[1]);
 
-            $application_route = $application_route[0];
-            $application_route_list = explode('/',$application_route);
-
-            if (count($application_route_list) < 3) {
-                throw new WException(vsprintf('error in application route "%s". Ex: "Application/Controller/method"',[$application_route,]));
-            }
-
-            if (empty($application_route_list[0])) {
-                throw new WException(vsprintf('application indefined in route "%s". Ex: "Application/Controller/method"',[$application_route,]));
-            }
-
-            if (empty($application_route_list[1])) {
-                throw new WException(vsprintf('application controller indefined in route "%s". Ex: "Application/Controller/method"',[$application_route,]));
-            }
-
-            if (empty($application_route_list[2])) {
-                throw new WException(vsprintf('controller method indefined in route "%s". Ex: "Application/Controller/method"',[$application_route,]));
-            }
-
-            $application = $application_route_list[0];
-            $controller = $application_route_list[1];
             $controller_action = $application_route_list[2];
-
-            $application = vsprintf('Application\\%s\\Controller\\%s',[$application,$controller]);
-
-            $new_application = new $application($request_method);
 
             if (empty(method_exists($new_application,$controller_action))) {
                 throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
             }
 
-            if (!empty($matche)) {
-                array_shift($matche);
-            }
+            $request = new Request($match);
 
-            return $new_application->$controller_action(...$matche);
+            return $new_application->$controller_action($request);
         }
 
         private function readyUrlRoute($request_uri) {
@@ -140,12 +115,24 @@ namespace Core {
                     throw new WException(vsprintf('class "%s" not found',[$app_url_class,]));
                 }
 
-                $url += $app_url_class::url();
+                $url_list = $app_url_class::url();
+
+                foreach ($url_list as $route => $url_config) {
+                    if (count($url_config) != 3) {
+                        throw new WException(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
+                    }
+
+                    $url_config[0] = vsprintf('%s\%s',[$app,$url_config[0]]);
+
+                    $url_list[$route] = $url_config;;
+                }
+
+                $url += $url_list;
             }
 
             foreach ($url as $url_er => $application_route) {
-                if (preg_match($url_er,$request_uri,$matche)) {
-                    return $this->urlRoute($application_route,$matche);
+                if (preg_match($url_er,$request_uri,$match)) {
+                    return $this->urlRoute($application_route,$match);
                 }
             }
 
