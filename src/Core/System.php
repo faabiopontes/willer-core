@@ -124,7 +124,31 @@ namespace Core {
 
                     $url_config[0] = vsprintf('%s\%s',[$app,$url_config[0]]);
 
-                    $url_list[$route] = $url_config;;
+                    $route = str_replace(' ','',$route);
+                    $route_split_list = explode('/',$route);
+
+                    foreach ($route_split_list as $key => $route_split) {
+                        $match = null;
+
+                        preg_match('/{([a-z0-9.\-_]+):{1}?([\w^\-|\[\]\\+\(\)\/]+)?}/',$route_split,$match);
+
+                        if (!empty($match)) {
+                            $match[0] = str_replace(['{','}'],'',$match[0]);
+                            $match = explode(':',$match[0]);
+
+                            if (!empty($match[1])) {
+                                $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],$match[1],]);
+
+                            } else {
+                                $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],'[a-z0-9]+',]);
+                            }
+                        }
+                    }
+
+                    $route_er = vsprintf('/^%s$/',[implode('\/',$route_split_list),]);
+                    unset($url_list[$route]);
+
+                    $url_list[$route_er] = $url_config;
                 }
 
                 $url += $url_list;
