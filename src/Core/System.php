@@ -146,17 +146,10 @@ namespace Core {
                     }
 
                     $route_er = vsprintf('/^%s$/',[implode('\/',$route_split_list),]);
-                    unset($url_list[$route]);
 
-                    $url_list[$route_er] = $url_config;
-                }
-
-                $url += $url_list;
-            }
-
-            foreach ($url as $url_er => $application_route) {
-                if (preg_match($url_er,$request_uri,$match)) {
-                    return $this->urlRoute($application_route,$match);
+                    if (preg_match($route_er,$request_uri,$match)) {
+                        return $this->urlRoute($url_config,$match);
+                    }
                 }
             }
 
