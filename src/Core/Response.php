@@ -12,13 +12,23 @@ namespace Core {
     use Core\Util;
 
     class Response {
+        private $body;
         private $code;
         private $header;
 
-        public function __construct($code = 200) {
+        public function __construct($body = null,$code = 200) {
+            $this->setbody($body);
             $this->setCode($code);
+        }
 
-            http_response_code($code);
+        public function setBody($body) {
+            $this->body = $body;
+
+            return $this;
+        }
+
+        public function getBody() {
+            return $this->body;
         }
 
         public function setCode($code) {
@@ -41,6 +51,32 @@ namespace Core {
 
         public function getHeader() {
             return $this->header;
+        }
+
+        public function render($body) {
+            if (!empty($body)) {
+                $this->setBody($body);
+
+            } else {
+                $body = $this->getBody();
+            }
+
+            print $body;
+        }
+
+        public function renderToJson($body) {
+            if (!empty($body)) {
+                $this->setBody($body);
+
+            } else {
+                $body = $this->getBody();
+            }
+
+            $body = json_encode($body,JSON_UNESCAPED_UNICODE);
+
+            header('Content-Type: application/json');
+
+            print $body;
         }
     }
 }
