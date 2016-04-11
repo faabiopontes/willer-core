@@ -1,37 +1,11 @@
 <?php
-/**
- * @author William Borba
- * @package Core/DAO
- * @uses \PDO
- * @uses \Exception
- * @uses \PDOException
- * @uses Core\Exception\WException
- */
+
 namespace Core\DAO {
     use \PDO as PDO;
     use \Exception as Exception;
     use \PDOException as PDOException;
     use Core\Exception\WException;
-    /**
-     * Class DataManipulationLanguage
-     * @class abstract
-     * @package Core\DAO
-     * @property mixed $transaction
-     * @property string $db_escape
-     * @property array $related
-     * @property string $limit
-     * @property array $limit_value
-     * @property array $order_by
-     * @property string $primary_key
-     * @property integer $last_insert_id
-     * @property array $where_unique
-     * @property array $where
-     * @property array $where_value
-     * @property array $like
-     * @property array $like_value
-     * @property array $query
-     * @property boolean $flag_new_or_update
-     */
+
     abstract class DataManipulationLanguage {
         private $transaction;
         private $db_escape;
@@ -48,11 +22,9 @@ namespace Core\DAO {
         private $like;
         private $like_value;
         private $query;
-        private $flag_new_or_update;
-        /**
-         * DataManipulationLanguage constructor.
-         * @param null $transaction
-         */
+
+        private $flag_getnotest;
+
         public function __construct($transaction = null) {
             if (empty($transaction)) {
                 throw new WException(vsprintf('Transaction object not loaded, in model instance "%s"',[$this->name(),]));
@@ -78,236 +50,142 @@ namespace Core\DAO {
             }
 
             $this->query = [];
-            $this->transaction = $transaction;
         }
-        /**
-         * @return mixed
-         */
+
         private function getClassName() {
             return $this->className();
         }
-        /**
-         * @return mixed
-         */
+
         private function getTableName() {
             return $this->name();
         }
-        /**
-         * @return mixed
-         */
+
         private function getTableColumn() {
             return $this->column();
         }
-        /**
-         * @return mixed
-         */
+
         private function getTableSchema() {
             return $this->schema();
         }
-        /**
-         * @return mixed
-         */
+
         protected function getTransaction() {
             return $this->transaction;
         }
-        /**
-         * @param $transaction
-         * @return $this
-         */
+
         protected function setTransaction($transaction) {
             $this->transaction = $transaction;
-
-            return $this;
         }
-        /**
-         * @return string
-         */
+
+        private function getRelated() {
+            return $this->related;
+        }
+
+        private function setRelated($related) {
+            $this->related = $related;
+        }
+
         private function getLimit() {
             return $this->limit;
         }
-        /**
-         * @param $limit
-         * @return $this
-         */
+
         private function setLimit($limit) {
             $this->limit = $limit;
-
-            return $this;
         }
-        /**
-         * @return array
-         */
+
         private function getLimitValue() {
             return $this->limit_value;
         }
-        /**
-         * @param $page
-         * @param $limit
-         * @return $this
-         */
-        private function setLimitValue($page, $limit) {
+
+        private function setLimitValue($page,$limit) {
             $this->limit_value = [
                 'page' => $page,
                 'limit' => $limit,
             ];
-
-            return $this;
         }
-        /**
-         * @return array
-         */
+
         private function getOrderBy() {
             return $this->order_by;
         }
-        /**
-         * @param $order_by
-         * @return $this
-         */
+
         private function setOrderBy($order_by) {
             $this->order_by = $order_by;
-
-            return $this;
         }
-        /**
-         * @return string
-         */
+
         protected function getPrimaryKey() {
             return $this->primary_key;
         }
-        /**
-         * @param $column
-         */
+
         private function setPrimaryKey($column) {
             $this->primary_key = $column;
         }
-        /**
-         * @return int
-         */
+
         private function getLastInsertId() {
             return $this->last_insert_id;
         }
-        /**
-         * @param $id
-         * @return $this
-         */
+
         private function setLastInsertId($id) {
             $this->last_insert_id = $id;
-
-            return $this;
         }
-        /**
-         * @return array
-         */
+
         private function getWhereUnique() {
             return $this->where_unique;
         }
-        /**
-         * @param $where_unique
-         * @return $this
-         */
+
         private function setWhereUnique($where_unique) {
             $this->where_unique = $where_unique;
-
-            return $this;
         }
-        /**
-         * @return mixed
-         */
+
         private function getWhereUniqueValue() {
             return $this->where_unique_value;
         }
-        /**
-         * @param $where_unique_value
-         * @return $this
-         */
+
         private function setWhereUniqueValue($where_unique_value) {
             $this->where_unique_value = $where_unique_value;
-
-            return $this;
         }
-        /**
-         * @return array
-         */
+
         private function getWhere() {
             return $this->where;
         }
-        /**
-         * @param $where
-         * @return $this
-         */
+
         private function setWhere($where) {
             $this->where = $where;
-
-            return $this;
         }
-        /**
-         * @return array
-         */
+
         private function getWhereValue() {
             return $this->where_value;
         }
-        /**
-         * @param $where_value
-         */
+
         private function setWhereValue($where_value) {
             $this->where_value = $where_value;
-
-            return $this;
         }
-        /**
-         * @return array
-         */
+
         private function getLike() {
             return $this->like;
         }
-        /**
-         * @param $like
-         * @return $this
-         */
+
         private function setLike($like) {
             $this->like = $like;
-
-            return $this;
         }
-        /**
-         * @return array
-         */
+
         private function getLikeValue() {
             return $this->like_value;
         }
-        /**
-         * @param $like_value
-         * @return $this
-         */
+
         private function setLikeValue($like_value) {
             $this->like_value = $like_value;
-
-            return $this;
         }
-        /**
-         * @return array
-         */
-        private function getQuery():array {
+
+        private function getQuery() {
             return $this->query;
         }
-        /**
-         * @param string $sql
-         * @param array $value
-         * @return DataManipulationLanguage
-         */
-        private function setQuery(string $sql, array $value):self {
+
+        private function setQuery($sql,$value) {
             $this->query[] = [
                 'sql' => $sql,
                 'value' => $value
             ];
-
-            return $this;
         }
-        /**
-         * @param null $column
-         * @return $this
-         * @throws WException
-         */
+
         protected function definePrimaryKey($column = null) {
             $table_schema = $this->schema();
             $primarykey_flag = false;
@@ -329,13 +207,8 @@ namespace Core\DAO {
             }
 
             $this->setPrimaryKey($column);
-
-            return $this;
         }
-        /**
-         * @param array $order_by
-         * @return $this
-         */
+
         public function orderBy($order_by = []) {
             if (!empty($order_by)) {
                 $order_by_list = [];
@@ -355,12 +228,8 @@ namespace Core\DAO {
 
             return $this;
         }
-        /**
-         * @param int $page
-         * @param int $limit
-         * @return $this
-         */
-        public function limit($page = 1, $limit = 1000) {
+
+        public function limit($page = 1,$limit = 1000) {
             $limit_value = null;
 
             $page = intval($page);
@@ -382,13 +251,8 @@ namespace Core\DAO {
 
             return $this;
         }
-        /**
-         * @param $table_related
-         * @param array $query_list
-         * @param bool $join
-         * @return array
-         */
-        private function related($table_related, $query_list = [], $join = false) {
+
+        private function related($table_related,$query_list = [],$join = false) {
             $table_name = $table_related->getTableName();
             $table_schema = $table_related->getTableSchema();
 
@@ -439,11 +303,7 @@ namespace Core\DAO {
 
             return $query_list;
         }
-        /**
-         * @param array $where
-         * @return $this
-         * @throws WException
-         */
+
         public function where($where = []) {
             $where_value_list = [];
 
@@ -488,11 +348,7 @@ namespace Core\DAO {
 
             return $this;
         }
-        /**
-         * @param array $like
-         * @return $this
-         * @throws WException
-         */
+
         public function like($like = []) {
             $like_value_list = [];
 
@@ -526,12 +382,7 @@ namespace Core\DAO {
 
             return $this;
         }
-        /**
-         * @param array $where
-         * @return mixed
-         * @throws Exception
-         * @throws WException
-         */
+
         public function get($where = []) {
             $transaction = $this->getTransaction();
 
@@ -598,7 +449,7 @@ namespace Core\DAO {
             $query = vsprintf('select %s from %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where]);
 
             try {
-                if (empty($this->flag_new_or_update)) {
+                if (empty($this->flag_getnotest)) {
                     $pdo_query_total = $transaction_resource->prepare($query_total);
 
                     $transaction_resource_error_info = $transaction_resource->errorInfo();
@@ -625,7 +476,7 @@ namespace Core\DAO {
                     }
                 }
 
-                $this->flag_new_or_update = false;
+                $this->flag_getnotest = false;
 
                 $pdo_query = $transaction_resource->prepare($query);
 
@@ -669,12 +520,7 @@ namespace Core\DAO {
 
             return $related_fetch;
         }
-        /**
-         * @param null $field
-         * @return $this
-         * @throws Exception
-         * @throws WException
-         */
+
         public function save($field = null) {
             $transaction = $this->getTransaction();
 
@@ -701,8 +547,7 @@ namespace Core\DAO {
             $table_name_with_escape = vsprintf('%s%s%s',[$this->db_escape,$table_name,$this->db_escape]);
 
             $column_list = [];
-            $query_value_update_list = [];
-            $query_value_add_list = [];
+            $query_value_list = [];
             $query_escape_list = [];
             $set_escape = [];
             $flag_getdiscard = false;
@@ -785,7 +630,7 @@ namespace Core\DAO {
             }
 
             if (empty($flag_getdiscard)) {
-                $this->flag_new_or_update = true;
+                $this->flag_getnotest = true;
 
                 $get_database_info = $transaction->getDatabaseInfo();
 
@@ -806,12 +651,7 @@ namespace Core\DAO {
 
             return $this;
         }
-        /**
-         * @param null $set
-         * @return $this
-         * @throws Exception
-         * @throws WException
-         */
+
         public function update($set = null) {
             $transaction = $this->getTransaction();
 
@@ -921,12 +761,7 @@ namespace Core\DAO {
 
             return $this;
         }
-        /**
-         * @param null $where
-         * @return $this
-         * @throws Exception
-         * @throws WException
-         */
+
         public function delete($where = null) {
             $transaction = $this->getTransaction();
 
@@ -1052,12 +887,7 @@ namespace Core\DAO {
 
             return $this;
         }
-        /**
-         * @param array $setting
-         * @return array
-         * @throws Exception
-         * @throws WException
-         */
+
         public function execute($setting = []) {
             $transaction = $this->getTransaction();
 
@@ -1255,15 +1085,8 @@ namespace Core\DAO {
 
             return $result;
         }
-        /**
-         * @param $obj_column_list
-         * @param $obj_schema_dict
-         * @param $fetch
-         * @param $transaction
-         * @param $obj
-         * @return mixed
-         */
-        private function relatedFetch($obj_column_list, $obj_schema_dict, $fetch, $transaction, $obj) {
+
+        private function relatedFetch($obj_column_list,$obj_schema_dict,$fetch,$transaction,$obj) {
             foreach ($obj_column_list as $column => $value) {
                 if ($obj_schema_dict[$column]->method == 'foreignKey') {
                     $obj_foreignkey = $obj_schema_dict[$column]->rule['table'];
@@ -1289,13 +1112,15 @@ namespace Core\DAO {
 
             return $obj;
         }
-        /**
-         * @return array
-         */
+
         public function dumpQuery() {
             $query = $this->getQuery();
 
             return $query;
+        }
+
+        public function __destruct() {
+            unset($this);
         }
     }
 }

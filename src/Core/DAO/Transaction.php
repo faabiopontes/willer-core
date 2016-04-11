@@ -55,6 +55,7 @@ namespace Core\DAO {
             }
 
             $database_path = json_decode(file_get_contents($database_path),true);
+            $this->setDatabasePath($database_path);
 
             if (empty($database_path)) {
                 throw new WException(vsprintf('json encode error in database path "%s"',[$this->getDatabasePath(),]));
@@ -201,7 +202,6 @@ namespace Core\DAO {
 
             try {
                 $resource->beginTransaction();
-                //$this->resource->beginTransaction();
 
             } catch (PDOException $error) {
                 throw $error;
@@ -221,7 +221,7 @@ namespace Core\DAO {
 
             if (!empty($resource)) {
                 try {
-                    $resource->commit();
+                    $this->resource->commit();
 
                 } catch (PDOException $error) {
                     throw $error;
@@ -242,7 +242,7 @@ namespace Core\DAO {
 
             if (!empty($resource)) {
                 try {
-                    $resource->rollBack();
+                    $this->resource->rollBack();
 
                 } catch (PDOException $error) {
                     throw $error;
