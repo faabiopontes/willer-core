@@ -1,10 +1,23 @@
 <?php
-
+/**
+ * @author William Borba
+ * @package Core
+ * @uses \SplFileInfo
+ */
 namespace Core {
 	use \SplFileInfo as SplFileInfo;
-
+	/**
+	 * Trait Util
+	 * @package Core
+	 */
 	trait Util {
-		public static function get($input,$key,$default = null) {
+		/**
+		 * @param $input
+		 * @param $key
+		 * @param null $default
+		 * @return mixed|null
+         */
+		public static function get($input, $key, $default = null) {
 			if (!is_array($input) && !(is_object($input))) {
 				return $default;
 			}
@@ -16,19 +29,12 @@ namespace Core {
 				return isset($input->$key) ? !empty($input->$key) ? $input->$key : $default : $default;
 			}
 		}
-
-		public static function csrf() {
-			$csrf = md5(uniqid(mt_rand(),true));
-			$_SESSION["csrf"] = $csrf;
-
-			return $csrf;
-		}
-
-		public static function httpRedirect($url) {
-			header('Location: '.$url);
-		}
-
-		public static function load($application_path = null,$exclude_list = []) {
+		/**
+		 * @param null $application_path
+		 * @param array $exclude_list
+		 * @return array
+         */
+		public static function load($application_path = null, $exclude_list = []) {
 			$exclude_list = array_merge($exclude_list,['..','.']);
 
 			$scandir_root = array_diff(scandir(ROOT_PATH),$exclude_list);
@@ -64,14 +70,6 @@ namespace Core {
 			}
 
 			return $load_var;
-		}
-
-		public static function renderToJson($data = []) {
-			header('Content-Type: application/json');
-
-			$data = json_encode($data,JSON_UNESCAPED_UNICODE);
-
-			print $data;
 		}
 	}
 }

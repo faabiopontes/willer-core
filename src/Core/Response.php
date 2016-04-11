@@ -1,36 +1,48 @@
 <?php
 /**
-  *
   * @author William Borba
-  * @package Core/Response
-  * @uses Core\Exception\WException
-  * @uses Core\Util
-  * 
+  * @package Core
   */
 namespace Core {
-    use Core\Exception\WException;
-    use Core\Util;
-
+    /**
+     * Class Response
+     * @package Core
+     * @property string $body
+     * @property integer $code
+     * @property array $header
+     */
     class Response {
         private $body;
         private $code;
         private $header;
-
-        public function __construct($body = null,$code = 200) {
-            $this->setbody($body);
+        /**
+         * Response constructor.
+         * @param null $body
+         * @param int $code
+         */
+        public function __construct($body = null, $code = 200) {
+            $this->setBody($body);
             $this->setCode($code);
         }
-
+        /**
+         * @param $body
+         * @return $this
+         */
         public function setBody($body) {
             $this->body = $body;
 
             return $this;
         }
-
+        /**
+         * @return mixed
+         */
         public function getBody() {
             return $this->body;
         }
-
+        /**
+         * @param $code
+         * @return $this
+         */
         public function setCode($code) {
             $this->code = $code;
 
@@ -38,21 +50,30 @@ namespace Core {
 
             return $this;
         }
-
+        /**
+         * @return mixed
+         */
         public function getCode() {
             return $this->code;
         }
-
+        /**
+         * @param $header
+         * @return $this
+         */
         public function setHeader($header) {
             $this->header = $header;
 
             return $this;
         }
-
+        /**
+         * @return mixed
+         */
         public function getHeader() {
             return $this->header;
         }
-
+        /**
+         * @param $body
+         */
         public function render($body) {
             if (!empty($body)) {
                 $this->setBody($body);
@@ -63,7 +84,9 @@ namespace Core {
 
             print $body;
         }
-
+        /**
+         * @param $body
+         */
         public function renderToJson($body) {
             if (!empty($body)) {
                 $this->setBody($body);
@@ -77,6 +100,25 @@ namespace Core {
             header('Content-Type: application/json');
 
             print $body;
+        }
+        /**
+         * @return mixed
+         */
+        public static function csrf() {
+            $csrf = md5(uniqid(mt_rand(),true));
+            $_SESSION["csrf"] = $csrf;
+
+            return $csrf;
+        }
+        /**
+         * @param $url
+         * @param int $code
+         */
+        public function httpRedirect($url) {
+            $code = $this->getCode($code);
+
+            http_response_code($code);
+            header('Location: '.$url);
         }
     }
 }

@@ -1,80 +1,151 @@
 <?php
-
+/**
+ * @author William Borba
+ * @package Core/DAO
+ * @uses \PDO
+ * @uses \Exception
+ * @uses \PDOException
+ * @uses Core\Exception\WException
+ */
 namespace Core\DAO {
     use \PDO as PDO;
     use \Exception as Exception;
     use \PDOException as PDOException;
     use Core\Exception\WException;
-
+    /**
+     * Class Transaction
+     * @package Core\DAO
+     * @property mixed $resource
+     * @property string $database
+     * @property integer $last_insert_id
+     * @property string $database_path
+     */
     class Transaction {
         private $resource;
         private $database;
         private $last_insert_id;
-        private $db_default = DATABASE;
-        private $database_path = DATABASE_PATH;
-
+        private $database_path;
+        /**
+         * Transaction constructor.
+         * @param null $database
+         */
         public function __construct($database = null) {
+            if (empty(defined('DATABASE_PATH'))) {
+                throw new WException('constant DATABASE_PATH not defined');
+            }
+
+            $this->setDatabasePath(DATABASE_PATH);
+
+            if (empty(defined('DATABASE'))) {
+                throw new WException('constant DATABASE not defined');
+            }
+
+            $this->setDatabase(DATABASE);
+
             if (empty($database)) {
-                $database = $this->db_default;
+                $database = $this->getDatabase();
+
+                $this->setDatabase($database);
             }
 
-            if (!file_exists($this->database_path)) {
-                throw new WException(vsprintf('database path dont find in "%s"',[$this->database_path,]));
+            $database_path = $this->getDatabasePath();
+
+            if (!file_exists($database_path)) {
+                throw new WException(vsprintf('database path dont find in "%s"',[$database_path,]));
             }
 
-            $database_path = $this->database_path;
+            $database_path = json_decode(file_get_contents($database_path),true);
 
-            $this->database_path = json_decode(file_get_contents($this->database_path),true);
-
-            if (empty($this->database_path)) {
-                throw new WException(vsprintf('json encode error in database path "%s"',[$database_path,]));
+            if (empty($database_path)) {
+                throw new WException(vsprintf('json encode error in database path "%s"',[$this->getDatabasePath(),]));
             }
 
-            if (!array_key_exists($database,$this->database_path)) {
-                throw new WException(vsprintf('database "%s" dont find in object "%s"',[$database,print_r($this->database_path,true),]));
+            if (!array_key_exists($database,$database_path)) {
+                throw new WException(vsprintf('database "%s" dont find in object "%s"',[$database,print_r($database_path,true),]));
             }
 
-            if (!array_key_exists('driver',$this->database_path[$database])) {
-                throw new WException(vsprintf('database driver key not registered in database object "%s"',[print_r($this->database_path,true)]));
+            if (!array_key_exists('driver',$database_path[$database])) {
+                throw new WException(vsprintf('database driver key not registered in database object "%s"',[print_r($database_path,true)]));
             }
 
             $this->setDatabase($database);
         }
-
+        /**
+         * @return mixed
+         */
         public function getResource() {
             return $this->resource;
         }
-
+        /**
+         * @param $resource
+         */
         protected function setResource($resource) {
             $this->resource = $resource;
-        }
 
+            return $this;
+        }
+        /**
+         * @return string
+         */
         public function getDatabase() {
             return $this->database;
         }
-
+        /**
+         * @param $database
+         * @return $this
+         */
         protected function setDatabase($database) {
             $this->database = $database;
-        }
 
+            return $this;
+        }
+        /**
+         * @return string
+         */
+        public function getDatabasePath() {
+            return $this->database_path;
+        }
+        /**
+         * @param $database_path
+         */
+        protected function setDatabasePath($database_path) {
+            $this->database_path = $database_path;
+
+            return $this;
+        }
+        /**
+         * @return int
+         */
         public function getLastInsertId() {
             return $this->last_insert_id;
         }
-
+        /**
+         * @param $id
+         */
         protected function setLastInsertId($id) {
             $this->last_insert_id = $id;
-        }
 
+            return $this;
+        }
+        /**
+         * @return mixed
+         * @throws WException
+         */
         public function getDatabaseInfo() {
             $database = $this->getDatabase();
+            $database_path = $this->getDatabasePath();
 
-            if (empty($database)) {
-                $database = $this->db_default;
+            if (!array_key_exists($database,$database_path)) {
+                throw new WException(vsprintf('database "%s" dont find in object "%s"',[$database,print_r($database_path,true),]));
             }
 
-            return $this->database_path[$database];
+            return $database_path[$database];
         }
-
+        /**
+         * @return $this
+         * @throws Exception
+         * @throws WException
+         */
         public function connect() {
             $database_info = $this->getDatabaseInfo();
 
@@ -119,12 +190,18 @@ namespace Core\DAO {
 
             return $this;
         }
-
+        /**
+         * @return $this
+         * @throws Exception
+         * @throws WException
+         */
         public function beginTransaction() {
             $this->connect();
+            $resource = $this->getResource();
 
             try {
-                $this->resource->beginTransaction();
+                $resource->beginTransaction();
+                //$this->resource->beginTransaction();
 
             } catch (PDOException $error) {
                 throw $error;
@@ -135,11 +212,16 @@ namespace Core\DAO {
 
             return $this;
         }
-
+        /**
+         * @return $this
+         * @throws Exception
+         */
         public function commit() {
-            if (!empty($this->resource)) {
+            $resource = $this->getResource();
+
+            if (!empty($resource)) {
                 try {
-                    $this->resource->commit();
+                    $resource->commit();
 
                 } catch (PDOException $error) {
                     throw $error;
@@ -151,11 +233,16 @@ namespace Core\DAO {
 
             return $this;
         }
-
+        /**
+         * @return $this
+         * @throws Exception
+         */
         public function rollBack() {
-            if (!empty($this->resource)) {
+            $resource = $this->getResource();
+
+            if (!empty($resource)) {
                 try {
-                    $this->resource->rollBack();
+                    $resource->rollBack();
 
                 } catch (PDOException $error) {
                     throw $error;
@@ -167,10 +254,16 @@ namespace Core\DAO {
 
             return $this;
         }
-
+        /**
+         * @param null $sequence_name
+         * @return int
+         * @throws Exception
+         */
         public function lastInsertId($sequence_name = null) {
+            $resource = $this->getResource();
+
             try {
-                $this->setLastInsertId($this->resource->lastInsertId($sequence_name));
+                $this->setLastInsertId($resource->lastInsertId($sequence_name));
 
             } catch (PDOException $error) {
                 throw $error;
@@ -180,10 +273,6 @@ namespace Core\DAO {
             }
 
             return $this->getLastInsertId();
-        }
-
-        public function __destruct() {
-            unset($this);
         }
     }
 }

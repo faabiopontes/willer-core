@@ -1,33 +1,47 @@
 <?php
 /**
-  *
   * @author William Borba
-  * @package Core/Request
+  * @package Core
   * @uses Core\Exception\WException
   * @uses Core\Util
-  * 
   */
 namespace Core {
     use Core\Exception\WException;
     use Core\Util;
-
+    /**
+     * Class Request
+     * @package Core
+     * @property string $uri
+     * @property array $uri_argument
+     */
     class Request {
         private $uri;
         private $uri_argument;
-
+        /**
+         * Request constructor.
+         * @param $uri_argument
+         */
         public function __construct($uri_argument) {
             $this->setArgument($uri_argument);
             $this->setUri($uri_argument);
         }
-
+        /**
+         * @param $uri_argument
+         * @return $this
+         */
         private function setArgument($uri_argument) {
             if (!empty($uri_argument)) {
                 array_shift($uri_argument);
             }
 
             $this->uri_argument = $uri_argument;
-        }
 
+            return $this;
+        }
+        /**
+         * @param null $key
+         * @return mixed
+         */
         public function getArgument($key = null) {
             if (!empty($key) && !empty($this->uri_argument)) {
                 if (array_key_exists($key,$this->uri_argument)) {
@@ -37,47 +51,69 @@ namespace Core {
 
             return $this->uri_argument;
         }
-
+        /**
+         * @param $uri_argument
+         * @return $this
+         */
         private function setUri($uri_argument) {
             if (!empty($uri_argument)) {
-                $uri = $uri_argument[0];
+                $this->uri = $uri_argument[0];
             }
 
-            $this->uri = $uri;
+            return $this;
         }
-
+        /**
+         * @return mixed
+         */
         public function getUri() {
             return $this->uri;
         }
-
+        /**
+         * @return mixed
+         */
         public function getHttpGet() {
             return $_GET;
         }
-
+        /**
+         * @return mixed
+         */
         public function getHttpPost() {
             return $_POST;
         }
-
+        /**
+         * @return mixed
+         */
         public function getHttpServer() {
             return $_SERVER;
         }
-
+        /**
+         * @return mixed
+         */
         public function getHttpSession() {
             return $_SESSION;
         }
-
+        /**
+         * @return mixed
+         */
         public function getHttpCookie() {
             return $_COOKIE;
         }
-
-        public function getRoute($id,$url_match = []) {
+        /**
+         * @param $id
+         * @param array $url_match
+         * @return int|string
+         * @throws WException
+         */
+        public function getRoute($id, $url_match = []) {
             $json_config_load = Util::load('Config');
+
+            if (empty(defined('ROOT_PATH'))) {
+                throw new WException('constant ROOT_PATH not defined');
+            }
 
             if (!array_key_exists('app',$json_config_load)) {
                 throw new WException(vsprintf('file app.json not found in directory "%s/Config"',[ROOT_PATH,]));
             }
-
-            $url = [];
 
             foreach ($json_config_load['app'] as $app) {
                 $app_url_class = vsprintf('\Application\%s\Url',[$app]);
@@ -138,9 +174,9 @@ namespace Core {
                     }
 
                     $route = implode('/',$route_split_list);
-                }
 
-                return $route;
+                    return $route;
+                }
 
                 throw new WException(vsprintf('route id %s dont exists',[$id,]));
             }

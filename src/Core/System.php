@@ -1,29 +1,49 @@
 <?php
 /**
-  *
   * @author William Borba
-  * @package Core/System
+  * @package Core
   * @uses Core\Exception\WException
   * @uses Core\Request
   * @uses Core\Util
-  * 
   */
 namespace Core {
     use Core\Exception\WException;
     use Core\Request;
     use Core\Util;
-
+    /**
+     * Class System
+     * @package Core
+     */
     class System {
+        /**
+         * System constructor.
+         */
         public function __construct() {
             $this->readyApp();
         }
-
+        /**
+         * @return mixed
+         */
         private function readyApp() {
             $this->readyErrorHandler();
-            $this->readyUrlRoute(REQUEST_URI);
-        }
 
+            if (empty(defined('REQUEST_URI'))) {
+                throw new WException('constant REQUEST_URI not defined');
+            }
+
+            $ready_url_route = $this->readyUrlRoute(REQUEST_URI);
+
+            return $ready_url_route;
+        }
+        /**
+         * @return $this|bool
+         * @throws WException
+         */
         private function readyErrorHandler() {
+            if (empty(defined('DEBUG'))) {
+                throw new WException('constant DEBUG not defined');
+            }
+
             if (empty(DEBUG)) {
                 return false;
             }
@@ -67,9 +87,16 @@ namespace Core {
                 'DATABASE' => DATABASE,));
 
             $whoops_run->register();
-        }
 
-        private function urlRoute($application_route,$match) {
+            return $this;
+        }
+        /**
+         * @param $application_route
+         * @param $match
+         * @return mixed
+         * @throws WException
+         */
+        private function urlRoute($application_route, $match) {
             $application_route_list = explode('\\',$application_route[0]);
 
             if (count($application_route_list) != 3) {
@@ -91,8 +118,15 @@ namespace Core {
             return $new_application->$controller_action($request);
         }
 
+        /**
+         * @param $request_uri
+         * @return mixed
+         * @throws WException
+         */
         private function readyUrlRoute($request_uri) {
-            $request_uri = str_replace(URL_PREFIX,'',$request_uri);
+            if (!empty(defined('URL_PREFIX'))) {
+                $request_uri = str_replace(URL_PREFIX,'',$request_uri);
+            }
 
             $request_uri_strstr = strstr($request_uri,'?',true);
 
@@ -102,11 +136,13 @@ namespace Core {
 
             $json_config_load = Util::load('Config');
 
+            if (empty(defined('ROOT_PATH'))) {
+                throw new WException('constant ROOT_PATH not defined');
+            }
+
             if (!array_key_exists('app',$json_config_load)) {
                 throw new WException(vsprintf('file app.json not found in directory "%s/Config"',[ROOT_PATH,]));
             }
-
-            $url = [];
 
             foreach ($json_config_load['app'] as $app) {
                 $app_url_class = vsprintf('\Application\%s\Url',[$app]);
@@ -148,7 +184,9 @@ namespace Core {
                     $route_er = vsprintf('/^%s$/',[implode('\/',$route_split_list),]);
 
                     if (preg_match($route_er,$request_uri,$match)) {
-                        return $this->urlRoute($url_config,$match);
+                        $route_er = $this->urlRoute($url_config,$match);
+
+                        return $route_er;
                     }
                 }
             }

@@ -1,14 +1,28 @@
 <?php
-
+/**
+ * @author William Borba
+ * @package Core
+ * @uses Core\Exception\WException
+ */
 namespace Core {
-    use Core\Util;
     use Core\Exception\WException;
-
+    /**
+     * Class Controller
+     * @package Core
+     * @class abstract
+     */
     abstract class Controller {
+        /**
+         * Controller constructor.
+         * @param null $request_method
+         */
         public function __construct($request_method = null) {
             $this->requestMethodAccess($request_method);
         }
-
+        /**
+         * @param null $request_method
+         * @throws WException
+         */
         private function requestMethodAccess($request_method = null) {
             if (empty(Util::get($_SERVER,'REQUEST_METHOD',null))) {
                 throw new WException('php $_SERVER["REQUEST_METHOD"] is empty');

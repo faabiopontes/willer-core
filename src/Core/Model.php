@@ -1,10 +1,24 @@
 <?php
-
+/**
+ * @author William Borba
+ * @package Core
+ * @uses Core\Exception\WException
+ * @uses Core\DAO\DataManipulationLanguage
+ */
 namespace Core {
     use Core\DAO\DataManipulationLanguage;
     use Core\Exception\WException;
-
+    /**
+     * Class Model
+     * @package Core
+     * @extends DataManipulationLanguage
+     * @class abstract
+     */
     abstract class Model extends DataManipulationLanguage {
+        /**
+         * Model constructor.
+         * @param null $transaction
+         */
         public function __construct($transaction = null) {
             $this->definePrimaryKey(null);
 
@@ -12,20 +26,33 @@ namespace Core {
                 parent::__construct($transaction);
             }
         }
-
+        /**
+         * @return mixed
+         */
         public function __debugInfo() {
             return $this->column();
         }
-
+        /**
+         * @return mixed
+         */
         protected function className() {
             return get_class($this);
         }
-
+        /**
+         * @return mixed
+         */
         protected function column() {
             return get_object_vars($this);
         }
-
-        private static function filterRule($rule_list,$value,$function_name,$function_filter) {
+        /**
+         * @param $rule_list
+         * @param $value
+         * @param $function_name
+         * @param $function_filter
+         * @return mixed
+         * @throws WException
+         */
+        private static function filterRule($rule_list, $value, $function_name, $function_filter) {
             if (empty($rule_list)) {
                 if ($function_name != 'boolean' && $function_name != 'integer' && empty($value)) {
                     throw new WException(vsprintf('"%s" field value can not be null',[$function_name,]));
@@ -113,14 +140,25 @@ namespace Core {
 
             return $value;
         }
-
-        protected static function primaryKey($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return object
+         */
+        protected static function primaryKey($rule = [], $value = null, $flag = false) {
             return (object) [
                 'method' => __function__,
                 'rule' => $rule];
         }
-
-        protected static function foreignKey($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function foreignKey($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -140,8 +178,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function char($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function char($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -165,23 +209,29 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function text($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function text($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
-                return (object) [
+                return (object)[
                     'method' => __function__,
                     'rule' => $rule];
 
             } else {
-                $filter_rule = self::filterRule($rule,$value,__function__,function($value) {
+                $filter_rule = self::filterRule($rule, $value, __function__, function ($value) {
                     $filter_var_option = [
                         'options' => [
                             'default' => false,
                             'regexp' => '/^[\w\W\d\D]+$/'],
                         'flags' => []];
 
-                    if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                        throw new WException(vsprintf('text field value "%s" incorrect',[$value,]));
+                    if (filter_var($value, FILTER_VALIDATE_REGEXP, $filter_var_option) === false) {
+                        throw new WException(vsprintf('text field value "%s" incorrect', [$value,]));
                     }
 
                     return $value;
@@ -190,8 +240,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function integer($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function integer($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -214,8 +270,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function boolean($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function boolean($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -238,8 +300,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function datetime($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function datetime($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -263,8 +331,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function date($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function date($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -288,8 +362,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function time($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function time($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -313,8 +393,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function float($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function float($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -338,8 +424,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function email($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function email($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -362,8 +454,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function ip($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function ip($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
@@ -386,8 +484,14 @@ namespace Core {
                 return $filter_rule;
             }
         }
-
-        protected static function url($rule = [],$value = null,$flag = false) {
+        /**
+         * @param array $rule
+         * @param null $value
+         * @param bool $flag
+         * @return mixed|object
+         * @throws WException
+         */
+        protected static function url($rule = [], $value = null, $flag = false) {
             if (empty($flag)) {
                 return (object) [
                     'method' => __function__,
