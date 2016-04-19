@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author William Borba
  * @package Core/DAO

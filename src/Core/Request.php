@@ -149,33 +149,38 @@ namespace Core {
 
                 preg_match_all('/{([a-z0-9.\-_]+):{1}?([\w^\-|\[\]\\+\(\)\/]+)?}/',$route,$match);
 
-                if (!empty($match) && !empty($match[0])) {
-                    if (empty($url_match) || count($url_match) != count($match[0])) {
-                        throw new WException(vsprintf('route id %s of format %s, contains vars missing',[$id,$route,]));
-                    }
+                if (!empty($match)) {
+                    if (empty($match[0])) {
+                        return $route;
 
-                    $route_split_list = explode('/',$route);
-
-                    foreach ($route_split_list as $key => $route_split) {
-                        $match = null;
-
-                        preg_match('/{([a-z0-9.\-_]+):{1}?([\w^\-|\[\]\\+\(\)\/]+)?}/',$route_split,$match);
-
-                        if (!empty($match)) {
-                            $match[0] = str_replace(['{','}'],'',$match[0]);
-                            $match = explode(':',$match[0]);
-
-                            if (!array_key_exists($match[0],$url_match)) {
-                                throw new WException(vsprintf('var %s missing in route %s(%s)',[$match[0],$route,$id]));
-                            }
-
-                            $route_split_list[$key] = $url_match[$match[0]];
+                    } else {
+                        if (empty($url_match) || count($url_match) != count($match[0])) {
+                            throw new WException(vsprintf('route id %s of format %s, contains vars missing',[$id,$route,]));
                         }
+
+                        $route_split_list = explode('/',$route);
+
+                        foreach ($route_split_list as $key => $route_split) {
+                            $match = null;
+
+                            preg_match('/{([a-z0-9.\-_]+):{1}?([\w^\-|\[\]\\+\(\)\/]+)?}/',$route_split,$match);
+
+                            if (!empty($match)) {
+                                $match[0] = str_replace(['{','}'],'',$match[0]);
+                                $match = explode(':',$match[0]);
+
+                                if (!array_key_exists($match[0],$url_match)) {
+                                    throw new WException(vsprintf('var %s missing in route %s(%s)',[$match[0],$route,$id]));
+                                }
+
+                                $route_split_list[$key] = $url_match[$match[0]];
+                            }
+                        }
+
+                        $route = implode('/',$route_split_list);
+
+                        return $route;
                     }
-
-                    $route = implode('/',$route_split_list);
-
-                    return $route;
                 }
 
                 throw new WException(vsprintf('route id %s dont exists',[$id,]));
