@@ -21,7 +21,7 @@ namespace Core {
          * Request constructor.
          * @param $uri_argument
          */
-        public function __construct($uri_argument) {
+        public function __construct($uri_argument = null) {
             $this->setArgument($uri_argument);
             $this->setUri($uri_argument);
         }
