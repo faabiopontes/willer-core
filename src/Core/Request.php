@@ -154,7 +154,7 @@ namespace Core {
 
             if (!empty($match)) {
                 if (empty($match[0])) {
-                    return $route;
+                    return URL_PREFIX.$route;
 
                 } else {
                     if (empty($url_match) || count($url_match) != count($match[0])) {
@@ -180,7 +180,7 @@ namespace Core {
                         }
                     }
 
-                    $route = implode('/',$route_split_list);
+                    $route = URL_PREFIX.implode('/',$route_split_list);
 
                     return $route;
                 }

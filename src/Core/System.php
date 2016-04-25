@@ -96,18 +96,16 @@ namespace Core {
          * @return mixed
          * @throws WException
          */
-        private function urlRoute($application_route, $match) {
+        private function urlRoute($application_route,$match) {
             $application_route_list = explode('\\',$application_route[0]);
 
-            if (count($application_route_list) != 3) {
-                throw new WException(vsprintf('error in application route "%s". Ex: "Application\Controller\method"',[$application_route[0],]));
-            }
+            $bundle = array_shift($application_route_list);
+            $controller_action = array_pop($application_route_list);
+            $application_path = implode('\\',$application_route_list);
 
-            $application = vsprintf('Application\\%s\\Controller\\%s',[$application_route_list[0],$application_route_list[1]]);
+            $application = vsprintf('Application\\%s\\Controller\\%s',[$bundle,$application_path]);
 
             $new_application = new $application($application_route[1]);
-
-            $controller_action = $application_route_list[2];
 
             if (empty(method_exists($new_application,$controller_action))) {
                 throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
