@@ -31,6 +31,8 @@ namespace Core {
                 throw new WException('constant REQUEST_URI not defined');
             }
 
+            session_start();
+
             $ready_url_route = $this->readyUrlRoute(REQUEST_URI);
 
             return $ready_url_route;
