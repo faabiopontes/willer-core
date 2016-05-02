@@ -112,13 +112,40 @@ namespace Core {
         }
         /**
          * @param $url
-         * @param int $code
          */
         public function httpRedirect($url) {
-            $code = $this->getCode($code);
+            $code = $this->getCode();
 
             http_response_code($code);
             header('Location: '.$url);
+        }
+        /**
+         * @return array $_SESSION['flash_message']
+         */
+        public function getFlashMessage() {
+            $flash_message = null;
+
+            if (isset($_SESSION['flash_message']) && !empty($_SESSION['flash_message'])) {
+                $flash_message = $_SESSION['flash_message'];
+
+                unset($_SESSION['flash_message']);
+            }
+
+            return $flash_message;
+        }
+        /**
+         * @param $message
+         * @return mixed
+         */
+        public function setFlashMessage($message) {
+            if (!isset($_SESSION['flash_message'])) {
+                $_SESSION['flash_message'] = [$message];
+
+            } else {
+                $_SESSION['flash_message'][] = $message;
+            }
+
+            return $this;
         }
     }
 }

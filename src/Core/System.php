@@ -111,7 +111,15 @@ namespace Core {
                 throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
             }
 
+            $uri = null;
+
+            if (!empty($match)) {
+                $uri = $match[0];
+                array_shift($match);
+            }
+
             $request = new Request($match);
+            $request->setUri($uri);
 
             return $new_application->$controller_action($request);
         }

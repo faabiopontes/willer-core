@@ -21,19 +21,14 @@ namespace Core {
          * Request constructor.
          * @param $uri_argument
          */
-        public function __construct($uri_argument = null) {
+        public function __construct($uri_argument = []) {
             $this->setArgument($uri_argument);
-            $this->setUri($uri_argument);
         }
         /**
          * @param $uri_argument
          * @return $this
          */
-        private function setArgument($uri_argument) {
-            if (!empty($uri_argument)) {
-                array_shift($uri_argument);
-            }
-
+        public function setArgument($uri_argument) {
             $this->uri_argument = $uri_argument;
 
             return $this;
@@ -44,7 +39,10 @@ namespace Core {
          */
         public function getArgument($key = null) {
             if (!empty($key) && !empty($this->uri_argument)) {
-                if (array_key_exists($key,$this->uri_argument)) {
+                if (!array_key_exists($key,$this->uri_argument)) {
+                    return false;
+
+                } else {
                     return $this->uri_argument[$key];
                 }
             }
@@ -55,10 +53,8 @@ namespace Core {
          * @param $uri_argument
          * @return $this
          */
-        private function setUri($uri_argument) {
-            if (!empty($uri_argument)) {
-                $this->uri = $uri_argument[0];
-            }
+        public function setUri($uri) {
+            $this->uri = $uri;
 
             return $this;
         }
