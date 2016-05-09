@@ -125,10 +125,10 @@ namespace Core {
         public function getFlashMessage() {
             $flash_message = null;
 
-            if (isset($_SESSION['flash_message']) && !empty($_SESSION['flash_message'])) {
-                $flash_message = $_SESSION['flash_message'];
+            if (isset($_SESSION['wf']['flash_message']) && !empty($_SESSION['wf']['flash_message'])) {
+                $flash_message = $_SESSION['wf']['flash_message'];
 
-                unset($_SESSION['flash_message']);
+                unset($_SESSION['wf']['flash_message']);
             }
 
             return $flash_message;
@@ -138,11 +138,11 @@ namespace Core {
          * @return mixed
          */
         public function setFlashMessage($message) {
-            if (!isset($_SESSION['flash_message'])) {
-                $_SESSION['flash_message'] = [$message];
+            if (!isset($_SESSION['wf']['flash_message'])) {
+                $_SESSION['wf']['flash_message'] = [$message];
 
             } else {
-                $_SESSION['flash_message'][] = $message;
+                $_SESSION['wf']['flash_message'][] = $message;
             }
 
             return $this;

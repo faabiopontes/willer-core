@@ -33,6 +33,10 @@ namespace Core {
 
             session_start();
 
+            if (!isset($_SESSION['wf'])) {
+                $_SESSION['wf'] = [];
+            }
+
             $ready_url_route = $this->readyUrlRoute(REQUEST_URI);
 
             return $ready_url_route;

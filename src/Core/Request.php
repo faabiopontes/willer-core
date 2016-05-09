@@ -85,8 +85,40 @@ namespace Core {
         /**
          * @return mixed
          */
-        public function getHttpSession() {
-            return $_SESSION;
+        public function getHttpSession($session_key = null) {
+            if (!empty($session_key)) {
+                if (isset($_SESSION['wf'][$session_key])) {
+                    return $_SESSION['wf'][$session_key];
+                }
+
+            }
+
+            return $_SESSION['wf'];
+        }
+        /**
+         * @return object $this
+         */
+        public function setHttpSession($session_key,$session_value) {
+            $_SESSION['wf'][$session_key] = $session_value;
+
+            return $this;
+        }
+        /**
+         * @return object $this
+         */
+        public function cleanHttpSession($session_key = null) {
+            if (!empty($session_key)) {
+                if (isset($_SESSION['wf'][$session_key])) {
+                    unset($_SESSION['wf'][$session_key]);
+                }
+
+            } else {
+                unset($_SESSION['wf']);
+
+                $_SESSION['wf'] = [];
+            }
+
+            return $this;
         }
         /**
          * @return mixed
