@@ -1192,6 +1192,13 @@ namespace Core\DAO {
                 throw $error;
             }
 
+            if (!empty($pdo_query_total)) {
+                $pdo_query_total = $pdo_query_total->total;
+
+            } else {
+                $pdo_query_total = 0;
+            }
+
             try {
                 $pdo_query = $transaction_resource->prepare($query);
 
@@ -1238,7 +1245,7 @@ namespace Core\DAO {
             }
 
             $limit_value = $this->getLimitValue();
-            $register_total = intval($pdo_query_total->total);
+            $register_total = $pdo_query_total;
             $register_perpage = $limit_value['limit'];
             $page_total = ceil($register_total / $register_perpage);
             $page_current = $limit_value['page'] >= $page_total ? $page_total : $limit_value['page'];
