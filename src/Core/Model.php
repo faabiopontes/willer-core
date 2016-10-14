@@ -64,7 +64,7 @@ namespace Core {
                 $rule_table = null;
 
                 foreach ($rule_list as $rule_name => $rule_value) {
-                    if (!in_array($rule_name,['null','length','table','label','multiple','hidden'])) {
+                    if (!in_array($rule_name,['null','length','table','label','multiple','hidden','filter','reference'])) {
                         throw new WException(vsprintf('"%s" field rule "%s" incorrect, possible values "hidden,label,multiple,null,length and table"',[$function_name,$rule_name]));
 
                     } else if ($rule_name == 'null') {
