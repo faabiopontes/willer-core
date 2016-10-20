@@ -390,7 +390,7 @@ namespace Core\DAO {
          * @param bool $join
          * @return array
          */
-        private function related($table_related, $query_list = [], $join = false) {
+        private function related($table_related, $query_list = [], $join = false, $table_related_name_alias = null) {
             $table_name = $table_related->getTableName();
             $table_schema = $table_related->getTableSchema();
 
@@ -411,10 +411,7 @@ namespace Core\DAO {
                     $table_related_table_column = $table_related->getTableColumn();
                     $table_related_primary_key = $table_related->getPrimaryKey();
 
-                    if (!empty($join)) {
-
-
-                    } else {
+                    if (empty($join)) {
                         $join = 'inner';
 
                         if (array_key_exists('null',$table->rule)) {
@@ -425,17 +422,26 @@ namespace Core\DAO {
                     }
 
                     $table_related_table_name_with_escape = vsprintf('%s%s%s',[$this->db_escape,$table_related_table_name,$this->db_escape]);
+                    $table_name_alias = vsprintf('%s_%s',[$table_name,$table_related_table_name]);
+                    $table_name_alias_with_escape = vsprintf('%s%s_%s%s',[$this->db_escape,$table_name,$table_related_table_name,$this->db_escape]);
 
                     $column_list = [];
 
                     foreach ($table_related_table_column as $ii => $column) {
-                        $column_list[] = vsprintf('%s.%s %s__%s',[$table_related_table_name_with_escape,$ii,$table_related_table_name,$ii]);
+                        $column_list[] = vsprintf('%s.%s %s__%s',[$table_name_alias_with_escape,$ii,$table_name_alias,$ii]);
                     }
 
                     $query_list['column'][] = $column_list;
-                    $query_list['join'][] = vsprintf('%s join %s on %s.%s = %s.%s',[$join,$table_related_table_name_with_escape,$table_related_table_name_with_escape,$table_related_primary_key,$table_name_with_escape,$table_foreign_key]);
 
-                    $query_list = $this->related($table_related,$query_list,$join);
+                    if (!empty($table_related_name_alias) && $table_related_name_alias != $table_name) {
+                        $table_name_with_escape = vsprintf('%s%s_%s%s',[$this->db_escape,$table_related_name_alias,$table_name,$this->db_escape]);
+                    }
+
+                    $query_list['join'][] = vsprintf('%s join %s AS %s on %s.%s = %s.%s',[$join,$table_related_table_name_with_escape,$table_name_alias_with_escape,$table_name_alias_with_escape,$table_related_primary_key,$table_name_with_escape,$table_foreign_key]);
+
+                    $table_related_name_alias = $table_name;
+
+                    $query_list = $this->related($table_related,$query_list,$join,$table_related_name_alias);
                 }
             }
 
@@ -1273,6 +1279,8 @@ namespace Core\DAO {
          * @return mixed
          */
         private function relatedFetch($obj_column_list, $obj_schema_dict, $fetch, $transaction, $obj) {
+            $table_name = $obj->getTableName();
+
             foreach ($obj_column_list as $column => $value) {
                 if ($obj_schema_dict[$column]->method == 'foreignKey') {
                     $obj_foreignkey = $obj_schema_dict[$column]->rule['table'];
@@ -1285,7 +1293,7 @@ namespace Core\DAO {
                     $obj_foreignkey = new $obj_foreignkey_class_name($transaction);
 
                     foreach ($obj_foreignkey_column_list as $column_ => $value_) {
-                        $table_column = vsprintf('%s__%s',[$obj_foreignkey_table_name,$column_]);
+                        $table_column = vsprintf('%s_%s__%s',[$table_name,$obj_foreignkey_table_name,$column_]);
 
                         $obj_foreignkey->$column_ = $fetch->$table_column;
                     }
