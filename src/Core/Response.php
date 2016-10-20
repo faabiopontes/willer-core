@@ -137,12 +137,17 @@ namespace Core {
          * @param $message
          * @return mixed
          */
-        public function setFlashMessage($message) {
+        public function setFlashMessage($message,$type = 'info') {
             if (!isset($_SESSION['wf']['flash_message'])) {
-                $_SESSION['wf']['flash_message'] = [$message];
+                $_SESSION['wf']['flash_message'] = [
+                    [
+                    'message' => $message,
+                    'type' => $type]];
 
             } else {
-                $_SESSION['wf']['flash_message'][] = $message;
+                $_SESSION['wf']['flash_message'][] = [
+                    'message' => $message,
+                    'type' => $type];
             }
 
             return $this;
