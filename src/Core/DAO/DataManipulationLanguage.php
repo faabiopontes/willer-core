@@ -89,7 +89,7 @@ namespace Core\DAO {
         /**
          * @return mixed
          */
-        private function getTableName() {
+        public function getTableName() {
             return $this->name();
         }
         /**
