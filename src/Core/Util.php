@@ -23,10 +23,10 @@ namespace Core {
 			}
 
 			if (is_array($input)) {
-				return isset($input[$key]) ? !empty($input[$key]) ? $input[$key] : $default : $default;
+				return isset($input[$key]) ? !empty($input[$key]) || $input[$key] === '0' ? $input[$key] : $default : $default;
 
 			} else if (is_object($input)) {
-				return isset($input->$key) ? !empty($input->$key) ? $input->$key : $default : $default;
+				return isset($input->$key) ? !empty($input->$key) || $input->$key === '0' ? $input->$key : $default : $default;
 			}
 		}
 		/**
