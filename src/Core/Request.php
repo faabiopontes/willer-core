@@ -89,6 +89,9 @@ namespace Core {
             if (!empty($session_key)) {
                 if (isset($_SESSION['wf'][$session_key])) {
                     return $_SESSION['wf'][$session_key];
+
+                } else {
+                    return $_SESSION['wf'][$session_key] = null;
                 }
 
             }
