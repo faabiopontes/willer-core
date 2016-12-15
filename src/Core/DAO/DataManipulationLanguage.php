@@ -30,6 +30,8 @@ namespace Core\DAO {
      * @property array $where_value
      * @property array $like
      * @property array $like_value
+     * @property array $between
+     * @property array $between_value
      * @property array $query
      * @property boolean $flag_new_or_update
      */
@@ -46,6 +48,8 @@ namespace Core\DAO {
         private $where_unique_value;
         private $where;
         private $where_value;
+        private $between;
+        private $between_value;
         private $like;
         private $like_value;
         private $query;
@@ -262,6 +266,36 @@ namespace Core\DAO {
         /**
          * @return array
          */
+        private function getBetween() {
+            return $this->between;
+        }
+        /**
+         * @param $between
+         * @return $this
+         */
+        private function setBetween($between) {
+            $this->between = $between;
+
+            return $this;
+        }
+        /**
+         * @return array
+         */
+        private function getBetweenValue() {
+            return $this->between_value;
+        }
+        /**
+         * @param $between_value
+         * @return $this
+         */
+        private function setBetweenValue($between_value) {
+            $this->between_value = $between_value;
+
+            return $this;
+        }
+        /**
+         * @return array
+         */
         private function getLike() {
             return $this->like;
         }
@@ -314,7 +348,6 @@ namespace Core\DAO {
          */
         protected function definePrimaryKey($column = null) {
             $table_schema = $this->schema();
-            $primarykey_flag = false;
 
             foreach ($table_schema as $i => $value) {
                 if ($value->method == 'primaryKey') {
@@ -323,13 +356,7 @@ namespace Core\DAO {
                     }
 
                     $column = $i;
-
-                    $primarykey_flag = true;
                 }
-            }
-
-            if (empty($column)) {
-                throw new WException(vsprintf('primary key missing in schema of model "%s"',[$this->name(),]));
             }
 
             $this->setPrimaryKey($column);
@@ -530,6 +557,49 @@ namespace Core\DAO {
 
                 $this->setLike($like_query);
                 $this->setLikeValue($like_value_list);
+            }
+
+            return $this;
+        }
+        /**
+         * @param array $between
+         * @return $this
+         * @throws WException
+         */
+        public function between($between = []) {
+            $between_value_list = [];
+
+            if (empty($between)) {
+                $between_query = null;
+
+            } else {
+                $between_query = [];
+
+                foreach ($between as $key => $value_list) {
+                    $between_value = null;
+
+                    if (empty($value_list)) {
+                        throw new WException(vsprintf('value for "%s" is null',[$key,]));
+                    }
+
+                    if (!is_array($value_list)) {
+                        throw new WException(vsprintf('value is incorrect with type "%s", in instance of model "%s"',[gettype($value_list),$this->name()]));
+                    }
+
+                    if (count($value_list) != 2) {
+                        throw new WException(vsprintf('value require two date values for key "%s", in instance of model "%s"',[$key,$this->name()]));
+                    }
+
+                    $between_value_list[] = $value_list[0];
+                    $between_value_list[] = $value_list[1];
+
+                    $between_value = vsprintf('%s between ? and ?',[$key,]);
+
+                    $between_query[] = $between_value;
+                }
+
+                $this->setBetween($between_query);
+                $this->setBetweenValue($between_value_list);
             }
 
             return $this;
@@ -1095,6 +1165,8 @@ namespace Core\DAO {
             $table_column = $this->getTableColumn();
             $get_where = $this->getWhere();
             $get_where_value = $this->getWhereValue();
+            $get_between = $this->getBetween();
+            $get_between_value = $this->getBetweenValue();
             $get_like = $this->getLike();
             $get_like_value = $this->getLikeValue();
             $order_by = $this->getOrderBy();
@@ -1146,11 +1218,25 @@ namespace Core\DAO {
                 $query_value = array_merge($query_value,$get_where_value);
             }
 
+            if (empty($get_between)) {
+                $between = '';
+
+            } else {
+                if (!empty($where)) {
+                    $between = vsprintf('and %s',[implode(' and ',$get_between),]);
+
+                } else {
+                    $between = vsprintf('%s',[implode(' and ',$get_between),]);
+                }
+
+                $query_value = array_merge($query_value,$get_between_value);
+            }
+
             if (empty($get_like)) {
                 $like = '';
 
             } else {
-                if (!empty($where)) {
+                if (!empty($where) || !empty($between)) {
                     $like = vsprintf('and %s',[implode(' and ',$get_like),]);
 
                 } else {
@@ -1171,11 +1257,11 @@ namespace Core\DAO {
                 $order_by = vsprintf('order by %s',[implode(',',$order_by),]);
             }
 
-            $query_total = vsprintf('select count(1) total from %s %s %s %s %s',[$table_name_with_escape,$related_join,$where_implicit,$where,$like]);
+            $query_total = vsprintf('select count(1) total from %s %s %s %s %s',[$table_name_with_escape,$related_join,$where_implicit,$where,$between,$like]);
 
             $this->setQuery($query_total,$query_value);
 
-            $query = vsprintf('select %s from %s %s %s %s %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where_implicit,$where,$like,$order_by,$limit]);
+            $query = vsprintf('select %s from %s %s %s %s %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where_implicit,$where,$between,$like,$order_by,$limit]);
 
             $this->setQuery($query,$query_value);
 
