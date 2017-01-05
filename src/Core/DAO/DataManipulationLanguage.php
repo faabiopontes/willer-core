@@ -176,7 +176,7 @@ namespace Core\DAO {
         /**
          * @return string
          */
-        protected function getPrimaryKey() {
+        public function getPrimaryKey() {
             return $this->primary_key;
         }
         /**
@@ -346,12 +346,14 @@ namespace Core\DAO {
          * @param null $column
          * @throws WException
          */
-        protected function definePrimaryKey($column = null) {
+        protected function definePrimaryKey() {
             $table_schema = $this->schema();
+
+            $column = null;
 
             foreach ($table_schema as $i => $value) {
                 if ($value->method == 'primaryKey') {
-                    if (!empty($primarykey_flag)) {
+                    if (!empty($column)) {
                         throw new WException(vsprintf('"%s" field error, primary key need be unique',[$i,]));
                     }
 
@@ -389,7 +391,7 @@ namespace Core\DAO {
          * @param int $limit
          * @return $this
          */
-        public function limit($page = 1, $limit = 1000) {
+        public function limit($page = 1, $limit = 1) {
             $limit_value = null;
 
             $page = intval($page);
@@ -1257,11 +1259,26 @@ namespace Core\DAO {
                 $order_by = vsprintf('order by %s',[implode(',',$order_by),]);
             }
 
-            $query_total = vsprintf('select count(1) total from %s %s %s %s %s',[$table_name_with_escape,$related_join,$where_implicit,$where,$between,$like]);
+            $query_total = vsprintf('select count(1) total from %s %s %s %s %s',[
+                $table_name_with_escape,
+                $related_join,
+                $where_implicit,
+                $where,
+                $between,
+                $like]);
 
             $this->setQuery($query_total,$query_value);
 
-            $query = vsprintf('select %s from %s %s %s %s %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where_implicit,$where,$between,$like,$order_by,$limit]);
+            $query = vsprintf('select %s from %s %s %s %s %s %s %s %s',[
+                $column_list,
+                $table_name_with_escape,
+                $related_join,
+                $where_implicit,
+                $where,
+                $between,
+                $like,
+                $order_by,
+                $limit]);
 
             $this->setQuery($query,$query_value);
 

@@ -20,7 +20,7 @@ namespace Core {
          * @param null $transaction
          */
         public function __construct($transaction = null) {
-            $this->definePrimaryKey(null);
+            $this->definePrimaryKey();
 
             if (!empty($transaction)) {
                 parent::__construct($transaction);
