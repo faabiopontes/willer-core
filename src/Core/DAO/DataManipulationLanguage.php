@@ -99,7 +99,7 @@ namespace Core\DAO {
         /**
          * @return mixed
          */
-        private function getTableColumn() {
+        public function getTableColumn() {
             return $this->column();
         }
         /**
