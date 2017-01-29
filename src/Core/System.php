@@ -7,9 +7,8 @@
   * @uses Core\Util
   */
 namespace Core {
+    use Core\{Request,Util};
     use Core\Exception\WException;
-    use Core\Request;
-    use Core\Util;
     /**
      * Class System
      * @package Core
@@ -111,12 +110,6 @@ namespace Core {
 
             $application = vsprintf('Application\\%s\\Controller\\%s',[$bundle,$application_path]);
 
-            $new_application = new $application($application_route[1]);
-
-            if (empty(method_exists($new_application,$controller_action))) {
-                throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
-            }
-
             $uri = null;
 
             if (!empty($match)) {
@@ -124,10 +117,16 @@ namespace Core {
                 array_shift($match);
             }
 
-            $request = new Request($match);
+            $request = new Request($match,$application_route[1],$application_route[2]);
             $request->setUri($uri);
 
-            return $new_application->$controller_action($request);
+            $new_application = new $application($request);
+
+            if (empty(method_exists($new_application,$controller_action))) {
+                throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
+            }
+
+            return $new_application->$controller_action();
         }
 
         /**

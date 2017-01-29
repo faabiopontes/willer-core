@@ -3,16 +3,17 @@
 /**
  * @author William Borba
  * @package Core/DAO
+ * @uses Core\Exception\WException
  * @uses \PDO
  * @uses \Exception
  * @uses \PDOException
- * @uses Core\Exception\WException
  */
 namespace Core\DAO {
+    use Core\Exception\WException;
+    use \PDOException as PDOException;
     use \PDO as PDO;
     use \Exception as Exception;
-    use \PDOException as PDOException;
-    use Core\Exception\WException;
+    use \stdClass as stdClass;
     /**
      * Class DataManipulationLanguage
      * @package Core\DAO
@@ -493,7 +494,7 @@ namespace Core\DAO {
                 foreach ($where as $key => $value) {
                     $where_value = null;
 
-                    if (empty($value)) {
+                    if (is_null($value)) {
                         $where_value = vsprintf('%s is null',[$key,]);
 
                     } else if (!is_array($value) && (is_string($value) || is_numeric($value) || is_bool($value))) {
@@ -542,7 +543,7 @@ namespace Core\DAO {
                 foreach ($like as $key => $value) {
                     $like_value = null;
 
-                    if (empty($value)) {
+                    if (is_null($value)) {
                         throw new WException(vsprintf('value for "%s" is null',[$key,]));
 
                     } else if (is_string($value) || is_numeric($value)) {
@@ -580,7 +581,7 @@ namespace Core\DAO {
                 foreach ($between as $key => $value_list) {
                     $between_value = null;
 
-                    if (empty($value_list)) {
+                    if (is_null($value_list)) {
                         throw new WException(vsprintf('value for "%s" is null',[$key,]));
                     }
 
@@ -1259,7 +1260,7 @@ namespace Core\DAO {
                 $order_by = vsprintf('order by %s',[implode(',',$order_by),]);
             }
 
-            $query_total = vsprintf('select count(1) total from %s %s %s %s %s',[
+            $query_total = vsprintf('select count(1) total from %s %s %s %s %s %s',[
                 $table_name_with_escape,
                 $related_join,
                 $where_implicit,
@@ -1361,15 +1362,14 @@ namespace Core\DAO {
             $page_next = $page_current + 1 >= $page_total ? $page_total : $page_current + 1;
             $page_previous = $page_current - 1 <= 0 ? 1 : $page_current - 1;
 
-            $result = [
-                'register_total' => $register_total,
-                'register_perpage' => $register_perpage,
-                'page_total' => $page_total,
-                'page_current' => $page_current,
-                'page_next' => $page_next,
-                'page_previous' => $page_previous,
-                'data' => $query_fetch_all_list,
-            ];
+            $result = new stdClass;
+            $result->register_total = $register_total;
+            $result->register_perpage = $register_perpage;
+            $result->page_total = $page_total;
+            $result->page_current = $page_current;
+            $result->page_next = $page_next;
+            $result->page_previous = $page_previous;
+            $result->data = $query_fetch_all_list;
 
             return $result;
         }
