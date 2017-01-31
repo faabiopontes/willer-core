@@ -75,14 +75,9 @@ namespace Core {
          * @param $body
          */
         public function render($body) {
-            if (!empty($body)) {
-                $this->setBody($body);
+            $this->setBody($body);
 
-            } else {
-                $body = $this->getBody();
-            }
-
-            print $body;
+            return $body;
         }
         /**
          * @param $body

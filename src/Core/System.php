@@ -9,6 +9,9 @@
 namespace Core {
     use Core\{Request,Util};
     use Core\Exception\WException;
+    use Workerman\Worker;
+    use \DateTime as DateTime;
+    use \Exception as Exception;
     /**
      * Class System
      * @package Core
@@ -18,27 +21,102 @@ namespace Core {
          * System constructor.
          */
         public function __construct() {
-            $this->readyApp();
+            session_start();
         }
         /**
          * @return mixed
          */
-        private function readyApp() {
-            $this->readyErrorHandler();
+        public function ready() {
+            $json_config_load = Util::load('Config');
 
-            if (empty(defined('REQUEST_URI'))) {
-                throw new WException('constant REQUEST_URI not defined');
+            foreach ($json_config_load['config'] as $key => $value) {
+                if (!defined($key)) {
+                    define($key,$value);
+                }
             }
 
-            session_start();
+            if (defined('WORKERMAN') && WORKERMAN == '1' && defined('WORKERMAN_IP') && defined('WORKERMAN_PORT') && defined('WORKERMAN_INSTANCE_MAX') && defined('WORKERMAN_DAEMONIZE') && defined('WORKERMAN_STDOUTFILE')) {
+                try {
+                    $ready_with_workerman = $this->readyWithWorkerman();
+
+                } catch (WException | Exception $error) {
+                    throw $error;
+                }
+
+                return $ready_with_workerman;
+            }
+
+            $this->readyErrorHandler();
+
+            $request_uri = Util::get($_REQUEST,'REQUEST_URI','/');
 
             if (!isset($_SESSION['wf'])) {
                 $_SESSION['wf'] = [];
             }
 
-            $ready_url_route = $this->readyUrlRoute(REQUEST_URI);
+            try {
+                $ready_route = $this->readyRoute($request_uri);
 
-            return $ready_url_route;
+            } catch (WException | Exception $error) {
+                throw $error;
+            }
+
+            return $ready_route;
+        }
+        /**
+         * @return mixed
+         */
+        public function readyWithWorkerman() {
+            $workerman_host = vsprintf('%s:%s',[WORKERMAN_IP,WORKERMAN_PORT]);
+
+            Worker::$daemonize = WORKERMAN_DAEMONIZE;
+            Worker::$stdoutFile = WORKERMAN_STDOUTFILE;
+
+            $worker_http = new Worker($workerman_host);
+
+            $worker_http->name = Util::get(get_defined_constants(true)['user'],'SYSTEM_NAME',null);
+            $worker_http->transport = 'tcp';
+            $worker_http->count = WORKERMAN_INSTANCE_MAX;
+
+            $worker_http->onConnect = function($connection) {
+                $connection->protocol = 'Workerman\\Protocols\\Http';
+                $connection->maxSendBufferSize = 2*1024*1024;
+            };
+
+            $worker_http->onMessage = function($connection,$data) {
+                $extension_static = ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html'];
+
+                $parse_url_path = parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
+                $extension = pathinfo($parse_url_path,PATHINFO_EXTENSION);
+
+                if (in_array($extension,$extension_static)) {
+                    $content = file_get_contents('/home/wborba/project/jessi/src'.$_SERVER['REQUEST_URI']);
+
+                    $connection->close($content);
+
+                    return;
+                }
+
+                try {
+                    $content = $this->readyRoute($_SERVER['REQUEST_URI']);
+
+                } catch (WException | Exception $error) {
+                    $date = new DateTime('now');
+
+                    print "---------------------------\n";
+                    print vsprintf("Remote: %s:%s\n",[$connection->getRemoteIp(),$connection->getRemotePort(),]);
+                    print vsprintf("Date: %s\n",[$date->format('Y-m-d H:i:s u'),]);
+                    print vsprintf("Error message: %s\n",[$error->getMessage(),]);
+                    print vsprintf("Error trace: %s",[$error->getTraceAsString(),]);
+                    print "\n---------------------------\n";
+
+                    $content = 'Entre em contato com o suporte!';
+                }
+
+                $connection->send($content);
+            };
+
+            Worker::runAll();
         }
         /**
          * @return $this|bool
@@ -84,12 +162,7 @@ namespace Core {
                 $whoops_run->pushHandler($whoops_json_response_handler);
             }
 
-            $whoops_pretty_page_handler->addDataTable('Willer Contants',array(
-                'URL_PREFIX' => URL_PREFIX,
-                'REQUEST_URI' => REQUEST_URI,
-                'ROOT_PATH' => ROOT_PATH,
-                'DATABASE_PATH' => DATABASE_PATH,
-                'DATABASE' => DATABASE,));
+            $whoops_pretty_page_handler->addDataTable('Willer Constants',get_defined_constants(true));
 
             $whoops_run->register();
 
@@ -101,7 +174,7 @@ namespace Core {
          * @return mixed
          * @throws WException
          */
-        private function urlRoute($application_route,$match) {
+        private function urlMatch($application_route,$match) {
             $application_route_list = explode('\\',$application_route[0]);
 
             $bundle = array_shift($application_route_list);
@@ -126,7 +199,14 @@ namespace Core {
                 throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
             }
 
-            return $new_application->$controller_action();
+            try {
+                $context = $new_application->$controller_action();
+
+            } catch (WException | Exception $error) {
+                throw $error;
+            }
+
+            return $context;
         }
 
         /**
@@ -134,7 +214,7 @@ namespace Core {
          * @return mixed
          * @throws WException
          */
-        private function readyUrlRoute($request_uri) {
+        private function readyRoute($request_uri) {
             if (!empty(defined('URL_PREFIX'))) {
                 $request_uri = str_replace(URL_PREFIX,'',$request_uri);
             }
@@ -195,9 +275,14 @@ namespace Core {
                     $route_er = vsprintf('/^%s$/',[implode('\/',$route_split_list),]);
 
                     if (preg_match($route_er,$request_uri,$match)) {
-                        $route_er = $this->urlRoute($url_config,$match);
+                        try {
+                            $url_match = $this->urlMatch($url_config,$match);
 
-                        return $route_er;
+                        } catch (WException | Exception $error) {
+                            throw $error;
+                        }
+
+                        return $url_match;
                     }
                 }
             }
