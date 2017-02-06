@@ -9,7 +9,6 @@
 namespace Core {
     use Core\{Request,Util};
     use Core\Exception\WException;
-    use Workerman\Worker;
     use \DateTime as DateTime;
     use \Exception as Exception;
     /**
@@ -35,15 +34,15 @@ namespace Core {
                 }
             }
 
-            if (defined('WORKERMAN') && WORKERMAN == '1' && defined('WORKERMAN_IP') && defined('WORKERMAN_PORT') && defined('WORKERMAN_INSTANCE_MAX') && defined('WORKERMAN_DAEMONIZE') && defined('WORKERMAN_STDOUTFILE')) {
+            if (defined('SWOOLE') && SWOOLE == '1' && defined('SWOOLE_IP') && defined('SWOOLE_PORT')) {
                 try {
-                    $ready_with_workerman = $this->readyWithWorkerman();
+                    $ready_with_swoole = $this->readyWithSwoole();
 
                 } catch (WException | Exception $error) {
                     throw $error;
                 }
 
-                return $ready_with_workerman;
+                return $ready_with_swoole;
             }
 
             $this->readyErrorHandler();
@@ -66,33 +65,59 @@ namespace Core {
         /**
          * @return mixed
          */
-        public function readyWithWorkerman() {
-            $workerman_host = vsprintf('%s:%s',[WORKERMAN_IP,WORKERMAN_PORT]);
+        public function readyWithSwoole() {
+            $http_server = new \swoole_http_server(SWOOLE_IP,SWOOLE_PORT);
 
-            Worker::$daemonize = WORKERMAN_DAEMONIZE;
-            Worker::$stdoutFile = WORKERMAN_STDOUTFILE;
+            $log = Util::get(get_defined_constants(),'SWOOLE_LOG',false);
+            $log_path = Util::get(get_defined_constants(),'SWOOLE_LOG_PATH',false);
 
-            $worker_http = new Worker($workerman_host);
+            if (!empty($log) && !empty($log_path)) {
+                $log_path = vsprintf('%s%s',[UPKEEP_PATH,$log_path,]);
 
-            $worker_http->name = Util::get(get_defined_constants(true)['user'],'SYSTEM_NAME',null);
-            $worker_http->transport = 'tcp';
-            $worker_http->count = WORKERMAN_INSTANCE_MAX;
+            } else {
+                $log_path = null;
+            }
 
-            $worker_http->onConnect = function($connection) {
-                $connection->protocol = 'Workerman\\Protocols\\Http';
-                $connection->maxSendBufferSize = 2*1024*1024;
-            };
+            $http_server->set(array(
+                'worker_num' => 1,
+                'reactor_num' => 1,
+                'daemonize' => Util::get(get_defined_constants(),'SWOOLE_DAEMONIZE','1'),
+                'backlog' => '',
+                'max_connection' => 1024,
+                'max_request' => 10,
+                'log_file' => $log_path,
+                'ssl_cert_file' => false,
+                'ssl_key_file' => false,
+                'ssl_method' => false,
+            ));
 
-            $worker_http->onMessage = function($connection,$data) {
+            $http_server->on('connect',function() {
+                // 
+            });
+
+            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) {
+                $_GET = $http_request->get ?? [];
+                $_POST = $http_request->post ?? [];
+                $_COOKIE = $http_request->cookie ?? [];
+                $_FILES = $http_request->files ?? [];
+                $_SERVER = $http_request->server ? array_change_key_case($http_request->server,CASE_UPPER) : [];
+
                 $extension_static = ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html'];
 
                 $parse_url_path = parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
                 $extension = pathinfo($parse_url_path,PATHINFO_EXTENSION);
 
                 if (in_array($extension,$extension_static)) {
-                    $content = file_get_contents('/home/wborba/project/jessi/src'.$_SERVER['REQUEST_URI']);
+                    $content = file_get_contents(vsprintf('%s%s',[ROOT_PATH,$_SERVER['REQUEST_URI'],]));
 
-                    $connection->close($content);
+                    if ($extension == 'css') {
+                        $http_response->header('Content-Type','text/css;charset=utf-8');
+
+                    } else if ($extension == 'js') {
+                        $http_response->header('Content-Type','application/javascript;charset=utf-8');
+                    }
+
+                    $http_response->end($content);
 
                     return;
                 }
@@ -104,19 +129,26 @@ namespace Core {
                     $date = new DateTime('now');
 
                     print "---------------------------\n";
-                    print vsprintf("Remote: %s:%s\n",[$connection->getRemoteIp(),$connection->getRemotePort(),]);
                     print vsprintf("Date: %s\n",[$date->format('Y-m-d H:i:s u'),]);
                     print vsprintf("Error message: %s\n",[$error->getMessage(),]);
                     print vsprintf("Error trace: %s",[$error->getTraceAsString(),]);
                     print "\n---------------------------\n";
 
-                    $content = 'Entre em contato com o suporte!';
+                    $page_error_path = Util::get(get_defined_constants(),'SWOOLE_PAGE_ERROR_PATH',false);
+
+                    $content = 'No output response!';
+
+                    if (file_exists(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]))) {
+                        $content = file_get_contents(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]));
+                    }
                 }
 
-                $connection->send($content);
-            };
+                $http_response->end($content);
 
-            Worker::runAll();
+                return;
+            });
+
+            $http_server->start();
         }
         /**
          * @return $this|bool
