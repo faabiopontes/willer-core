@@ -45,8 +45,6 @@ namespace Core {
                 return $ready_with_swoole;
             }
 
-            $this->readyErrorHandler();
-
             $request_uri = Util::get($_REQUEST,'REQUEST_URI','/');
 
             if (!isset($_SESSION['wf'])) {
@@ -68,10 +66,10 @@ namespace Core {
         public function readyWithSwoole() {
             $http_server = new \swoole_http_server(SWOOLE_IP,SWOOLE_PORT);
 
-            $log = Util::get(get_defined_constants(),'SWOOLE_LOG',false);
+            $log_level = Util::get(get_defined_constants(),'SWOOLE_LOG_LEVEL',false);
             $log_path = Util::get(get_defined_constants(),'SWOOLE_LOG_PATH',false);
 
-            if (!empty($log) && !empty($log_path)) {
+            if (!empty($log_level) && !empty($log_path)) {
                 $log_path = vsprintf('%s%s',[UPKEEP_PATH,$log_path,]);
 
             } else {
@@ -91,8 +89,21 @@ namespace Core {
                 'ssl_method' => false,
             ));
 
-            $http_server->on('connect',function() {
-                // 
+            $http_server->on('connect',function(\swoole_http_server $http_server_client) {
+                $log_level = Util::get(get_defined_constants(),'SWOOLE_LOG_LEVEL',false);
+
+                if (!empty($log_level) && $log_level < '2') {
+                    return;
+                }
+
+                $date = new DateTime('now');
+
+                print "------------------------------------------------------\n";
+                print "Client connect...\n";
+                print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
+                print "Client stats...\n";
+                print_r($http_server_client->stats());
+                print "------------------------------------------------------\n";
             });
 
             $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) {
@@ -102,7 +113,7 @@ namespace Core {
                 $_FILES = $http_request->files ?? [];
                 $_SERVER = $http_request->server ? array_change_key_case($http_request->server,CASE_UPPER) : [];
 
-                $extension_static = ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html'];
+                $extension_static = ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map'];
 
                 $parse_url_path = parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
                 $extension = pathinfo($parse_url_path,PATHINFO_EXTENSION);
@@ -128,11 +139,19 @@ namespace Core {
                 } catch (WException | Exception $error) {
                     $date = new DateTime('now');
 
-                    print "---------------------------\n";
-                    print vsprintf("Date: %s\n",[$date->format('Y-m-d H:i:s u'),]);
-                    print vsprintf("Error message: %s\n",[$error->getMessage(),]);
-                    print vsprintf("Error trace: %s",[$error->getTraceAsString(),]);
-                    print "\n---------------------------\n";
+                    print "------------------------------------------------------\n";
+                    print "Client connect...\n";
+                    print "Throw Exception...\n";
+                    print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
+                    print vsprintf("HTTP GET...\n%s",[print_r($_GET,true),]);
+                    print vsprintf("HTTP POST...\n%s",[print_r($_POST,true),]);
+                    print vsprintf("HTTP COOKIE...\n%s",[print_r($_COOKIE,true),]);
+                    print vsprintf("HTTP FILES...\n%s",[print_r($_FILES,true),]);
+                    print vsprintf("HTTP SERVER...\n%s",[print_r($_SERVER,true),]);
+                    print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
+                    print vsprintf("Error message...\n%s\n",[$error->getMessage(),]);
+                    print vsprintf("Error trace...\n%s",[$error->getTraceAsString(),]);
+                    print "------------------------------------------------------\n";
 
                     $page_error_path = Util::get(get_defined_constants(),'SWOOLE_PAGE_ERROR_PATH',false);
 
@@ -143,62 +162,18 @@ namespace Core {
                     }
                 }
 
+                $gzip = Util::get(get_defined_constants(),'SWOOLE_GZIP',false);
+
+                if (!empty($gzip)) {
+                    $http_response->gzip(1);
+                }
+
                 $http_response->end($content);
 
                 return;
             });
 
             $http_server->start();
-        }
-        /**
-         * @return $this|bool
-         * @throws WException
-         */
-        private function readyErrorHandler() {
-            if (empty(defined('DEBUG'))) {
-                throw new WException('constant DEBUG not defined');
-            }
-
-            if (empty(DEBUG)) {
-                return false;
-            }
-
-            $whoops_run = new \Whoops\Run();
-            $whoops_pretty_page_handler = new \Whoops\Handler\PrettyPageHandler();
-            $whoops_json_response_handler = new \Whoops\Handler\JsonResponseHandler();
-
-            $whoops_run->pushHandler($whoops_pretty_page_handler);
-            $whoops_run->pushHandler(function ($exception,$inspector,$whoops_run) {
-                $inspector->getFrames()->map(function ($frame) {
-                    $frame_function = $frame->getFunction();
-                    $frame_class = $frame->getClass();
-                    $frame_args = $frame->getArgs();
-
-                    if (!empty($frame_function)) {
-                        $frame->addComment($frame_function,'Function');
-                    }
-
-                    if (!empty($frame_class)) {
-                        $frame->addComment($frame_class,'Class');
-                    }
-
-                    if (!empty($frame_args)) {
-                        $frame->addComment(print_r($frame_args,true),'Args');
-                    }
-
-                    return $frame;
-                });
-            });
-
-            if (\Whoops\Util\Misc::isAjaxRequest()) {
-                $whoops_run->pushHandler($whoops_json_response_handler);
-            }
-
-            $whoops_pretty_page_handler->addDataTable('Willer Constants',get_defined_constants(true));
-
-            $whoops_run->register();
-
-            return $this;
         }
         /**
          * @param $application_route
