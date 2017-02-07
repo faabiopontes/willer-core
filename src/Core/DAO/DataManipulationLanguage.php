@@ -3,16 +3,17 @@
 /**
  * @author William Borba
  * @package Core/DAO
+ * @uses Core\Exception\WException
  * @uses \PDO
  * @uses \Exception
  * @uses \PDOException
- * @uses Core\Exception\WException
  */
 namespace Core\DAO {
+    use Core\Exception\WException;
+    use \PDOException as PDOException;
     use \PDO as PDO;
     use \Exception as Exception;
-    use \PDOException as PDOException;
-    use Core\Exception\WException;
+    use \stdClass as stdClass;
     /**
      * Class DataManipulationLanguage
      * @package Core\DAO
@@ -30,6 +31,8 @@ namespace Core\DAO {
      * @property array $where_value
      * @property array $like
      * @property array $like_value
+     * @property array $between
+     * @property array $between_value
      * @property array $query
      * @property boolean $flag_new_or_update
      */
@@ -46,6 +49,8 @@ namespace Core\DAO {
         private $where_unique_value;
         private $where;
         private $where_value;
+        private $between;
+        private $between_value;
         private $like;
         private $like_value;
         private $query;
@@ -89,13 +94,13 @@ namespace Core\DAO {
         /**
          * @return mixed
          */
-        private function getTableName() {
+        public function getTableName() {
             return $this->name();
         }
         /**
          * @return mixed
          */
-        private function getTableColumn() {
+        public function getTableColumn() {
             return $this->column();
         }
         /**
@@ -172,7 +177,7 @@ namespace Core\DAO {
         /**
          * @return string
          */
-        protected function getPrimaryKey() {
+        public function getPrimaryKey() {
             return $this->primary_key;
         }
         /**
@@ -262,6 +267,36 @@ namespace Core\DAO {
         /**
          * @return array
          */
+        private function getBetween() {
+            return $this->between;
+        }
+        /**
+         * @param $between
+         * @return $this
+         */
+        private function setBetween($between) {
+            $this->between = $between;
+
+            return $this;
+        }
+        /**
+         * @return array
+         */
+        private function getBetweenValue() {
+            return $this->between_value;
+        }
+        /**
+         * @param $between_value
+         * @return $this
+         */
+        private function setBetweenValue($between_value) {
+            $this->between_value = $between_value;
+
+            return $this;
+        }
+        /**
+         * @return array
+         */
         private function getLike() {
             return $this->like;
         }
@@ -312,24 +347,19 @@ namespace Core\DAO {
          * @param null $column
          * @throws WException
          */
-        protected function definePrimaryKey($column = null) {
+        protected function definePrimaryKey() {
             $table_schema = $this->schema();
-            $primarykey_flag = false;
+
+            $column = null;
 
             foreach ($table_schema as $i => $value) {
                 if ($value->method == 'primaryKey') {
-                    if (!empty($primarykey_flag)) {
+                    if (!empty($column)) {
                         throw new WException(vsprintf('"%s" field error, primary key need be unique',[$i,]));
                     }
 
                     $column = $i;
-
-                    $primarykey_flag = true;
                 }
-            }
-
-            if (empty($column)) {
-                throw new WException(vsprintf('primary key missing in schema of model "%s"',[$this->name(),]));
             }
 
             $this->setPrimaryKey($column);
@@ -362,7 +392,7 @@ namespace Core\DAO {
          * @param int $limit
          * @return $this
          */
-        public function limit($page = 1, $limit = 1000) {
+        public function limit($page = 1, $limit = 1) {
             $limit_value = null;
 
             $page = intval($page);
@@ -390,7 +420,7 @@ namespace Core\DAO {
          * @param bool $join
          * @return array
          */
-        private function related($table_related, $query_list = [], $join = false) {
+        private function related($table_related, $query_list = [], $join = false, $table_related_name_alias = null) {
             $table_name = $table_related->getTableName();
             $table_schema = $table_related->getTableSchema();
 
@@ -411,10 +441,7 @@ namespace Core\DAO {
                     $table_related_table_column = $table_related->getTableColumn();
                     $table_related_primary_key = $table_related->getPrimaryKey();
 
-                    if (!empty($join)) {
-
-
-                    } else {
+                    if (empty($join)) {
                         $join = 'inner';
 
                         if (array_key_exists('null',$table->rule)) {
@@ -425,17 +452,26 @@ namespace Core\DAO {
                     }
 
                     $table_related_table_name_with_escape = vsprintf('%s%s%s',[$this->db_escape,$table_related_table_name,$this->db_escape]);
+                    $table_name_alias = vsprintf('%s_%s',[$table_name,$table_related_table_name]);
+                    $table_name_alias_with_escape = vsprintf('%s%s_%s%s',[$this->db_escape,$table_name,$table_related_table_name,$this->db_escape]);
 
                     $column_list = [];
 
                     foreach ($table_related_table_column as $ii => $column) {
-                        $column_list[] = vsprintf('%s.%s %s__%s',[$table_related_table_name_with_escape,$ii,$table_related_table_name,$ii]);
+                        $column_list[] = vsprintf('%s.%s %s__%s',[$table_name_alias_with_escape,$ii,$table_name_alias,$ii]);
                     }
 
                     $query_list['column'][] = $column_list;
-                    $query_list['join'][] = vsprintf('%s join %s on %s.%s = %s.%s',[$join,$table_related_table_name_with_escape,$table_related_table_name_with_escape,$table_related_primary_key,$table_name_with_escape,$table_foreign_key]);
 
-                    $query_list = $this->related($table_related,$query_list,$join);
+                    if (!empty($table_related_name_alias) && $table_related_name_alias != $table_name) {
+                        $table_name_with_escape = vsprintf('%s%s_%s%s',[$this->db_escape,$table_related_name_alias,$table_name,$this->db_escape]);
+                    }
+
+                    $query_list['join'][] = vsprintf('%s join %s AS %s on %s.%s = %s.%s',[$join,$table_related_table_name_with_escape,$table_name_alias_with_escape,$table_name_alias_with_escape,$table_related_primary_key,$table_name_with_escape,$table_foreign_key]);
+
+                    $table_related_name_alias = $table_name;
+
+                    $query_list = $this->related($table_related,$query_list,$join,$table_related_name_alias);
                 }
             }
 
@@ -458,7 +494,7 @@ namespace Core\DAO {
                 foreach ($where as $key => $value) {
                     $where_value = null;
 
-                    if (empty($value)) {
+                    if (is_null($value)) {
                         $where_value = vsprintf('%s is null',[$key,]);
 
                     } else if (!is_array($value) && (is_string($value) || is_numeric($value) || is_bool($value))) {
@@ -507,7 +543,7 @@ namespace Core\DAO {
                 foreach ($like as $key => $value) {
                     $like_value = null;
 
-                    if (empty($value)) {
+                    if (is_null($value)) {
                         throw new WException(vsprintf('value for "%s" is null',[$key,]));
 
                     } else if (is_string($value) || is_numeric($value)) {
@@ -524,6 +560,49 @@ namespace Core\DAO {
 
                 $this->setLike($like_query);
                 $this->setLikeValue($like_value_list);
+            }
+
+            return $this;
+        }
+        /**
+         * @param array $between
+         * @return $this
+         * @throws WException
+         */
+        public function between($between = []) {
+            $between_value_list = [];
+
+            if (empty($between)) {
+                $between_query = null;
+
+            } else {
+                $between_query = [];
+
+                foreach ($between as $key => $value_list) {
+                    $between_value = null;
+
+                    if (is_null($value_list)) {
+                        throw new WException(vsprintf('value for "%s" is null',[$key,]));
+                    }
+
+                    if (!is_array($value_list)) {
+                        throw new WException(vsprintf('value is incorrect with type "%s", in instance of model "%s"',[gettype($value_list),$this->name()]));
+                    }
+
+                    if (count($value_list) != 2) {
+                        throw new WException(vsprintf('value require two date values for key "%s", in instance of model "%s"',[$key,$this->name()]));
+                    }
+
+                    $between_value_list[] = $value_list[0];
+                    $between_value_list[] = $value_list[1];
+
+                    $between_value = vsprintf('%s between ? and ?',[$key,]);
+
+                    $between_query[] = $between_value;
+                }
+
+                $this->setBetween($between_query);
+                $this->setBetweenValue($between_value_list);
             }
 
             return $this;
@@ -1089,6 +1168,8 @@ namespace Core\DAO {
             $table_column = $this->getTableColumn();
             $get_where = $this->getWhere();
             $get_where_value = $this->getWhereValue();
+            $get_between = $this->getBetween();
+            $get_between_value = $this->getBetweenValue();
             $get_like = $this->getLike();
             $get_like_value = $this->getLikeValue();
             $order_by = $this->getOrderBy();
@@ -1140,11 +1221,25 @@ namespace Core\DAO {
                 $query_value = array_merge($query_value,$get_where_value);
             }
 
+            if (empty($get_between)) {
+                $between = '';
+
+            } else {
+                if (!empty($where)) {
+                    $between = vsprintf('and %s',[implode(' and ',$get_between),]);
+
+                } else {
+                    $between = vsprintf('%s',[implode(' and ',$get_between),]);
+                }
+
+                $query_value = array_merge($query_value,$get_between_value);
+            }
+
             if (empty($get_like)) {
                 $like = '';
 
             } else {
-                if (!empty($where)) {
+                if (!empty($where) || !empty($between)) {
                     $like = vsprintf('and %s',[implode(' and ',$get_like),]);
 
                 } else {
@@ -1165,11 +1260,26 @@ namespace Core\DAO {
                 $order_by = vsprintf('order by %s',[implode(',',$order_by),]);
             }
 
-            $query_total = vsprintf('select count(1) total from %s %s %s %s %s',[$table_name_with_escape,$related_join,$where_implicit,$where,$like]);
+            $query_total = vsprintf('select count(1) total from %s %s %s %s %s %s',[
+                $table_name_with_escape,
+                $related_join,
+                $where_implicit,
+                $where,
+                $between,
+                $like]);
 
             $this->setQuery($query_total,$query_value);
 
-            $query = vsprintf('select %s from %s %s %s %s %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where_implicit,$where,$like,$order_by,$limit]);
+            $query = vsprintf('select %s from %s %s %s %s %s %s %s %s',[
+                $column_list,
+                $table_name_with_escape,
+                $related_join,
+                $where_implicit,
+                $where,
+                $between,
+                $like,
+                $order_by,
+                $limit]);
 
             $this->setQuery($query,$query_value);
 
@@ -1252,15 +1362,14 @@ namespace Core\DAO {
             $page_next = $page_current + 1 >= $page_total ? $page_total : $page_current + 1;
             $page_previous = $page_current - 1 <= 0 ? 1 : $page_current - 1;
 
-            $result = [
-                'register_total' => $register_total,
-                'register_perpage' => $register_perpage,
-                'page_total' => $page_total,
-                'page_current' => $page_current,
-                'page_next' => $page_next,
-                'page_previous' => $page_previous,
-                'data' => $query_fetch_all_list,
-            ];
+            $result = new stdClass;
+            $result->register_total = $register_total;
+            $result->register_perpage = $register_perpage;
+            $result->page_total = $page_total;
+            $result->page_current = $page_current;
+            $result->page_next = $page_next;
+            $result->page_previous = $page_previous;
+            $result->data = $query_fetch_all_list;
 
             return $result;
         }
@@ -1273,6 +1382,8 @@ namespace Core\DAO {
          * @return mixed
          */
         private function relatedFetch($obj_column_list, $obj_schema_dict, $fetch, $transaction, $obj) {
+            $table_name = $obj->getTableName();
+
             foreach ($obj_column_list as $column => $value) {
                 if ($obj_schema_dict[$column]->method == 'foreignKey') {
                     $obj_foreignkey = $obj_schema_dict[$column]->rule['table'];
@@ -1285,7 +1396,7 @@ namespace Core\DAO {
                     $obj_foreignkey = new $obj_foreignkey_class_name($transaction);
 
                     foreach ($obj_foreignkey_column_list as $column_ => $value_) {
-                        $table_column = vsprintf('%s__%s',[$obj_foreignkey_table_name,$column_]);
+                        $table_column = vsprintf('%s_%s__%s',[$table_name,$obj_foreignkey_table_name,$column_]);
 
                         $obj_foreignkey->$column_ = $fetch->$table_column;
                     }

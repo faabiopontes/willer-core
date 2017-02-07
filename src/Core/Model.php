@@ -20,7 +20,7 @@ namespace Core {
          * @param null $transaction
          */
         public function __construct($transaction = null) {
-            $this->definePrimaryKey(null);
+            $this->definePrimaryKey();
 
             if (!empty($transaction)) {
                 parent::__construct($transaction);
@@ -64,8 +64,8 @@ namespace Core {
                 $rule_table = null;
 
                 foreach ($rule_list as $rule_name => $rule_value) {
-                    if (!in_array($rule_name,['null','length','table','label','multiple','hidden'])) {
-                        throw new WException(vsprintf('"%s" field rule "%s" incorrect, possible values "hidden,label,multiple,null,length and table"',[$function_name,$rule_name]));
+                    if (!in_array($rule_name,['null','length','table','label','option','multiple','hidden','filter','reference','password'])) {
+                        throw new WException(vsprintf('"%s" field rule "%s" incorrect"',[$function_name,$rule_name]));
 
                     } else if ($rule_name == 'null') {
                         $rule_null = $rule_value;
@@ -79,7 +79,7 @@ namespace Core {
                 }
 
                 if (empty($rule_null)) {
-                    if ($value !== 0 && empty($value)) {
+                    if ($value !== '0' && empty($value)) {
                         throw new WException(vsprintf('"%s" field value can not be null',[$function_name,]));
                     }
                 }

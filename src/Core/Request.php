@@ -17,21 +17,16 @@ namespace Core {
     class Request {
         private $uri;
         private $uri_argument;
+        private $request_method;
+        private $route_id;
         /**
          * Request constructor.
          * @param $uri_argument
          */
-        public function __construct($uri_argument = []) {
+        public function __construct($uri_argument = [],$request_method = null,$route_id = null) {
             $this->setArgument($uri_argument);
-        }
-        /**
-         * @param $uri_argument
-         * @return $this
-         */
-        public function setArgument($uri_argument) {
-            $this->uri_argument = $uri_argument;
-
-            return $this;
+            $this->setRequestMethod($request_method);
+            $this->setRouteId($route_id);
         }
         /**
          * @param null $key
@@ -53,8 +48,8 @@ namespace Core {
          * @param $uri_argument
          * @return $this
          */
-        public function setUri($uri) {
-            $this->uri = $uri;
+        public function setArgument($uri_argument) {
+            $this->uri_argument = $uri_argument;
 
             return $this;
         }
@@ -63,6 +58,45 @@ namespace Core {
          */
         public function getUri() {
             return $this->uri;
+        }
+        /**
+         * @param $uri_argument
+         * @return $this
+         */
+        public function setUri($uri) {
+            $this->uri = $uri;
+
+            return $this;
+        }
+        /**
+         * @return mixed
+         */
+        public function getRequestMethod() {
+            return $this->request_method;
+        }
+        /**
+         * @param $request_method
+         * @return $this
+         */
+        public function setRequestMethod($request_method) {
+            $this->request_method = $request_method;
+
+            return $this;
+        }
+        /**
+         * @return mixed
+         */
+        public function getRouteId() {
+            return $this->route_id;
+        }
+        /**
+         * @param $route_id
+         * @return $this
+         */
+        public function setRouteId($route_id) {
+            $this->route_id = $route_id;
+
+            return $this;
         }
         /**
          * @return mixed
@@ -89,6 +123,9 @@ namespace Core {
             if (!empty($session_key)) {
                 if (isset($_SESSION['wf'][$session_key])) {
                     return $_SESSION['wf'][$session_key];
+
+                } else {
+                    return $_SESSION['wf'][$session_key] = null;
                 }
 
             }
