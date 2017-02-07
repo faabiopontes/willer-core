@@ -26,7 +26,7 @@ namespace Core {
          * @return mixed
          */
         public function ready() {
-            $json_config_load = Util::load('Config');
+            $json_config_load = Util::load('config');
 
             foreach ($json_config_load['config'] as $key => $value) {
                 if (!defined($key)) {
@@ -232,14 +232,14 @@ namespace Core {
                 $request_uri = $request_uri_strstr;
             }
 
-            $json_config_load = Util::load('Config');
+            $json_config_load = Util::load('config');
 
             if (empty(defined('ROOT_PATH'))) {
                 throw new WException('constant ROOT_PATH not defined');
             }
 
             if (!array_key_exists('app',$json_config_load)) {
-                throw new WException(vsprintf('file app.json not found in directory "%s/Config"',[ROOT_PATH,]));
+                throw new WException(vsprintf('file app.json not found in directory "%s/config"',[ROOT_PATH,]));
             }
 
             foreach ($json_config_load['app'] as $app) {

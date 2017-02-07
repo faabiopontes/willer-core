@@ -170,7 +170,7 @@ namespace Core {
          * @throws WException
          */
         public function getRoute($id, $url_match = []) {
-            $json_config_load = Util::load('Config');
+            $json_config_load = Util::load('config');
 
             if (empty(defined('ROOT_PATH'))) {
                 throw new WException('constant ROOT_PATH not defined');
