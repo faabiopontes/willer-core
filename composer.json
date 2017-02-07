@@ -1,8 +1,8 @@
 {
     "name": "wborba/willer-core",
-    "description": "php framework - core for willer framework",
+    "description": "Core for Willer Framework",
+    "keywords": ["framework"],
     "homepage": "http://williamborba.github.io/willer-core",
-    "keywords": ["orm", "active record", "framework", "core"],
     "type": "library",
     "require": {
         "php": ">=7.1"
