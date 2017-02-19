@@ -53,18 +53,13 @@ namespace Core {
          * @throws WException
          */
         private static function filterRule($rule_list, $value, $function_name, $function_filter) {
-            if (empty($rule_list)) {
-                if ($function_name != 'boolean' && $function_name != 'integer' && empty($value)) {
-                    throw new WException(vsprintf('"%s" field value can not be null',[$function_name,]));
-                }
-
-            } else {
+            if (!empty($rule_list)) {
                 $rule_null = null;
                 $rule_length = null;
                 $rule_table = null;
 
                 foreach ($rule_list as $rule_name => $rule_value) {
-                    if (!in_array($rule_name,['null','length','table','label','option','multiple','hidden','filter','reference','password'])) {
+                    if (!in_array($rule_name,['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled'])) {
                         throw new WException(vsprintf('"%s" field rule "%s" incorrect"',[$function_name,$rule_name]));
 
                     } else if ($rule_name == 'null') {
@@ -90,6 +85,21 @@ namespace Core {
                             throw new WException('foreign key field require one object');
                         }
 
+                        if (empty($value)) {
+                            if (empty($rule_null)) {
+                                throw new WException('foreign key field value is missing');
+                            }
+
+                        } else {
+                            if (!is_object($rule_table)) {
+                                throw new WException('foreign key field value is not object');
+                            }
+
+                            if (!$value instanceof $rule_table) {
+                                throw new WException('foreign key field value is not object instance of referral');
+                            }
+                        }
+
                         break;
 
                     default:
@@ -100,23 +110,7 @@ namespace Core {
                         }
                 }
 
-                if (!empty($rule_table)) {
-                    if (empty($value)) {
-                        if (empty($rule_null)) {
-                            throw new WException('foreign key field value is missing');
-                        }
-
-                    } else {
-                        if (!is_object($rule_table)) {
-                            throw new WException('foreign key field value is not object');
-                        }
-
-                        if (!$value instanceof $rule_table) {
-                            throw new WException('foreign key field value is not object instance of referral');
-                        }
-                    }
-
-                } else if (!empty($rule_length)) {
+                if (!empty($rule_length)) {
                     if (empty($value)) {
                         if (empty($rule_null)) {
                             throw new WException(vsprintf('"%s" field value can not be null',[$function_name,]));

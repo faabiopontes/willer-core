@@ -98,12 +98,12 @@ namespace Core {
 
                 $date = new DateTime('now');
 
-                print "------------------------------------------------------\n";
+                print "\n------------------------------------------------------\n";
                 print "Client connect...\n";
                 print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
                 print "Client stats...\n";
                 print_r($http_server_client->stats());
-                print "------------------------------------------------------\n";
+                print "\n------------------------------------------------------\n";
             });
 
             $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) {
@@ -139,7 +139,7 @@ namespace Core {
                 } catch (WException | Exception $error) {
                     $date = new DateTime('now');
 
-                    print "------------------------------------------------------\n";
+                    print "\n------------------------------------------------------\n";
                     print "Client connect...\n";
                     print "Throw Exception...\n";
                     print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
@@ -151,7 +151,7 @@ namespace Core {
                     print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
                     print vsprintf("Error message...\n%s\n",[$error->getMessage(),]);
                     print vsprintf("Error trace...\n%s",[$error->getTraceAsString(),]);
-                    print "------------------------------------------------------\n";
+                    print "\n------------------------------------------------------\n";
 
                     $page_error_path = Util::get(get_defined_constants(),'SWOOLE_PAGE_ERROR_PATH',false);
 

@@ -820,17 +820,17 @@ namespace Core\DAO {
 
             $set_escape = implode(',',$set_escape);
 
-            if (!empty($table_column[$primary_key])) {
-                $where = vsprintf('%s=%s',[$primary_key,$table_column[$primary_key]]);
-
-            } else {
-                $where = vsprintf('%s=%s',[$primary_key,$last_insert_id]);
-            }
-
             $column_list = implode(',',$column_list);
             $query_escape_list = implode(',',$query_escape_list);
 
-            if (!empty($last_insert_id) || !empty($table_column[$primary_key])) {
+            if (empty($field) && (!empty($last_insert_id) || !empty($table_column[$primary_key]))) {
+                if (!empty($table_column[$primary_key])) {
+                    $where = vsprintf('%s=%s',[$primary_key,$table_column[$primary_key]]);
+
+                } else {
+                    $where = vsprintf('%s=%s',[$primary_key,$last_insert_id]);
+                }
+
                 $query = vsprintf('update %s set %s where %s',[$table_name_with_escape,$set_escape,$where]);
                 $query_value_list = $query_value_update_list;
 
