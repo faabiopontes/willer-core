@@ -37,8 +37,6 @@ namespace Core\DAO {
      * @property boolean $flag_new_or_update
      */
     abstract class DataManipulationLanguage {
-        private const QUERY_LIMIT_DEFAULT = 1000;
-
         private $transaction;
         private $db_escape;
         private $related;
@@ -394,11 +392,7 @@ namespace Core\DAO {
          * @param int $limit
          * @return $this
          */
-        public function limit($page = 1, $limit = null) {
-            if (empty($limit)) {
-                $limit = defined(QUERY_LIMIT) ? QUERY_LIMIT : $this->QUERY_LIMIT_DEFAULT;
-            }
-
+        public function limit($page = 1, $limit = 1) {
             $limit_value = null;
 
             $page = intval($page);
@@ -407,12 +401,12 @@ namespace Core\DAO {
             if ($page <= 1) {
                 $page = 1;
 
-                $limit_value = vsprintf('LIMIT %s OFFSET 0',[$limit,]);
+                $limit_value = vsprintf('limit %s offset 0',[$limit,]);
 
             } else {
                 $page_ = $page - 1;
                 $page_x_limit = $page_ * $limit;
-                $limit_value = vsprintf('LIMIT %s OFFSET %s',[$limit,$page_x_limit]);
+                $limit_value = vsprintf('limit %s offset %s',[$limit,$page_x_limit]);
             }
 
             $this->setLimitValue($page,$limit);
@@ -448,11 +442,11 @@ namespace Core\DAO {
                     $table_related_primary_key = $table_related->getPrimaryKey();
 
                     if (empty($join)) {
-                        $join = 'INNER';
+                        $join = 'inner';
 
                         if (array_key_exists('null',$table->rule)) {
                             if (!empty($table->rule['null'])) {
-                                $join = 'LEFT';
+                                $join = 'left';
                             }
                         }
                     }
@@ -473,7 +467,7 @@ namespace Core\DAO {
                         $table_name_with_escape = vsprintf('%s%s_%s%s',[$this->db_escape,$table_related_name_alias,$table_name,$this->db_escape]);
                     }
 
-                    $query_list['join'][] = vsprintf('%s JOIN %s AS %s on %s.%s = %s.%s',[$join,$table_related_table_name_with_escape,$table_name_alias_with_escape,$table_name_alias_with_escape,$table_related_primary_key,$table_name_with_escape,$table_foreign_key]);
+                    $query_list['join'][] = vsprintf('%s join %s AS %s on %s.%s = %s.%s',[$join,$table_related_table_name_with_escape,$table_name_alias_with_escape,$table_name_alias_with_escape,$table_related_primary_key,$table_name_with_escape,$table_foreign_key]);
 
                     $table_related_name_alias = $table_name;
 
@@ -501,7 +495,7 @@ namespace Core\DAO {
                     $where_value = null;
 
                     if (is_null($value)) {
-                        $where_value = vsprintf('%s IS NULL',[$key,]);
+                        $where_value = vsprintf('%s is null',[$key,]);
 
                     } else if (!is_array($value) && (is_string($value) || is_numeric($value) || is_bool($value))) {
                         $where_value_list[] = $value;
@@ -514,7 +508,7 @@ namespace Core\DAO {
                             return '?';
                         },$value));
 
-                        $where_value = vsprintf('%s IN(%s)',[$key,$value]);
+                        $where_value = vsprintf('%s in(%s)',[$key,$value]);
 
                     } else {
                         throw new WException(vsprintf('value is incorrect with type "%s", in instance of model "%s"',[gettype($value),$this->name()]));
@@ -555,7 +549,7 @@ namespace Core\DAO {
                     } else if (is_string($value) || is_numeric($value)) {
                         $like_value_list[] = $value;
 
-                        $like_value = vsprintf('%s LIKE ?',[$key,]);
+                        $like_value = vsprintf('%s like ?',[$key,]);
 
                     } else {
                         throw new WException(vsprintf('value is incorrect with type "%s", in instance of model "%s"',[gettype($value),$this->name()]));
@@ -602,7 +596,7 @@ namespace Core\DAO {
                     $between_value_list[] = $value_list[0];
                     $between_value_list[] = $value_list[1];
 
-                    $between_value = vsprintf('%s BETWEEN ? AND ?',[$key,]);
+                    $between_value = vsprintf('%s between ? and ?',[$key,]);
 
                     $between_query[] = $between_value;
                 }
@@ -679,10 +673,10 @@ namespace Core\DAO {
             $column_list = array_merge($related_column,$column_list);
             $column_list = implode(',',$column_list);
 
-            $where = vsprintf('where %s',[implode(' AND ',$where_escape_list),]);
+            $where = vsprintf('where %s',[implode(' and ',$where_escape_list),]);
 
-            $query_total = vsprintf('SELECT COUNT(1) total FROM %s %s %s',[$table_name_with_escape,$related_join,$where]);
-            $query = vsprintf('SELECT %s FROM %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where]);
+            $query_total = vsprintf('select count(1) total from %s %s %s',[$table_name_with_escape,$related_join,$where]);
+            $query = vsprintf('select %s from %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where]);
 
             try {
                 if (empty($this->flag_new_or_update)) {
@@ -725,7 +719,10 @@ namespace Core\DAO {
                 $pdo_query->execute($query_value_list);
                 $pdo_query_fetch = $pdo_query->fetch(PDO::FETCH_OBJ);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException $error) {
+                throw $error;
+
+            } catch (Exception $error) {
                 throw $error;
             }
 
@@ -834,13 +831,13 @@ namespace Core\DAO {
                     $where = vsprintf('%s=%s',[$primary_key,$last_insert_id]);
                 }
 
-                $query = vsprintf('UPDATE %s SET %s WHERE %s',[$table_name_with_escape,$set_escape,$where]);
+                $query = vsprintf('update %s set %s where %s',[$table_name_with_escape,$set_escape,$where]);
                 $query_value_list = $query_value_update_list;
 
                 $flag_getdiscard = true;
 
             } else {
-                $query = vsprintf('INSERT INTO %s (%s) VALUES(%s)',[$table_name_with_escape,$column_list,$query_escape_list]);
+                $query = vsprintf('insert into %s (%s) values(%s)',[$table_name_with_escape,$column_list,$query_escape_list]);
                 $query_value_list = $query_value_add_list;
             }
 
@@ -855,7 +852,10 @@ namespace Core\DAO {
 
                 $pdo_query->execute($query_value_list);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException $error) {
+                throw $error;
+
+            } catch (Exception $error) {
                 throw $error;
             }
 
@@ -955,7 +955,7 @@ namespace Core\DAO {
             if (!empty($get_where_unique)) {
                 $get_where_unique_value = $this->getWhereUniqueValue();
 
-                $where = vsprintf('WHERE %s',[implode(' AND ',$get_where_unique),]);
+                $where = vsprintf('where %s',[implode(' and ',$get_where_unique),]);
 
                 $query_value = array_merge($query_value,$get_where_unique_value);
 
@@ -964,17 +964,17 @@ namespace Core\DAO {
                 $get_where_value = $this->getWhereValue();
 
                 if (!empty($get_where)) {
-                    $where .= implode(' AND ',$get_where);
+                    $where .= implode(' and ',$get_where);
 
                     $query_value = array_merge($query_value,$get_where_value);
                 }
 
                 if (!empty($where)) {
-                    $where = vsprintf('WHERE %s',[$where,]);
+                    $where = vsprintf('where %s',[$where,]);
                 }
             }
 
-            $query = vsprintf('UPDATE %s SET %s %s',[$table_name_with_escape,$set_escape,$where]);
+            $query = vsprintf('update %s set %s %s',[$table_name_with_escape,$set_escape,$where]);
 
             try {
                 $query = $transaction_resource->prepare($query);
@@ -987,7 +987,10 @@ namespace Core\DAO {
 
                 $query->execute($query_value);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException $error) {
+                throw $error;
+
+            } catch (Exception $error) {
                 throw $error;
             }
 
@@ -1065,14 +1068,14 @@ namespace Core\DAO {
                             return '?';
                         },$value));
 
-                        $where_list[] = vsprintf('%s IN(%s)',[$key,$value]);
+                        $where_list[] = vsprintf('%s in(%s)',[$key,$value]);
 
                     } else {
                         throw new WException(vsprintf('value is incorrect with type "%s", in instance of model "%s"',[gettype($value),$this->name()]));
                     }
                 }
 
-                $where_str = vsprintf('WHERE %s',[implode(' AND ',$where_list),]);
+                $where_str = vsprintf('where %s',[implode(' and ',$where_list),]);
 
             } else {
                 $get_where_unique = $this->getWhereUnique();
@@ -1080,7 +1083,7 @@ namespace Core\DAO {
                 if (!empty($get_where_unique)) {
                     $get_where_unique_value = $this->getWhereUniqueValue();
 
-                    $where_str = vsprintf('WHERE %s',[implode(' AND ',$get_where_unique),]);
+                    $where_str = vsprintf('where %s',[implode(' and ',$get_where_unique),]);
 
                     $query_value = $get_where_unique_value;
 
@@ -1089,23 +1092,23 @@ namespace Core\DAO {
                     $get_where_value = $this->getWhereValue();
 
                     if (!empty($get_where)) {
-                        $where_str .= implode(' AND ',$get_where);
+                        $where_str .= implode(' and ',$get_where);
 
                         $query_value = array_merge($query_value,$get_where_value);
                     }
 
                     if (!empty($where_str)) {
-                        $where_str = vsprintf('WHERE %s',[$where_str,]);
+                        $where_str = vsprintf('where %s',[$where_str,]);
                     }
                 }
             }
 
             $table_name_with_escape = vsprintf('%s%s%s',[$this->db_escape,$table_name,$this->db_escape]);
 
-            $query = vsprintf('DELETE FROM %s %s',[$table_name_with_escape,$where_str]);
+            $query = vsprintf('delete from %s %s',[$table_name_with_escape,$where_str]);
 
             try {
-                $pdo_query = $transaction_resource->prepare($query);
+                $query = $transaction_resource->prepare($query);
 
                 $transaction_resource_error_info = $transaction_resource->errorInfo();
 
@@ -1113,11 +1116,13 @@ namespace Core\DAO {
                     throw new WException(vsprintf('[delete]PDO error message "%s", in model instance "%s"',[$transaction_resource_error_info[2],$this->name(),]));
                 }
 
-                $pdo_query->execute($query_value);
+                $query->execute($query_value);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException $error) {
                 throw $error;
 
+            } catch (Exception $error) {
+                throw $error;
             }
 
             foreach ($table_column as $column => $value) {
@@ -1172,9 +1177,9 @@ namespace Core\DAO {
             $limit = $this->getLimit();
 
             if (empty($limit)) {
-                $limit = defined(QUERY_LIMIT) ? QUERY_LIMIT : $this->QUERY_LIMIT_DEFAULT;
+                $limit = defined(QUERY_LIMIT) ? QUERY_LIMIT : 1000;
 
-                $this->setLimit(vsprintf('LIMIT %s OFFSET 0',[$limit,]));
+                $this->setLimit(vsprintf('limit %s offset 0',[$limit,]));
                 $this->setLimitValue(1,$limit);
 
                 $limit = $this->getLimit();
@@ -1205,13 +1210,13 @@ namespace Core\DAO {
 
             $query_value = [];
 
-            $where_implicit = 'WHERE';
+            $where_implicit = 'where';
 
             if (empty($get_where)) {
                 $where = '';
 
             } else {
-                $where = vsprintf('%s',[implode(' AND ',$get_where),]);
+                $where = vsprintf('%s',[implode(' and ',$get_where),]);
 
                 $query_value = array_merge($query_value,$get_where_value);
             }
@@ -1221,10 +1226,10 @@ namespace Core\DAO {
 
             } else {
                 if (!empty($where)) {
-                    $between = vsprintf('AND %s',[implode(' AND ',$get_between),]);
+                    $between = vsprintf('and %s',[implode(' and ',$get_between),]);
 
                 } else {
-                    $between = vsprintf('%s',[implode(' AND ',$get_between),]);
+                    $between = vsprintf('%s',[implode(' and ',$get_between),]);
                 }
 
                 $query_value = array_merge($query_value,$get_between_value);
@@ -1235,10 +1240,10 @@ namespace Core\DAO {
 
             } else {
                 if (!empty($where) || !empty($between)) {
-                    $like = vsprintf('AND %s',[implode(' AND ',$get_like),]);
+                    $like = vsprintf('and %s',[implode(' and ',$get_like),]);
 
                 } else {
-                    $like = vsprintf('%s',[implode(' AND ',$get_like),]);
+                    $like = vsprintf('%s',[implode(' and ',$get_like),]);
                 }
 
                 $query_value = array_merge($query_value,$get_like_value);
@@ -1252,10 +1257,10 @@ namespace Core\DAO {
                 $order_by = '';
 
             } else {
-                $order_by = vsprintf('ORDER BY %s',[implode(',',$order_by),]);
+                $order_by = vsprintf('order by %s',[implode(',',$order_by),]);
             }
 
-            $query_total = vsprintf('SELECT COUNT(1) total FROM %s %s %s %s %s %s',[
+            $query_total = vsprintf('select count(1) total from %s %s %s %s %s %s',[
                 $table_name_with_escape,
                 $related_join,
                 $where_implicit,
@@ -1265,7 +1270,7 @@ namespace Core\DAO {
 
             $this->setQuery($query_total,$query_value);
 
-            $query = vsprintf('SELECT %s FROM %s %s %s %s %s %s %s %s',[
+            $query = vsprintf('select %s from %s %s %s %s %s %s %s %s',[
                 $column_list,
                 $table_name_with_escape,
                 $related_join,
@@ -1290,7 +1295,10 @@ namespace Core\DAO {
                 $pdo_query_total->execute($query_value);
                 $pdo_query_total = $pdo_query_total->fetch(PDO::FETCH_OBJ);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException $error) {
+                throw $error;
+
+            } catch (Exception $error) {
                 throw $error;
             }
 
@@ -1313,7 +1321,10 @@ namespace Core\DAO {
                 $pdo_query->execute($query_value);
                 $query_fetch_all = $pdo_query->fetchAll(PDO::FETCH_OBJ);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException $error) {
+                throw $error;
+
+            } catch (Exception $error) {
                 throw $error;
             }
 
