@@ -180,10 +180,7 @@ namespace Core\DAO {
                     }
                 }
 
-            } catch (PDOException $error) {
-                throw $error;
-
-            } catch (Exception $error) {
+            } catch (PDOException | Exception $error) {
                 throw $error;
             }
 
@@ -198,15 +195,13 @@ namespace Core\DAO {
          */
         public function beginTransaction() {
             $this->connect();
+
             $resource = $this->getResource();
 
             try {
                 $resource->beginTransaction();
 
-            } catch (PDOException $error) {
-                throw $error;
-
-            } catch (Exception $error) {
+            } catch (PDOException | Exception $error) {
                 throw $error;
             }
 
@@ -223,10 +218,7 @@ namespace Core\DAO {
                 try {
                     $this->resource->commit();
 
-                } catch (PDOException $error) {
-                    throw $error;
-
-                } catch (Exception $error) {
+                } catch (PDOException | Exception $error) {
                     throw $error;
                 }
             }
@@ -244,10 +236,7 @@ namespace Core\DAO {
                 try {
                     $this->resource->rollBack();
 
-                } catch (PDOException $error) {
-                    throw $error;
-
-                } catch (Exception $error) {
+                } catch (PDOException | Exception $error) {
                     throw $error;
                 }
             }
@@ -265,14 +254,49 @@ namespace Core\DAO {
             try {
                 $this->setLastInsertId($resource->lastInsertId($sequence_name));
 
-            } catch (PDOException $error) {
-                throw $error;
-
-            } catch (Exception $error) {
+            } catch (PDOException | Exception $error) {
                 throw $error;
             }
 
             return $this->getLastInsertId();
+        }
+        /**
+         * @param String $query_raw
+         * @param Array $value []
+         * @param Boolean $acd false
+         * @return Array
+         * @throws PDOException | Exception
+         */
+        public function queryRaw(String $query_raw,Array $value = [],Boolean $acd = false): Array {
+            $resource = $this->getResource();
+
+            if (empty($resource)) {
+                throw WException('database resource dont loaded');
+            }
+
+            try {
+                $pdo_query = $resource->prepare($query);
+
+                $transaction_resource_error_info = $resource->errorInfo();
+
+                if ($transaction_resource_error_info[0] != '00000') {
+                    throw new WException(vsprintf('PDO error message "%s"',[$transaction_resource_error_info[2],]));
+                }
+
+                $pdo_query->execute($value);
+
+                if (empty($acd)) {
+                    $result = $pdo_query->fetchAll(PDO::FETCH_OBJ);
+
+                } else {
+                    $result = [$pdo_query->fetch(PDO::FETCH_OBJ)];
+                }
+
+            } catch (PDOException | Exception $error) {
+                throw $error;
+            }
+
+            return $result;
         }
     }
 }
