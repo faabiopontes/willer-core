@@ -27,9 +27,9 @@ namespace Core\DAO {
         private $database_path;
         /**
          * Transaction constructor.
-         * @param null $database
+         * @param string $database null
          */
-        public function __construct($database = null) {
+        public function __construct(?string $database) {
             if (empty(defined('DATABASE_PATH'))) {
                 throw new WException('constant DATABASE_PATH not defined');
             }
@@ -72,27 +72,28 @@ namespace Core\DAO {
             $this->setDatabase($database);
         }
         /**
-         * @return mixed
+         * @return object $this->resource
          */
-        public function getResource() {
+        public function getResource(): PDO {
             return $this->resource;
         }
         /**
-         * @param $resource
+         * @param object $resource
+         * @return object $this
          */
-        protected function setResource($resource) {
+        protected function setResource(PDO $resource): Transaction {
             $this->resource = $resource;
 
             return $this;
         }
         /**
-         * @return string
+         * @return string $this->database
          */
-        public function getDatabase() {
+        public function getDatabase(): string {
             return $this->database;
         }
         /**
-         * @param $database
+         * @param string $database
          * @return $this
          */
         protected function setDatabase($database) {
@@ -267,7 +268,7 @@ namespace Core\DAO {
          * @return Array
          * @throws PDOException | Exception
          */
-        public function queryRaw(String $query_raw,Array $value = [],Boolean $acd = false): Array {
+        public function queryRaw(string $query_raw,array $value = [],boolean $acd = false): array {
             $resource = $this->getResource();
 
             if (empty($resource)) {

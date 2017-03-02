@@ -24,6 +24,7 @@ namespace Core {
         }
         /**
          * @return mixed
+         * @throws WException|Exception
          */
         public function ready() {
             $json_config_load = Util::load('config');
@@ -34,7 +35,7 @@ namespace Core {
                 }
             }
 
-            if (defined('SWOOLE') && SWOOLE == '1' && defined('SWOOLE_IP') && defined('SWOOLE_PORT')) {
+            if (defined('SWOOLE') && SWOOLE == '1' && defined('SWOOLE_IP') && !empty(SWOOLE_IP) && defined('SWOOLE_PORT') && !empty(SWOOLE_PORT)) {
                 try {
                     $ready_with_swoole = $this->readyWithSwoole();
 
@@ -63,7 +64,7 @@ namespace Core {
         /**
          * @return mixed
          */
-        public function readyWithSwoole() {
+        public function readyWithSwoole(): mixed {
             $http_server = new \swoole_http_server(SWOOLE_IP,SWOOLE_PORT);
 
             $log_level = Util::get(get_defined_constants(),'SWOOLE_LOG_LEVEL',false);
@@ -176,12 +177,12 @@ namespace Core {
             $http_server->start();
         }
         /**
-         * @param $application_route
-         * @param $match
-         * @return mixed
-         * @throws WException
+         * @param array $application_route
+         * @param array $match
+         * @return object
+         * @throws WException|Exception
          */
-        private function urlMatch($application_route,$match) {
+        private function urlMatch(array $application_route,array $match): object {
             $application_route_list = explode('\\',$application_route[0]);
 
             $bundle = array_shift($application_route_list);

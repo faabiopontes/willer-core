@@ -6,18 +6,20 @@
  */
 namespace Core {
 	use \SplFileInfo as SplFileInfo;
+	use Core\Exception\WException;
 	/**
 	 * Trait Util
 	 * @package Core
 	 */
 	trait Util {
 		/**
-		 * @param $input
-		 * @param $key
-		 * @param null $default
+		 * @param mixed $input
+		 * @param string $key
+		 * @param mixed $default null
 		 * @return mixed|null
+		 * @throws WException
          */
-		public static function get($input, $key, $default = null) {
+		public static function get(mixed $input,string $key,mixed $default = null): mixed {
 			if (!is_array($input) && !(is_object($input))) {
 				return $default;
 			}
@@ -28,13 +30,15 @@ namespace Core {
 			} else if (is_object($input)) {
 				return isset($input->$key) ? !empty($input->$key) || $input->$key === '0' ? $input->$key : $default : $default;
 			}
+
+			throw WException('input type is incorrect');
 		}
 		/**
-		 * @param null $application_path
-		 * @param array $exclude_list
+		 * @param string $application_path null
+		 * @param array $exclude_list []
 		 * @return array
          */
-		public static function load($application_path = null, $exclude_list = []) {
+		public static function load(string $application_path = null,array $exclude_list = []): array {
 			$exclude_list = array_merge($exclude_list,['..','.']);
 
 			$scandir_root = array_diff(scandir(ROOT_PATH),$exclude_list);
