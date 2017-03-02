@@ -5,75 +5,102 @@
  * @uses \SplFileInfo
  */
 namespace Core {
-	use \SplFileInfo as SplFileInfo;
-	use Core\Exception\WException;
-	/**
-	 * Trait Util
-	 * @package Core
-	 */
-	trait Util {
-		/**
-		 * @param mixed $input
-		 * @param string $key
-		 * @param mixed $default null
-		 * @return mixed|null
-		 * @throws WException
+    use \SplFileInfo as SplFileInfo;
+    /**
+     * Trait Util
+     * @package Core
+     * @var $return
+     */
+    class WUtil {
+        private $return;
+        /**
+         * @param object $input
+         * @param string $key
+         * @return string
          */
-		public static function get(mixed $input,string $key,mixed $default = null): mixed {
-			if (!is_array($input) && !(is_object($input))) {
-				return $default;
-			}
-
-			if (is_array($input)) {
-				return isset($input[$key]) ? !empty($input[$key]) || $input[$key] === '0' ? $input[$key] : $default : $default;
-
-			} else if (is_object($input)) {
-				return isset($input->$key) ? !empty($input->$key) || $input->$key === '0' ? $input->$key : $default : $default;
-			}
-
-			throw WException('input type is incorrect');
-		}
-		/**
-		 * @param string $application_path null
-		 * @param array $exclude_list []
-		 * @return array
+        public function objectContains(object $input,string $key): void {
+            $this->return = isset($input->$key) ? !empty($input->$key) || $input->$key === '0' ? $input->$key : null : null;
+        }
+        /**
+         * @param array $input
+         * @param string $key
+         * @param string $default null
+         * @return string
          */
-		public static function load(string $application_path = null,array $exclude_list = []): array {
-			$exclude_list = array_merge($exclude_list,['..','.']);
+        public function arrayContains(array $input,string $key): void {
+            $this->return = isset($input[$key]) ? !empty($input[$key]) || $input[$key] === '0' ? $input[$key] : null : null;
+        }
+        /**
+         * @return string
+         */
+        public function getString(?string $string_default = null): ?string {
+            if (empty($this->return)) {
+                return $string_default;
+            }
 
-			$scandir_root = array_diff(scandir(ROOT_PATH),$exclude_list);
+            return $this->return;
+        }
+        /**
+         * @return object
+         */
+        public function getObject(?object $object_default = null): ?object {
+            if (empty($this->return)) {
+                return $object_default;
+            }
 
-			$scandir_application = null;
+            return $this->return;
+        }
+        /**
+         * @return array
+         */
+        public function getArray(?array $array_default = null): ?array {
+            if (empty($this->return)) {
+                return $array_default;
+            }
 
-			if (!empty($application_path)) {
-				$scandir_application = array_diff(scandir(vsprintf('%s/%s',[ROOT_PATH,$application_path])),$exclude_list);
-			}
+            return $this->return;
+        }
+        /**
+         * @param string $application_path null
+         * @param array $exclude_list []
+         * @return array
+         */
+        public static function load(?string $application_path,array $exclude_list = []): ?array {
+            $exclude_list = array_merge($exclude_list,['..','.']);
 
-			$load_var = [];
+            $scandir_root = array_diff(scandir(ROOT_PATH),$exclude_list);
 
-			foreach ($scandir_root as $file) {
-				$spl_file_info = new SplFileInfo($file);
+            $scandir_application = null;
 
-				if ($spl_file_info->getExtension() == 'json') {
-					$key = $spl_file_info->getBasename('.json');
+            if (!empty($application_path)) {
+                $scandir_application = array_diff(scandir(vsprintf('%s/%s',[ROOT_PATH,$application_path])),$exclude_list);
+            }
 
-					$load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s',[ROOT_PATH,$file])),true);
-				}
-			}
+            $load_var = [];
 
-			if (!empty($scandir_application)) {
-				foreach ($scandir_application as $file) {
-					$spl_file_info = new SplFileInfo($file);
+            foreach ($scandir_root as $file) {
+                $spl_file_info = new SplFileInfo($file);
 
-					if ($spl_file_info->getExtension() == 'json') {
-						$key = $spl_file_info->getBasename('.json');
+                if ($spl_file_info->getExtension() == 'json') {
+                    $key = $spl_file_info->getBasename('.json');
 
-						$load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s/%s',[ROOT_PATH,$application_path,$file])),true);
-					}
-				}
-			}
+                    $load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s',[ROOT_PATH,$file])),true);
+                }
+            }
 
-			return $load_var;
-		}
-	}
+            if (!empty($scandir_application)) {
+                foreach ($scandir_application as $file) {
+                    $spl_file_info = new SplFileInfo($file);
+
+                    if ($spl_file_info->getExtension() == 'json') {
+                        $key = $spl_file_info->getBasename('.json');
+
+                        $load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s/%s',[ROOT_PATH,$application_path,$file])),true);
+                    }
+                }
+            }
+
+            return $load_var;
+        }
+    }
 }

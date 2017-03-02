@@ -4,13 +4,12 @@
   * @package Core
   * @uses Core\Exception\WException
   * @uses Core\Request
-  * @uses Core\Util
+  * @uses Core\WUtil
   */
 namespace Core {
-    use Core\{Request,Util};
+    use Core\{Request,WUtil};
     use Core\Exception\WException;
     use \DateTime as DateTime;
-    use \Exception as Exception;
     /**
      * Class System
      * @package Core
@@ -23,11 +22,13 @@ namespace Core {
             session_start();
         }
         /**
-         * @return mixed
-         * @throws WException|Exception
+         * @return void
+         * @throws WException
          */
-        public function ready() {
-            $json_config_load = Util::load('config');
+        public function ready(): void {
+            $wutil = new WUtil;
+
+            $json_config_load = $wutil->load('config');
 
             foreach ($json_config_load['config'] as $key => $value) {
                 if (!defined($key)) {
@@ -35,40 +36,42 @@ namespace Core {
                 }
             }
 
-            if (defined('SWOOLE') && SWOOLE == '1' && defined('SWOOLE_IP') && !empty(SWOOLE_IP) && defined('SWOOLE_PORT') && !empty(SWOOLE_PORT)) {
-                try {
-                    $ready_with_swoole = $this->readyWithSwoole();
-
-                } catch (WException | Exception $error) {
-                    throw $error;
-                }
-
-                return $ready_with_swoole;
-            }
-
-            $request_uri = Util::get($_REQUEST,'REQUEST_URI','/');
-
             if (!isset($_SESSION['wf'])) {
                 $_SESSION['wf'] = [];
             }
 
+            if (defined('SWOOLE') && SWOOLE == '1' && defined('SWOOLE_IP') && !empty(SWOOLE_IP) && defined('SWOOLE_PORT') && !empty(SWOOLE_PORT)) {
+                try {
+                    $this->readyWithSwoole();
+
+                } catch (WException $error) {
+                    throw $error;
+                }
+
+                return;
+            }
+
+            $request_uri = $wutil->arrayContains($_REQUEST,'REQUEST_URI','/')->getString();
+
             try {
                 $ready_route = $this->readyRoute($request_uri);
 
-            } catch (WException | Exception $error) {
+            } catch (WException $error) {
                 throw $error;
             }
 
-            return $ready_route;
+            return;
         }
         /**
          * @return mixed
          */
-        public function readyWithSwoole(): mixed {
+        public function readyWithSwoole(): void {
+            $wutil = new WUtil;
+
             $http_server = new \swoole_http_server(SWOOLE_IP,SWOOLE_PORT);
 
-            $log_level = Util::get(get_defined_constants(),'SWOOLE_LOG_LEVEL',false);
-            $log_path = Util::get(get_defined_constants(),'SWOOLE_LOG_PATH',false);
+            $log_level = wutil::arrayContains(get_defined_constants(),'SWOOLE_LOG_LEVEL',false)->getString();
+            $log_path = wutil::arrayContains(get_defined_constants(),'SWOOLE_LOG_PATH',false)->getString();
 
             if (!empty($log_level) && !empty($log_path)) {
                 $log_path = vsprintf('%s%s',[UPKEEP_PATH,$log_path,]);
@@ -77,10 +80,10 @@ namespace Core {
                 $log_path = null;
             }
 
-            $http_server->set(array(
+            $http_server->set([
                 'worker_num' => 1,
                 'reactor_num' => 1,
-                'daemonize' => Util::get(get_defined_constants(),'SWOOLE_DAEMONIZE','1'),
+                'daemonize' => $wutil->arrayContains(get_defined_constants(),'SWOOLE_DAEMONIZE','1')->getString(),
                 'backlog' => '',
                 'max_connection' => 1024,
                 'max_request' => 10,
@@ -88,10 +91,10 @@ namespace Core {
                 'ssl_cert_file' => false,
                 'ssl_key_file' => false,
                 'ssl_method' => false,
-            ));
+            ]);
 
             $http_server->on('connect',function(\swoole_http_server $http_server_client) {
-                $log_level = Util::get(get_defined_constants(),'SWOOLE_LOG_LEVEL',false);
+                $log_level = $wutil->arrayContains(get_defined_constants(),'SWOOLE_LOG_LEVEL',false)->getString();
 
                 if (!empty($log_level) && $log_level < '2') {
                     return;
@@ -154,7 +157,7 @@ namespace Core {
                     print vsprintf("Error trace...\n%s",[$error->getTraceAsString(),]);
                     print "\n------------------------------------------------------\n";
 
-                    $page_error_path = Util::get(get_defined_constants(),'SWOOLE_PAGE_ERROR_PATH',false);
+                    $page_error_path = $wutil->arrayContains(get_defined_constants(),'SWOOLE_PAGE_ERROR_PATH',false)->getString();
 
                     $content = 'No output response!';
 
@@ -163,7 +166,7 @@ namespace Core {
                     }
                 }
 
-                $gzip = Util::get(get_defined_constants(),'SWOOLE_GZIP',false);
+                $gzip = $wutil->arrayContains(get_defined_constants(),'SWOOLE_GZIP',false)->getString();
 
                 if (!empty($gzip)) {
                     $http_response->gzip(1);
@@ -175,48 +178,9 @@ namespace Core {
             });
 
             $http_server->start();
+
+            return;
         }
-        /**
-         * @param array $application_route
-         * @param array $match
-         * @return object
-         * @throws WException|Exception
-         */
-        private function urlMatch(array $application_route,array $match): object {
-            $application_route_list = explode('\\',$application_route[0]);
-
-            $bundle = array_shift($application_route_list);
-            $controller_action = array_pop($application_route_list);
-            $application_path = implode('\\',$application_route_list);
-
-            $application = vsprintf('Application\\%s\\Controller\\%s',[$bundle,$application_path]);
-
-            $uri = null;
-
-            if (!empty($match)) {
-                $uri = $match[0];
-                array_shift($match);
-            }
-
-            $request = new Request($match,$application_route[1],$application_route[2]);
-            $request->setUri($uri);
-
-            $new_application = new $application($request);
-
-            if (empty(method_exists($new_application,$controller_action))) {
-                throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
-            }
-
-            try {
-                $context = $new_application->$controller_action();
-
-            } catch (WException | Exception $error) {
-                throw $error;
-            }
-
-            return $context;
-        }
-
         /**
          * @param $request_uri
          * @return mixed
@@ -296,6 +260,46 @@ namespace Core {
             }
 
             throw new WException(vsprintf('request "%s" not found in Url.php',[$request_uri,]));
+        }
+        /**
+         * @param array $application_route
+         * @param array $match
+         * @return object
+         * @throws WException|Exception
+         */
+        private function urlMatch(array $application_route,array $match): string {
+            $application_route_list = explode('\\',$application_route[0]);
+
+            $bundle = array_shift($application_route_list);
+            $controller_action = array_pop($application_route_list);
+            $application_path = implode('\\',$application_route_list);
+
+            $application = vsprintf('Application\\%s\\Controller\\%s',[$bundle,$application_path]);
+
+            $uri = null;
+
+            if (!empty($match)) {
+                $uri = $match[0];
+                array_shift($match);
+            }
+
+            $request = new Request($match,$application_route[1],$application_route[2]);
+            $request->setUri($uri);
+
+            $new_application = new $application($request);
+
+            if (empty(method_exists($new_application,$controller_action))) {
+                throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
+            }
+
+            try {
+                $context = $new_application->$controller_action();
+
+            } catch (WException | Exception $error) {
+                throw $error;
+            }
+
+            return $context;
         }
     }
 }

@@ -48,7 +48,7 @@ namespace Core {
             $request_method = $request->getRequestMethod();
             $request_server = $request->getHttpServer();
 
-            if (empty(Util::get($request_server,'REQUEST_METHOD',null))) {
+            if (empty(Util::getOfArray($request_server,'REQUEST_METHOD',null))) {
                 throw new WException('php $_SERVER["REQUEST_METHOD"] is empty');
             }
 

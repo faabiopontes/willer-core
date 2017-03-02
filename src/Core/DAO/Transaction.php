@@ -29,7 +29,7 @@ namespace Core\DAO {
          * Transaction constructor.
          * @param string $database null
          */
-        public function __construct(?string $database) {
+        public function __construct(?string $database = null) {
             if (empty(defined('DATABASE_PATH'))) {
                 throw new WException('constant DATABASE_PATH not defined');
             }
@@ -268,7 +268,7 @@ namespace Core\DAO {
          * @return Array
          * @throws PDOException | Exception
          */
-        public function queryRaw(string $query_raw,array $value = [],boolean $acd = false): array {
+        public function queryRaw(string $query_raw,array $value = [],boolean $acd): array {
             $resource = $this->getResource();
 
             if (empty($resource)) {
