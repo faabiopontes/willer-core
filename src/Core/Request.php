@@ -164,6 +164,12 @@ namespace Core {
             return $_COOKIE;
         }
         /**
+         * @return mixed
+         */
+        public function getHttpFiles() {
+            return $_FILES;
+        }
+        /**
          * @param $id
          * @param array $url_match
          * @return int|string

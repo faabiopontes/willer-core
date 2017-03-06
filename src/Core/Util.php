@@ -7,7 +7,7 @@
 namespace Core {
     use \SplFileInfo as SplFileInfo;
     /**
-     * Trait Util
+     * Class Util
      * @package Core
      * @var $return
      */
@@ -16,7 +16,7 @@ namespace Core {
         /**
          * @param object $input
          * @param string $key
-         * @return string
+         * @return void
          */
         public function objectContains(object $input,string $key): void {
             $this->return = isset($input->$key) ? !empty($input->$key) || $input->$key === '0' ? $input->$key : null : null;
@@ -24,16 +24,16 @@ namespace Core {
         /**
          * @param array $input
          * @param string $key
-         * @param string $default null
-         * @return string
+         * @return void
          */
         public function arrayContains(array $input,string $key): void {
             $this->return = isset($input[$key]) ? !empty($input[$key]) || $input[$key] === '0' ? $input[$key] : null : null;
         }
         /**
-         * @return string
+         * @param string $string_default null
+         * @return string|null
          */
-        public function getString(?string $string_default = null): ?string {
+        public function getString(?string $string_default): ?string {
             if (empty($this->return)) {
                 return $string_default;
             }
@@ -41,9 +41,10 @@ namespace Core {
             return $this->return;
         }
         /**
-         * @return object
+         * @param object $object_default null
+         * @return object|null
          */
-        public function getObject(?object $object_default = null): ?object {
+        public function getObject(?object $object_default): ?object {
             if (empty($this->return)) {
                 return $object_default;
             }
@@ -51,9 +52,10 @@ namespace Core {
             return $this->return;
         }
         /**
-         * @return array
+         * @param array $array_default null
+         * @return array|null
          */
-        public function getArray(?array $array_default = null): ?array {
+        public function getArray(?array $array_default): ?array {
             if (empty($this->return)) {
                 return $array_default;
             }
@@ -61,6 +63,7 @@ namespace Core {
             return $this->return;
         }
         /**
+         * Load vars from .json extension files, and return associative array.
          * @param string $application_path null
          * @param array $exclude_list []
          * @return array

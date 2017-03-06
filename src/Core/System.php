@@ -13,31 +13,51 @@ namespace Core {
     /**
      * Class System
      * @package Core
+     * @var $load_var
      */
     class System {
+        private const EXTENSION_STATIC = ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map'];
+        private $load_var;
         /**
          * System constructor.
+         * @return void
          */
-        public function __construct() {
+        public function __construct(): void {
             session_start();
+
+            $wutil = new WUtil;
+
+            $load_var = $wutil->load('config');
+
+            $this->setLoadVar($load_var);
+        }
+        /**
+         * @return array
+         */
+        private function getLoadVar(): array {
+            return $this->load_var;
+        }
+        /**
+         * @return self
+         */
+        private function setLoadVar(array $load_var): self {
+            $this->load_var = $load_var;
+
+            return $this;
         }
         /**
          * @return void
          * @throws WException
          */
         public function ready(): void {
-            $wutil = new WUtil;
+            $load_var = $this->getLoadVar();
 
-            $json_config_load = $wutil->load('config');
-
-            foreach ($json_config_load['config'] as $key => $value) {
-                if (!defined($key)) {
-                    define($key,$value);
+            if (!empty($load_var)) {
+                foreach ($load_var['config'] as $var_key => $var_value) {
+                    if (!defined($var_key)) {
+                        define($var_key,$var_value);
+                    }
                 }
-            }
-
-            if (!isset($_SESSION['wf'])) {
-                $_SESSION['wf'] = [];
             }
 
             if (defined('SWOOLE') && SWOOLE == '1' && defined('SWOOLE_IP') && !empty(SWOOLE_IP) && defined('SWOOLE_PORT') && !empty(SWOOLE_PORT)) {
@@ -51,27 +71,39 @@ namespace Core {
                 return;
             }
 
-            $request_uri = $wutil->arrayContains($_REQUEST,'REQUEST_URI','/')->getString();
+            $request = new Request;
+
+            $request_uri = $wutil->arrayContains($request->getHttpServer(),'REQUEST_URI','/')->getString();
 
             try {
-                $ready_route = $this->readyRoute($request_uri);
+                $object_info = $this->readyRoute($request_uri);
+
+                $controller = $object_info->controller;
+                $action = $object_info->action;
+
+                $content = $controller->$action();
 
             } catch (WException $error) {
                 throw $error;
             }
 
+            print $content;
+
             return;
         }
         /**
-         * @return mixed
+         * @return void
          */
         public function readyWithSwoole(): void {
+            $request = new Request;
             $wutil = new WUtil;
 
             $http_server = new \swoole_http_server(SWOOLE_IP,SWOOLE_PORT);
 
-            $log_level = wutil::arrayContains(get_defined_constants(),'SWOOLE_LOG_LEVEL',false)->getString();
-            $log_path = wutil::arrayContains(get_defined_constants(),'SWOOLE_LOG_PATH',false)->getString();
+            $get_defined_constants = get_defined_constants();
+
+            $log_level = wutil::arrayContains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
+            $log_path = wutil::arrayContains($get_defined_constants,'SWOOLE_LOG_PATH',false)->getString();
 
             if (!empty($log_level) && !empty($log_path)) {
                 $log_path = vsprintf('%s%s',[UPKEEP_PATH,$log_path,]);
@@ -81,20 +113,20 @@ namespace Core {
             }
 
             $http_server->set([
-                'worker_num' => 1,
-                'reactor_num' => 1,
-                'daemonize' => $wutil->arrayContains(get_defined_constants(),'SWOOLE_DAEMONIZE','1')->getString(),
+                'worker_num' => $wutil->arrayContains($get_defined_constants,'SWOOLE_WORKER_NUM','1')->getString(),
+                'reactor_num' => $wutil->arrayContains($get_defined_constants,'SWOOLE_REACTOR_NUM','1')->getString(),
+                'daemonize' => $wutil->arrayContains($get_defined_constants,'SWOOLE_DAEMONIZE','1')->getString(),
                 'backlog' => '',
-                'max_connection' => 1024,
-                'max_request' => 10,
+                'max_connection' => $wutil->arrayContains($get_defined_constants,'SWOOLE_MAX_CONNECTION','1024')->getString(),
+                'max_request' => $wutil->arrayContains($get_defined_constants,'SWOOLE_MAX_REQUEST','10')->getString(),
                 'log_file' => $log_path,
-                'ssl_cert_file' => false,
-                'ssl_key_file' => false,
-                'ssl_method' => false,
+                'ssl_cert_file' => $wutil->arrayContains($get_defined_constants,'SWOOLE_SSL_CERT_FILE',false)->getString(),
+                'ssl_key_file' => $wutil->arrayContains($get_defined_constants,'SWOOLE_SSL_KEY_FILE',false)->getString(),
+                'ssl_method' => $wutil->arrayContains($get_defined_constants,'SWOOLE_SSL_METHOD',false)->getString(),
             ]);
 
             $http_server->on('connect',function(\swoole_http_server $http_server_client) {
-                $log_level = $wutil->arrayContains(get_defined_constants(),'SWOOLE_LOG_LEVEL',false)->getString();
+                $log_level = $wutil->arrayContains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
 
                 if (!empty($log_level) && $log_level < '2') {
                     return;
@@ -117,13 +149,15 @@ namespace Core {
                 $_FILES = $http_request->files ?? [];
                 $_SERVER = $http_request->server ? array_change_key_case($http_request->server,CASE_UPPER) : [];
 
-                $extension_static = ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map'];
+                $extension_static = self::EXTENSION_STATIC;
 
-                $parse_url_path = parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
+                $request_uri = $wutil->arrayContains($request->getHttpServer(),'REQUEST_URI','/')->getString();
+
+                $parse_url_path = parse_url($request_uri,PHP_URL_PATH);
                 $extension = pathinfo($parse_url_path,PATHINFO_EXTENSION);
 
                 if (in_array($extension,$extension_static)) {
-                    $content = file_get_contents(vsprintf('%s%s',[ROOT_PATH,$_SERVER['REQUEST_URI'],]));
+                    $content = file_get_contents(vsprintf('%s%s',[ROOT_PATH,$request_uri,]));
 
                     if ($extension == 'css') {
                         $http_response->header('Content-Type','text/css;charset=utf-8');
@@ -138,26 +172,33 @@ namespace Core {
                 }
 
                 try {
-                    $content = $this->readyRoute($_SERVER['REQUEST_URI']);
+                    $object_info = $this->readyRoute($request_uri);
 
-                } catch (WException | Exception $error) {
+                    $controller = $object_info->controller;
+                    $action = $object_info->action;
+
+                    $content = $controller->$action();
+
+                } catch (WException $error) {
                     $date = new DateTime('now');
 
                     print "\n------------------------------------------------------\n";
+                    print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
                     print "Client connect...\n";
                     print "Throw Exception...\n";
                     print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
-                    print vsprintf("HTTP GET...\n%s",[print_r($_GET,true),]);
-                    print vsprintf("HTTP POST...\n%s",[print_r($_POST,true),]);
-                    print vsprintf("HTTP COOKIE...\n%s",[print_r($_COOKIE,true),]);
-                    print vsprintf("HTTP FILES...\n%s",[print_r($_FILES,true),]);
-                    print vsprintf("HTTP SERVER...\n%s",[print_r($_SERVER,true),]);
+                    print vsprintf("HTTP GET...\n%s",[print_r($request->getHttpGet(),true),]);
+                    print vsprintf("HTTP POST...\n%s",[print_r($request->getHttpPost(),true),]);
+                    print vsprintf("HTTP SESSION...\n%s",[print_r($request->getHttpSession(),true),]);
+                    print vsprintf("HTTP COOKIE...\n%s",[print_r($request->getHttpCookie(),true),]);
+                    print vsprintf("HTTP FILES...\n%s",[print_r($request->getHttpFiles(),true),]);
+                    print vsprintf("HTTP SERVER...\n%s",[print_r($request->getHttpServer(),true),]);
                     print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
                     print vsprintf("Error message...\n%s\n",[$error->getMessage(),]);
                     print vsprintf("Error trace...\n%s",[$error->getTraceAsString(),]);
                     print "\n------------------------------------------------------\n";
 
-                    $page_error_path = $wutil->arrayContains(get_defined_constants(),'SWOOLE_PAGE_ERROR_PATH',false)->getString();
+                    $page_error_path = $wutil->arrayContains($get_defined_constants,'SWOOLE_PAGE_ERROR_PATH',false)->getString();
 
                     $content = 'No output response!';
 
@@ -166,7 +207,7 @@ namespace Core {
                     }
                 }
 
-                $gzip = $wutil->arrayContains(get_defined_constants(),'SWOOLE_GZIP',false)->getString();
+                $gzip = $wutil->arrayContains($get_defined_constants,'SWOOLE_GZIP',false)->getString();
 
                 if (!empty($gzip)) {
                     $http_response->gzip(1);
@@ -182,11 +223,11 @@ namespace Core {
             return;
         }
         /**
-         * @param $request_uri
-         * @return mixed
+         * @param string $request_uri
+         * @return object
          * @throws WException
          */
-        private function readyRoute($request_uri) {
+        private function readyRoute(string $request_uri): object {
             if (!empty(defined('URL_PREFIX'))) {
                 $request_uri = str_replace(URL_PREFIX,'',$request_uri);
             }
@@ -197,17 +238,17 @@ namespace Core {
                 $request_uri = $request_uri_strstr;
             }
 
-            $json_config_load = Util::load('config');
+            $load_var = $this->getLoadVar();
 
             if (empty(defined('ROOT_PATH'))) {
                 throw new WException('constant ROOT_PATH not defined');
             }
 
-            if (!array_key_exists('app',$json_config_load)) {
+            if (!array_key_exists('app',$load_var)) {
                 throw new WException(vsprintf('file app.json not found in directory "%s/config"',[ROOT_PATH,]));
             }
 
-            foreach ($json_config_load['app'] as $app) {
+            foreach ($load_var['app'] as $app) {
                 $app_url_class = vsprintf('\Application\%s\Url',[$app]);
 
                 if (!class_exists($app_url_class,true)) {
@@ -216,12 +257,12 @@ namespace Core {
 
                 $url_list = $app_url_class::url();
 
-                foreach ($url_list as $route => $url_config) {
-                    if (count($url_config) != 3) {
-                        throw new WException(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
+                foreach ($url_list as $route => $application_route) {
+                    if (count($application_route) != 3) {
+                        throw new WException(vsprintf('route %s incorrect format. EX: "/home/page/test/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
                     }
 
-                    $url_config[0] = vsprintf('%s\%s',[$app,$url_config[0]]);
+                    $application_route[0] = vsprintf('%s\%s',[$app,$application_route[0]]);
 
                     $route = str_replace(' ','',$route);
                     $route_split_list = explode('/',$route);
@@ -248,13 +289,13 @@ namespace Core {
 
                     if (preg_match($route_er,$request_uri,$match)) {
                         try {
-                            $url_match = $this->urlMatch($url_config,$match);
+                            $object_info = $this->urlMatch($application_route,$match);
 
-                        } catch (WException | Exception $error) {
+                        } catch (WException $error) {
                             throw $error;
                         }
 
-                        return $url_match;
+                        return $object_info;
                     }
                 }
             }
@@ -265,9 +306,9 @@ namespace Core {
          * @param array $application_route
          * @param array $match
          * @return object
-         * @throws WException|Exception
+         * @throws WException
          */
-        private function urlMatch(array $application_route,array $match): string {
+        private function urlMatch(array $application_route,array $match): object {
             $application_route_list = explode('\\',$application_route[0]);
 
             $bundle = array_shift($application_route_list);
@@ -292,14 +333,17 @@ namespace Core {
                 throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
             }
 
-            try {
-                $context = $new_application->$controller_action();
+            $object_info = new stdClass;
 
-            } catch (WException | Exception $error) {
+            try {
+                $object_info->controller = $new_application;
+                $object_info->action = $controller_action;
+
+            } catch (WException $error) {
                 throw $error;
             }
 
-            return $context;
+            return $object_info;
         }
     }
 }
