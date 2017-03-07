@@ -8,26 +8,22 @@ namespace Core {
     use \SplFileInfo as SplFileInfo;
     /**
      * Class Util
-     * @package Core
      * @var $return
      */
     class WUtil {
         private $return;
         /**
-         * @param object $input
+         * @param iterable $input
          * @param string $key
          * @return void
          */
-        public function objectContains(object $input,string $key): void {
-            $this->return = isset($input->$key) ? !empty($input->$key) || $input->$key === '0' ? $input->$key : null : null;
-        }
-        /**
-         * @param array $input
-         * @param string $key
-         * @return void
-         */
-        public function arrayContains(array $input,string $key): void {
-            $this->return = isset($input[$key]) ? !empty($input[$key]) || $input[$key] === '0' ? $input[$key] : null : null;
+        public function contains(iterable $input,string $key): void {
+            if (is_array($input)) {
+                $this->return = isset($input[$key]) ? !empty($input[$key]) || $input[$key] === '0' ? $input[$key] : null : null;
+
+            } else if (is_object()) {
+                $this->return = isset($input->$key) ? !empty($input->$key) || $input->$key === '0' ? $input->$key : null : null;
+            }
         }
         /**
          * @param string $string_default null

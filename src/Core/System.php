@@ -1,22 +1,25 @@
 <?php
 /**
-  * @author William Borba
-  * @package Core
-  * @uses Core\Exception\WException
-  * @uses Core\Request
-  * @uses Core\WUtil
-  */
+ * @author William Borba
+ * @package Core
+ * @uses Core\Exception\WException
+ * @uses Core\Request
+ * @uses Core\WUtil
+ */
 namespace Core {
     use Core\{Request,WUtil};
     use Core\Exception\WException;
     use \DateTime as DateTime;
     /**
      * Class System
-     * @package Core
+     * @constant EXTENSION_STATIC ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map']
+     * @constant CONTENT_ERROR_DEFAULT 'No output response!'
      * @var $load_var
      */
     class System {
         private const EXTENSION_STATIC = ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map'];
+        private const CONTENT_ERROR_DEFAULT = 'No output response!';
+
         private $load_var;
         /**
          * System constructor.
@@ -73,13 +76,13 @@ namespace Core {
 
             $request = new Request;
 
-            $request_uri = $wutil->arrayContains($request->getHttpServer(),'REQUEST_URI','/')->getString();
+            $request_uri = $wutil->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
 
             try {
-                $object_info = $this->readyRoute($request_uri);
+                $object_route = $this->readyRoute($request_uri);
 
-                $controller = $object_info->controller;
-                $action = $object_info->action;
+                $controller = $object_route->controller;
+                $action = $object_route->action;
 
                 $content = $controller->$action();
 
@@ -102,8 +105,8 @@ namespace Core {
 
             $get_defined_constants = get_defined_constants();
 
-            $log_level = wutil::arrayContains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
-            $log_path = wutil::arrayContains($get_defined_constants,'SWOOLE_LOG_PATH',false)->getString();
+            $log_level = wutil::contains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
+            $log_path = wutil::contains($get_defined_constants,'SWOOLE_LOG_PATH',false)->getString();
 
             if (!empty($log_level) && !empty($log_path)) {
                 $log_path = vsprintf('%s%s',[UPKEEP_PATH,$log_path,]);
@@ -112,22 +115,30 @@ namespace Core {
                 $log_path = null;
             }
 
+            $page_error_path = $wutil->contains($get_defined_constants,'SWOOLE_PAGE_ERROR_PATH',false)->getString();
+            $page_error_content = '';
+
+            if (file_exists(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]))) {
+                $page_error_content = file_get_contents(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]));
+            }
+
+            $gzip = $wutil->contains($get_defined_constants,'SWOOLE_GZIP',false)->getString();
+            $log_level = $wutil->contains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
+
             $http_server->set([
-                'worker_num' => $wutil->arrayContains($get_defined_constants,'SWOOLE_WORKER_NUM','1')->getString(),
-                'reactor_num' => $wutil->arrayContains($get_defined_constants,'SWOOLE_REACTOR_NUM','1')->getString(),
-                'daemonize' => $wutil->arrayContains($get_defined_constants,'SWOOLE_DAEMONIZE','1')->getString(),
+                'worker_num' => $wutil->contains($get_defined_constants,'SWOOLE_WORKER_NUM','1')->getString(),
+                'reactor_num' => $wutil->contains($get_defined_constants,'SWOOLE_REACTOR_NUM','1')->getString(),
+                'daemonize' => $wutil->contains($get_defined_constants,'SWOOLE_DAEMONIZE','1')->getString(),
                 'backlog' => '',
-                'max_connection' => $wutil->arrayContains($get_defined_constants,'SWOOLE_MAX_CONNECTION','1024')->getString(),
-                'max_request' => $wutil->arrayContains($get_defined_constants,'SWOOLE_MAX_REQUEST','10')->getString(),
+                'max_connection' => $wutil->contains($get_defined_constants,'SWOOLE_MAX_CONNECTION','1024')->getString(),
+                'max_request' => $wutil->contains($get_defined_constants,'SWOOLE_MAX_REQUEST','10')->getString(),
                 'log_file' => $log_path,
-                'ssl_cert_file' => $wutil->arrayContains($get_defined_constants,'SWOOLE_SSL_CERT_FILE',false)->getString(),
-                'ssl_key_file' => $wutil->arrayContains($get_defined_constants,'SWOOLE_SSL_KEY_FILE',false)->getString(),
-                'ssl_method' => $wutil->arrayContains($get_defined_constants,'SWOOLE_SSL_METHOD',false)->getString(),
+                'ssl_cert_file' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_CERT_FILE',false)->getString(),
+                'ssl_key_file' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_KEY_FILE',false)->getString(),
+                'ssl_method' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_METHOD',false)->getString(),
             ]);
 
             $http_server->on('connect',function(\swoole_http_server $http_server_client) {
-                $log_level = $wutil->arrayContains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
-
                 if (!empty($log_level) && $log_level < '2') {
                     return;
                 }
@@ -151,7 +162,7 @@ namespace Core {
 
                 $extension_static = self::EXTENSION_STATIC;
 
-                $request_uri = $wutil->arrayContains($request->getHttpServer(),'REQUEST_URI','/')->getString();
+                $request_uri = $wutil->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
 
                 $parse_url_path = parse_url($request_uri,PHP_URL_PATH);
                 $extension = pathinfo($parse_url_path,PATHINFO_EXTENSION);
@@ -172,10 +183,10 @@ namespace Core {
                 }
 
                 try {
-                    $object_info = $this->readyRoute($request_uri);
+                    $object_route = $this->readyRoute($request_uri);
 
-                    $controller = $object_info->controller;
-                    $action = $object_info->action;
+                    $controller = $object_route->controller;
+                    $action = $object_route->action;
 
                     $content = $controller->$action();
 
@@ -198,16 +209,12 @@ namespace Core {
                     print vsprintf("Error trace...\n%s",[$error->getTraceAsString(),]);
                     print "\n------------------------------------------------------\n";
 
-                    $page_error_path = $wutil->arrayContains($get_defined_constants,'SWOOLE_PAGE_ERROR_PATH',false)->getString();
+                    $content = self::CONTENT_ERROR_DEFAULT;
 
-                    $content = 'No output response!';
-
-                    if (file_exists(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]))) {
-                        $content = file_get_contents(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]));
+                    if (!empty($page_error_content)) {
+                        $content = $page_error_content;
                     }
                 }
-
-                $gzip = $wutil->arrayContains($get_defined_constants,'SWOOLE_GZIP',false)->getString();
 
                 if (!empty($gzip)) {
                     $http_response->gzip(1);
@@ -289,13 +296,13 @@ namespace Core {
 
                     if (preg_match($route_er,$request_uri,$match)) {
                         try {
-                            $object_info = $this->urlMatch($application_route,$match);
+                            $object_route = $this->urlMatch($application_route,$match);
 
                         } catch (WException $error) {
                             throw $error;
                         }
 
-                        return $object_info;
+                        return $object_route;
                     }
                 }
             }
@@ -324,7 +331,10 @@ namespace Core {
                 array_shift($match);
             }
 
-            $request = new Request($match,$application_route[1],$application_route[2]);
+            $request_method = $application_route[1];
+            $route_id = $application_route[2];
+
+            $request = new Request($match,$request_method,$route_id);
             $request->setUri($uri);
 
             $new_application = new $application($request);
@@ -333,17 +343,17 @@ namespace Core {
                 throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
             }
 
-            $object_info = new stdClass;
+            $object_route = new stdClass;
 
             try {
-                $object_info->controller = $new_application;
-                $object_info->action = $controller_action;
+                $object_route->controller = $new_application;
+                $object_route->action = $controller_action;
 
             } catch (WException $error) {
                 throw $error;
             }
 
-            return $object_info;
+            return $object_route;
         }
     }
 }

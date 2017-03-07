@@ -1,49 +1,55 @@
 <?php
 /**
-  * @author William Borba
-  * @package Core
-  */
+ * @author William Borba
+ * @package Core
+ * @uses Core\Exception\WException
+ */
 namespace Core {
+    use Core\Exception\WException;
     /**
      * Class Response
-     * @package Core
-     * @property string $body
-     * @property integer $code
-     * @property array $header
+     * @var string $body
+     * @var integer $code
      */
     class Response {
         private $body;
         private $code;
-        private $header;
         /**
          * Response constructor.
-         * @param null $body
-         * @param int $code
+         * @param string $body null
+         * @param string $code
+         * @return void
          */
-        public function __construct($body = null, $code = 200) {
+        public function __construct(?string $body,string $code = '200'): void {
             $this->setBody($body);
             $this->setCode($code);
         }
         /**
-         * @param $body
-         * @return $this
+         * @return string
          */
-        public function setBody($body) {
+        public function getBody(): string {
+            return $this->body;
+        }
+        /**
+         * @param string $body null
+         * @return self
+         */
+        public function setBody(?string $body): self {
             $this->body = $body;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return string
          */
-        public function getBody() {
-            return $this->body;
+        public function getCode(): string {
+            return $this->code;
         }
         /**
-         * @param $code
-         * @return $this
+         * @param string $code
+         * @return self
          */
-        public function setCode($code) {
+        public function setCode(string $code): self {
             $this->code = $code;
 
             http_response_code($code);
@@ -51,73 +57,70 @@ namespace Core {
             return $this;
         }
         /**
-         * @return mixed
+         * @param string $header_key
+         * @return string
+         * @throws WException
          */
-        public function getCode() {
-            return $this->code;
+        public function getHeader(string $header_key): string {
+            $header = getallheaders();
+
+            if (!array_key_exists($header_key,$header)) {
+                throw new WException(vsprintf('Header key "%s" dont find in header list',[$header_key,]));
+            }
+
+            return $header[$header_key];
         }
         /**
-         * @param $header
-         * @return $this
+         * @return array
          */
-        public function setHeader($header) {
-            $this->header = $header;
+        public function getAllHeader(): array {
+            $header = getallheaders();
+
+            return $header;
+        }
+        /**
+         * @param string $header_key
+         * @param string $header_value
+         * @return self
+         */
+        public function setHeader(string $header_key,string $header_value): self {
+            $header = vsprintf('%s: %s',[$header_key,$header_value]);
+
+            header($header);
 
             return $this;
         }
         /**
-         * @return mixed
+         * @param string $body
+         * @return string
          */
-        public function getHeader() {
-            return $this->header;
-        }
-        /**
-         * @param $body
-         */
-        public function render($body) {
+        public function render(string $body): string {
             $this->setBody($body);
 
             return $body;
         }
         /**
-         * @param $body
+         * @param object $body
+         * @return string
          */
-        public function renderToJson($body) {
-            if (!empty($body)) {
-                $this->setBody($body);
-
-            } else {
-                $body = $this->getBody();
-            }
-
+        public function renderObjectToJson(object $body): string {
             $body = json_encode($body,JSON_UNESCAPED_UNICODE);
 
-            header('Content-Type: application/json');
+            $this->setHeader('Content-Type','application/json');
 
-            print $body;
+            return $body;
         }
         /**
-         * @return mixed
+         * @param string $url
+         * @return void
          */
-        public static function csrf() {
-            $csrf = md5(uniqid(mt_rand(),true));
-            $_SESSION["csrf"] = $csrf;
-
-            return $csrf;
+        public function httpRedirect(string $url): void {
+            $this->setHeader('Location',$url);
         }
         /**
-         * @param $url
+         * @return array
          */
-        public function httpRedirect($url) {
-            $code = $this->getCode();
-
-            http_response_code($code);
-            header('Location: '.$url);
-        }
-        /**
-         * @return array $_SESSION['flash_message']
-         */
-        public function getFlashMessage() {
+        public function getFlashMessage(): array {
             $flash_message = null;
 
             if (isset($_SESSION['wf']['flash_message']) && !empty($_SESSION['wf']['flash_message'])) {
@@ -129,10 +132,11 @@ namespace Core {
             return $flash_message;
         }
         /**
-         * @param $message
-         * @return mixed
+         * @param string $message
+         * @param string $type 'info'
+         * @return self
          */
-        public function setFlashMessage($message,$type = 'info') {
+        public function setFlashMessage($message,$type = 'info'): self {
             if (!isset($_SESSION['wf']['flash_message'])) {
                 $_SESSION['wf']['flash_message'] = [
                     [

@@ -1,194 +1,191 @@
 <?php
 /**
-  * @author William Borba
-  * @package Core
-  * @uses Core\Exception\WException
-  * @uses Core\Util
-  */
+ * @author William Borba
+ * @package Core
+ * @uses Core\Util
+ * @uses Core\Exception\WException
+ */
 namespace Core {
-    use Core\Exception\WException;
     use Core\Util;
+    use Core\Exception\WException;
     /**
      * Class Request
-     * @package Core
-     * @property string $uri
-     * @property array $uri_argument
+     * @constant SESSION_KEY_DEFAULT 'wf'
+     * @var string $uri
+     * @var array $uri_argument
+     * @var array $request_method
+     * @var string $route_id
      */
     class Request {
+        private const SESSION_KEY_DEFAULT = 'wf';
+
         private $uri;
         private $uri_argument;
         private $request_method;
         private $route_id;
         /**
          * Request constructor.
-         * @param $uri_argument
+         * @param array $uri_argument []
+         * @param array $request_method []
+         * @param string $route_id null
          */
-        public function __construct($uri_argument = [],$request_method = null,$route_id = null) {
+        public function __construct(array $uri_argument = [],array $request_method = [],?string $route_id): void {
             $this->setArgument($uri_argument);
             $this->setRequestMethod($request_method);
             $this->setRouteId($route_id);
         }
         /**
-         * @param null $key
-         * @return mixed
+         * @param string $key
+         * @return string
+         * @throws WException
          */
-        public function getArgument($key = null) {
-            if (!empty($key) && !empty($this->uri_argument)) {
-                if (!array_key_exists($key,$this->uri_argument)) {
-                    return false;
-
-                } else {
-                    return $this->uri_argument[$key];
-                }
+        public function getArgument(string $key): string {
+            if (empty($this->uri_argument)) {
+                throw new WException('URI arguments is empty');
             }
 
+            if (!array_key_exists($key,$this->uri_argument)) {
+                throw new WException(vsprintf('URI arguments key "%s" dont find',[$key,]));
+            }
+
+            return $this->uri_argument[$key];
+        }
+        /**
+         * @return array
+         */
+        public function getAllArgument(): array {
             return $this->uri_argument;
         }
         /**
-         * @param $uri_argument
-         * @return $this
+         * @param array $uri_argument
+         * @return self
          */
-        public function setArgument($uri_argument) {
+        public function setArgument(array $uri_argument): self {
             $this->uri_argument = $uri_argument;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return string
          */
-        public function getUri() {
+        public function getUri(): string {
             return $this->uri;
         }
         /**
-         * @param $uri_argument
-         * @return $this
+         * @param string $uri
+         * @return self
          */
-        public function setUri($uri) {
+        public function setUri($uri): self {
             $this->uri = $uri;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getRequestMethod() {
+        public function getRequestMethod(): array {
             return $this->request_method;
         }
         /**
-         * @param $request_method
+         * @param array $request_method
          * @return $this
          */
-        public function setRequestMethod($request_method) {
+        public function setRequestMethod(array $request_method): self {
             $this->request_method = $request_method;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return string
          */
-        public function getRouteId() {
+        public function getRouteId(): string {
             return $this->route_id;
         }
         /**
-         * @param $route_id
-         * @return $this
+         * @param string $route_id
+         * @return self
          */
-        public function setRouteId($route_id) {
+        public function setRouteId($route_id): self {
             $this->route_id = $route_id;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpGet() {
+        public function getHttpGet(): array {
             return $_GET;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpPost() {
+        public function getHttpPost(): array {
             return $_POST;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpServer() {
+        public function getHttpServer(): array {
             return $_SERVER;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpSession($session_key = null) {
-            if (!empty($session_key)) {
-                if (isset($_SESSION['wf'][$session_key])) {
-                    return $_SESSION['wf'][$session_key];
-
-                } else {
-                    return $_SESSION['wf'][$session_key] = null;
-                }
-
-            }
-
-            return $_SESSION['wf'];
+        public function getHttpSession(): array {
+            return $_SESSION[self::SESSION_KEY_DEFAULT];
         }
         /**
-         * @return object $this
+         * @param string $session_key
+         * @param string $session_value
+         * @return self
          */
-        public function setHttpSession($session_key,$session_value) {
-            $_SESSION['wf'][$session_key] = $session_value;
+        public function setHttpSession(string $session_key,string $session_value): self {
+            $_SESSION[self::SESSION_KEY_DEFAULT][$session_key] = $session_value;
 
             return $this;
         }
         /**
-         * @return object $this
+         * @param string $session_key
+         * @return self
          */
-        public function cleanHttpSession($session_key = null) {
+        public function cleanHttpSession(?string $session_key): self {
             if (!empty($session_key)) {
-                if (isset($_SESSION['wf'][$session_key])) {
-                    unset($_SESSION['wf'][$session_key]);
+                if (isset($_SESSION[self::SESSION_KEY_DEFAULT][$session_key])) {
+                    unset($_SESSION[self::SESSION_KEY_DEFAULT][$session_key]);
                 }
 
-            } else {
-                unset($_SESSION['wf']);
-
-                $_SESSION['wf'] = [];
             }
+
+            unset($_SESSION[self::SESSION_KEY_DEFAULT]);
+
+            $_SESSION[self::SESSION_KEY_DEFAULT] = [];
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpCookie() {
+        public function getHttpCookie(): array {
             return $_COOKIE;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpFiles() {
+        public function getHttpFiles(): array {
             return $_FILES;
         }
         /**
-         * @param $id
-         * @param array $url_match
-         * @return int|string
+         * @param string $id
+         * @param array $url_match []
+         * @return string
          * @throws WException
          */
-        public function getRoute($id, $url_match = []) {
-            $json_config_load = Util::load('config');
-
-            if (empty(defined('ROOT_PATH'))) {
-                throw new WException('constant ROOT_PATH not defined');
-            }
-
-            if (!array_key_exists('app',$json_config_load)) {
-                throw new WException(vsprintf('file app.json not found in directory "%s/Config"',[ROOT_PATH,]));
-            }
+        public function getRoute(string $id,array $url_match = []): string {
+            $load_var = Util::load('config');
 
             $url_list = [];
 
-            foreach ($json_config_load['app'] as $app) {
+            foreach ($load_var['app'] as $app) {
                 $app_url_class = vsprintf('\Application\%s\Url',[$app]);
 
                 if (!class_exists($app_url_class,true)) {
@@ -225,7 +222,9 @@ namespace Core {
 
             if (!empty($match)) {
                 if (empty($match[0])) {
-                    return URL_PREFIX.$route;
+                    $route = URL_PREFIX.$route;
+
+                    return $route;
 
                 } else {
                     if (empty($url_match) || count($url_match) != count($match[0])) {
