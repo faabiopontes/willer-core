@@ -2,25 +2,25 @@
 /**
  * @author William Borba
  * @package Core/DAO
- * @uses \PDO
- * @uses \Exception
- * @uses \PDOException
  * @uses Core\Exception\WException
+ * @uses \PDO
+ * @uses \PDOException
  */
 namespace Core\DAO {
-    use \PDO as PDO;
-    use \Exception as Exception;
-    use \PDOException as PDOException;
     use Core\Exception\WException;
+    use \PDO as PDO;
+    use \PDOException as PDOException;
     /**
      * Class Transaction
-     * @package Core\DAO
-     * @property mixed $resource
-     * @property string $database
-     * @property integer $last_insert_id
-     * @property string $database_path
+     * @constant PDO_DRIVE ['mysql','pgsql','sqlite']
+     * @var object $resource
+     * @var string $database
+     * @var integer $last_insert_id
+     * @var string $database_path
      */
     class Transaction {
+        private const PDO_DRIVE = ['mysql','pgsql','sqlite'];
+
         private $resource;
         private $database;
         private $last_insert_id;
@@ -28,8 +28,9 @@ namespace Core\DAO {
         /**
          * Transaction constructor.
          * @param string $database null
+         * @return void
          */
-        public function __construct(?string $database = null) {
+        public function __construct(?string $database = null): void {
             if (empty(defined('DATABASE_PATH'))) {
                 throw new WException('constant DATABASE_PATH not defined');
             }
@@ -72,68 +73,70 @@ namespace Core\DAO {
             $this->setDatabase($database);
         }
         /**
-         * @return object $this->resource
+         * @return object
          */
-        public function getResource(): PDO {
+        public function getResource(): object {
             return $this->resource;
         }
         /**
          * @param object $resource
-         * @return object $this
+         * @return self
          */
-        protected function setResource(PDO $resource): Transaction {
+        protected function setResource(object $resource): self {
             $this->resource = $resource;
-
-            return $this;
-        }
-        /**
-         * @return string $this->database
-         */
-        public function getDatabase(): string {
-            return $this->database;
-        }
-        /**
-         * @param string $database
-         * @return $this
-         */
-        protected function setDatabase($database) {
-            $this->database = $database;
 
             return $this;
         }
         /**
          * @return string
          */
-        public function getDatabasePath() {
+        public function getDatabase(): string {
+            return $this->database;
+        }
+        /**
+         * @param string $database
+         * @return self
+         */
+        protected function setDatabase(string $database): self {
+            $this->database = $database;
+
+            return $this;
+        }
+        /**
+         * @return array
+         */
+        public function getDatabasePath(): array {
             return $this->database_path;
         }
         /**
-         * @param $database_path
+         * @param array $database_path
+         * @return self
          */
-        protected function setDatabasePath($database_path) {
+        protected function setDatabasePath(array $database_path): self {
             $this->database_path = $database_path;
 
             return $this;
         }
         /**
-         * @return int
+         * @return integer
          */
-        public function getLastInsertId() {
+        public function getLastInsertId(): integer {
             return $this->last_insert_id;
         }
         /**
-         * @param $id
+         * @param integer $id
+         * @return self
          */
-        protected function setLastInsertId($id) {
+        protected function setLastInsertId(integer $id): self {
             $this->last_insert_id = $id;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return array
          * @throws WException
          */
-        public function getDatabaseInfo() {
+        public function getDatabaseInfo(): array {
             $database = $this->getDatabase();
             $database_path = $this->getDatabasePath();
 
@@ -144,14 +147,13 @@ namespace Core\DAO {
             return $database_path[$database];
         }
         /**
-         * @return $this
-         * @throws Exception
-         * @throws WException
+         * @return self
+         * @throws WException|PDOException
          */
-        public function connect() {
+        public function connect(): self {
             $database_info = $this->getDatabaseInfo();
 
-            if (!in_array($database_info['driver'],['mysql','pgsql','sqlite'])) {
+            if (!in_array($database_info['driver'],self::PDO_DRIVE)) {
                 throw new WException(vsprintf('database driver "%s" not registered',[$database_info['driver'],]));
             }
 
@@ -181,7 +183,7 @@ namespace Core\DAO {
                     }
                 }
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
             }
 
@@ -190,11 +192,10 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @return $this
-         * @throws Exception
-         * @throws WException
+         * @return self
+         * @throws WException|PDOException
          */
-        public function beginTransaction() {
+        public function beginTransaction(): self {
             $this->connect();
 
             $resource = $this->getResource();
@@ -202,24 +203,24 @@ namespace Core\DAO {
             try {
                 $resource->beginTransaction();
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
             }
 
             return $this;
         }
         /**
-         * @return $this
-         * @throws Exception
+         * @return self
+         * @throws WException|PDOException
          */
-        public function commit() {
+        public function commit(): self {
             $resource = $this->getResource();
 
             if (!empty($resource)) {
                 try {
                     $this->resource->commit();
 
-                } catch (PDOException | Exception $error) {
+                } catch (PDOException | WException $error) {
                     throw $error;
                 }
             }
@@ -227,17 +228,17 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @return $this
-         * @throws Exception
+         * @return self
+         * @throws WException|PDOException
          */
-        public function rollBack() {
+        public function rollBack(): self {
             $resource = $this->getResource();
 
             if (!empty($resource)) {
                 try {
                     $this->resource->rollBack();
 
-                } catch (PDOException | Exception $error) {
+                } catch (PDOException | WException $error) {
                     throw $error;
                 }
             }
@@ -245,30 +246,30 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param null $sequence_name
-         * @return int
-         * @throws Exception
+         * @param string $sequence_name null
+         * @return integer
+         * @throws WException|PDOException
          */
-        public function lastInsertId($sequence_name = null) {
+        public function lastInsertId(string $sequence_name = null): integer {
             $resource = $this->getResource();
 
             try {
                 $this->setLastInsertId($resource->lastInsertId($sequence_name));
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
             }
 
             return $this->getLastInsertId();
         }
         /**
-         * @param String $query_raw
-         * @param Array $value []
-         * @param Boolean $acd false
-         * @return Array
-         * @throws PDOException | Exception
+         * @param string $query_raw
+         * @param array $value []
+         * @param boolean $cud false
+         * @return array
+         * @throws PDOException | WException
          */
-        public function queryRaw(string $query_raw,array $value = [],boolean $acd): array {
+        public function queryRaw(string $query_raw,array $value = [],boolean $cud = false): array {
             $resource = $this->getResource();
 
             if (empty($resource)) {
@@ -286,14 +287,14 @@ namespace Core\DAO {
 
                 $pdo_query->execute($value);
 
-                if (empty($acd)) {
+                if (empty($cud)) {
                     $result = $pdo_query->fetchAll(PDO::FETCH_OBJ);
 
                 } else {
                     $result = [$pdo_query->fetch(PDO::FETCH_OBJ)];
                 }
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
             }
 

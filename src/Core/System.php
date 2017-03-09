@@ -2,9 +2,10 @@
 /**
  * @author William Borba
  * @package Core
- * @uses Core\Exception\WException
  * @uses Core\Request
  * @uses Core\WUtil
+ * @uses Core\Exception\WException
+ * @uses \DateTime
  */
 namespace Core {
     use Core\{Request,WUtil};

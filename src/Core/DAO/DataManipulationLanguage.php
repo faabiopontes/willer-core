@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @author William Borba
  * @package Core/DAO
@@ -12,29 +11,28 @@ namespace Core\DAO {
     use Core\Exception\WException;
     use \PDOException as PDOException;
     use \PDO as PDO;
-    use \Exception as Exception;
     use \stdClass as stdClass;
     /**
      * Class DataManipulationLanguage
-     * @package Core\DAO
-     * @property mixed $transaction
-     * @property string $db_escape
-     * @property array $related
-     * @property string $limit
-     * @property array $limit_value
-     * @property array $order_by
-     * @property string $primary_key
-     * @property integer $last_insert_id
-     * @property array $where_unique
-     * @property array $where_unique_value
-     * @property array $where
-     * @property array $where_value
-     * @property array $like
-     * @property array $like_value
-     * @property array $between
-     * @property array $between_value
-     * @property array $query
-     * @property boolean $flag_new_or_update
+     * @constant QUERY_LIMIT_DEFAULT 1000
+     * @var object $transaction
+     * @var string $db_escape
+     * @var array $related
+     * @var string $limit
+     * @var array $limit_value
+     * @var array $order_by
+     * @var string $primary_key
+     * @var integer $last_insert_id
+     * @var array $where_unique
+     * @var array $where_unique_value
+     * @var array $where
+     * @var array $where_value
+     * @var array $like
+     * @var array $like_value
+     * @var array $between
+     * @var array $between_value
+     * @var array $query
+     * @var boolean $flag_new_or_update
      */
     abstract class DataManipulationLanguage {
         private const QUERY_LIMIT_DEFAULT = 1000;
@@ -59,9 +57,9 @@ namespace Core\DAO {
         private $flag_new_or_update;
         /**
          * DataManipulationLanguage constructor.
-         * @param null $transaction
+         * @param object $transaction null
          */
-        public function __construct($transaction = null) {
+        public function __construct(object $transaction = null): void {
             if (empty($transaction)) {
                 throw new WException(vsprintf('Transaction object not loaded, in model instance "%s"',[$this->name(),]));
             }
@@ -88,72 +86,72 @@ namespace Core\DAO {
             $this->query = [];
         }
         /**
-         * @return mixed
+         * @return string
          */
-        private function getClassName() {
+        private function getClassName(): string {
             return $this->className();
         }
         /**
-         * @return mixed
+         * @return string
          */
-        public function getTableName() {
+        public function getTableName(): string {
             return $this->name();
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getTableColumn() {
+        public function getTableColumn(): array {
             return $this->column();
         }
         /**
-         * @return mixed
+         * @return array
          */
-        private function getTableSchema() {
+        private function getTableSchema(): array {
             return $this->schema();
         }
         /**
-         * @return mixed
+         * @return object|null
          */
-        protected function getTransaction() {
+        protected function getTransaction(): ?object {
             return $this->transaction;
         }
 
         /**
-         * @param $transaction
-         * @return $this
+         * @param object $transaction
+         * @return self
          */
-        protected function setTransaction($transaction) {
+        protected function setTransaction(object $transaction): self {
             $this->transaction = $transaction;
 
             return $this;
         }
         /**
-         * @return string
+         * @return string|null
          */
-        private function getLimit() {
+        private function getLimit(): ?string {
             return $this->limit;
         }
         /**
-         * @param $limit
-         * @return $this
+         * @param string $limit null
+         * @return self
          */
-        private function setLimit($limit) {
+        private function setLimit(?string $limit): self {
             $this->limit = $limit;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getLimitValue() {
+        private function getLimitValue(): ?array {
             return $this->limit_value;
         }
         /**
-         * @param $page
-         * @param $limit
-         * @return $this
+         * @param string $page
+         * @param string $limit
+         * @return self
          */
-        private function setLimitValue($page, $limit) {
+        private function setLimitValue(integer $page,integer $limit): self {
             $this->limit_value = [
                 'page' => $page,
                 'limit' => $limit,
@@ -162,182 +160,182 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getOrderBy() {
+        private function getOrderBy(): ?array {
             return $this->order_by;
         }
         /**
-         * @param $order_by
-         * @return $this
+         * @param array $order_by null
+         * @return self
          */
-        private function setOrderBy($order_by) {
+        private function setOrderBy(?array $order_by): self {
             $this->order_by = $order_by;
 
             return $this;
         }
         /**
-         * @return string
+         * @return string|null
          */
-        public function getPrimaryKey() {
+        public function getPrimaryKey(): ?string {
             return $this->primary_key;
         }
         /**
-         * @param $column
-         * @return $this
+         * @param string $column null
+         * @return self
          */
-        private function setPrimaryKey($column) {
+        private function setPrimaryKey(?string $column): self {
             $this->primary_key = $column;
 
             return $this;
         }
         /**
-         * @return int
+         * @return integer|null
          */
-        private function getLastInsertId() {
+        private function getLastInsertId(): ?integer {
             return $this->last_insert_id;
         }
         /**
-         * @param $id
-         * @return $this
+         * @param integer $id null
+         * @return self
          */
-        private function setLastInsertId($id) {
+        private function setLastInsertId(?integer $id): self {
             $this->last_insert_id = $id;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getWhereUnique() {
+        private function getWhereUnique(): ?array {
             return $this->where_unique;
         }
         /**
-         * @param $where_unique
-         * @return $this
+         * @param array $where_unique null
+         * @return self
          */
-        private function setWhereUnique($where_unique) {
+        private function setWhereUnique(?array $where_unique): self {
             $this->where_unique = $where_unique;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getWhereUniqueValue() {
+        private function getWhereUniqueValue(): ?array {
             return $this->where_unique_value;
         }
         /**
-         * @param $where_unique_value
-         * @return $this
+         * @param array $where_unique_value null
+         * @return self
          */
-        private function setWhereUniqueValue($where_unique_value) {
+        private function setWhereUniqueValue(?array $where_unique_value): self {
             $this->where_unique_value = $where_unique_value;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getWhere() {
+        private function getWhere(): ?array {
             return $this->where;
         }
         /**
-         * @param $where
-         * @return $this
+         * @param array $where null
+         * @return self
          */
-        private function setWhere($where) {
+        private function setWhere(?array $where): self {
             $this->where = $where;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getWhereValue() {
+        private function getWhereValue(): ?array {
             return $this->where_value;
         }
         /**
-         * @param $where_value
-         * @return $this
+         * @param array $where_value null
+         * @return self
          */
-        private function setWhereValue($where_value) {
+        private function setWhereValue(?array $where_value): self {
             $this->where_value = $where_value;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getBetween() {
+        private function getBetween(): ?array {
             return $this->between;
         }
         /**
-         * @param $between
-         * @return $this
+         * @param array $between null
+         * @return self
          */
-        private function setBetween($between) {
+        private function setBetween(?array $between): array {
             $this->between = $between;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getBetweenValue() {
+        private function getBetweenValue(): ?array {
             return $this->between_value;
         }
         /**
-         * @param $between_value
-         * @return $this
+         * @param array $between_value null
+         * @return self
          */
-        private function setBetweenValue($between_value) {
+        private function setBetweenValue(?array $between_value): self {
             $this->between_value = $between_value;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getLike() {
+        private function getLike(): ?array {
             return $this->like;
         }
         /**
-         * @param $like
-         * @return $this
+         * @param array $like null
+         * @return self
          */
-        private function setLike($like) {
+        private function setLike(?array $like): self {
             $this->like = $like;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getLikeValue() {
+        private function getLikeValue(): ?array {
             return $this->like_value;
         }
         /**
-         * @param $like_value
+         * @param array $like_value null
          * @return $this
          */
-        private function setLikeValue($like_value) {
+        private function setLikeValue(?array $like_value): self {
             $this->like_value = $like_value;
 
             return $this;
         }
         /**
-         * @return array
+         * @return array|null
          */
-        private function getQuery() {
+        private function getQuery(): ?array {
             return $this->query;
         }
         /**
-         * @param $sql
-         * @param $value
-         * @return $this
+         * @param string $sql
+         * @param array $value null
+         * @return self
          */
-        private function setQuery($sql, $value) {
+        private function setQuery(string $sql,?array $value): self {
             $this->query[] = [
                 'sql' => $sql,
                 'value' => $value
@@ -616,7 +614,6 @@ namespace Core\DAO {
         /**
          * @param array $where
          * @return mixed
-         * @throws Exception
          * @throws WException
          */
         public function get($where = []) {
@@ -725,7 +722,7 @@ namespace Core\DAO {
                 $pdo_query->execute($query_value_list);
                 $pdo_query_fetch = $pdo_query->fetch(PDO::FETCH_OBJ);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
             }
 
@@ -756,7 +753,6 @@ namespace Core\DAO {
         /**
          * @param null $field
          * @return $this
-         * @throws Exception
          * @throws WException
          */
         public function save($field = null) {
@@ -855,7 +851,7 @@ namespace Core\DAO {
 
                 $pdo_query->execute($query_value_list);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
             }
 
@@ -890,7 +886,6 @@ namespace Core\DAO {
         /**
          * @param null $set
          * @return $this
-         * @throws Exception
          * @throws WException
          */
         public function update($set = null) {
@@ -987,7 +982,7 @@ namespace Core\DAO {
 
                 $query->execute($query_value);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
             }
 
@@ -1002,7 +997,6 @@ namespace Core\DAO {
         /**
          * @param null $where
          * @return $this
-         * @throws Exception
          * @throws WException
          */
         public function delete($where = null) {
@@ -1115,7 +1109,7 @@ namespace Core\DAO {
 
                 $pdo_query->execute($query_value);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
 
             }
@@ -1131,7 +1125,6 @@ namespace Core\DAO {
         /**
          * @param array $setting
          * @return array
-         * @throws Exception
          * @throws WException
          */
         public function execute($setting = []) {
@@ -1290,7 +1283,7 @@ namespace Core\DAO {
                 $pdo_query_total->execute($query_value);
                 $pdo_query_total = $pdo_query_total->fetch(PDO::FETCH_OBJ);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
             }
 
@@ -1313,7 +1306,7 @@ namespace Core\DAO {
                 $pdo_query->execute($query_value);
                 $query_fetch_all = $pdo_query->fetchAll(PDO::FETCH_OBJ);
 
-            } catch (PDOException | Exception $error) {
+            } catch (PDOException | WException $error) {
                 throw $error;
             }
 

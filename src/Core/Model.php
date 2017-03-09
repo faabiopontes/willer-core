@@ -10,8 +10,10 @@ namespace Core {
     use Core\Exception\WException;
     /**
      * Class Model
+     * @constant RULE ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled']
      */
     abstract class Model extends DataManipulationLanguage {
+        private const RULE = ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled'];
         /**
          * Model constructor.
          * @param Transaction $transaction
@@ -40,96 +42,6 @@ namespace Core {
          */
         protected function column(): array {
             return get_object_vars($this);
-        }
-        /**
-         * @param $rule_list
-         * @param $value
-         * @param $function_name
-         * @param $function_filter
-         * @return mixed
-         * @throws WException
-         */
-        private static function filterRule($rule_list,$value,$function_name,$function_filter) {
-            if (!empty($rule_list)) {
-                $rule_null = null;
-                $rule_length = null;
-                $rule_table = null;
-
-                foreach ($rule_list as $rule_name => $rule_value) {
-                    if (!in_array($rule_name,['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled'])) {
-                        throw new WException(vsprintf('"%s" field rule "%s" incorrect"',[$function_name,$rule_name]));
-
-                    } else if ($rule_name == 'null') {
-                        $rule_null = $rule_value;
-
-                    } else if ($rule_name == 'length') {
-                        $rule_length = $rule_value;
-
-                    } else if ($rule_name == 'table') {
-                        $rule_table = $rule_value;
-                    }
-                }
-
-                if (empty($rule_null)) {
-                    if ($value !== '0' && empty($value)) {
-                        throw new WException(vsprintf('"%s" field value can not be null',[$function_name,]));
-                    }
-                }
-
-                switch ($function_name) {
-                    case 'foreignKey':
-                        if (empty($rule_table)) {
-                            throw new WException('foreign key field require one object');
-                        }
-
-                        if (empty($value)) {
-                            if (empty($rule_null)) {
-                                throw new WException('foreign key field value is missing');
-                            }
-
-                        } else {
-                            if (!is_object($rule_table)) {
-                                throw new WException('foreign key field value is not object');
-                            }
-
-                            if (!$value instanceof $rule_table) {
-                                throw new WException('foreign key field value is not object instance of referral');
-                            }
-                        }
-
-                        break;
-
-                    default:
-                        if (empty($rule_null) && !empty($value)) {
-                            if (is_object($value)) {
-                                throw new WException(vsprintf('"%s" field value can not be object',[$function_name,]));
-                            }
-                        }
-                }
-
-                if (!empty($rule_length)) {
-                    if (empty($value)) {
-                        if (empty($rule_null)) {
-                            throw new WException(vsprintf('"%s" field value can not be null',[$function_name,]));
-                        }
-
-                    } else {
-                        if (!is_numeric($rule_length)) {
-                            throw new WException(vsprintf('"%s" field length is not numeric',[$function_name,]));
-                        }
-
-                        if (strlen($value) > $rule_length) {
-                            throw new WException(vsprintf('"%s" field length is greater than "%s"',[$function_name,$rule_length]));
-                        }
-                    }
-                }
-            }
-
-            if (!empty($value)) {
-                $value = $function_filter($value);
-            }
-
-            return $value;
         }
         /**
          * @param array $rule []
