@@ -8,10 +8,13 @@ namespace Core {
     use Core\Exception\WException;
     /**
      * Class Response
+     * @constant string CODE_STATUS_OK '200'
      * @var string $body
      * @var integer $code
      */
     class Response {
+        private const CODE_STATUS_OK = '200'
+
         private $body;
         private $code;
         /**
@@ -20,7 +23,11 @@ namespace Core {
          * @param string $code
          * @return void
          */
-        public function __construct(?string $body,string $code = '200'): void {
+        public function __construct(?string $body,?string $code): void {
+            if (empty($code)) {
+                $code = self::CODE_STATUS_OK;
+            }
+
             $this->setBody($body);
             $this->setCode($code);
         }

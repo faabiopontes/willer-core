@@ -30,7 +30,7 @@ namespace Core\DAO {
          * @param string $database null
          * @return void
          */
-        public function __construct(?string $database = null): void {
+        public function __construct(?string $database): void {
             if (empty(defined('DATABASE_PATH'))) {
                 throw new WException('constant DATABASE_PATH not defined');
             }

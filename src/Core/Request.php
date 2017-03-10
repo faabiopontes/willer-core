@@ -2,11 +2,11 @@
 /**
  * @author William Borba
  * @package Core
- * @uses Core\Util
+ * @uses Core\WUtil
  * @uses Core\Exception\WException
  */
 namespace Core {
-    use Core\Util;
+    use Core\WUtil;
     use Core\Exception\WException;
     /**
      * Class Request
@@ -15,6 +15,7 @@ namespace Core {
      * @var array $uri_argument
      * @var array $request_method
      * @var string $route_id
+     * @var array $app_url_list
      */
     class Request {
         private const SESSION_KEY_DEFAULT = 'wf';
@@ -23,6 +24,7 @@ namespace Core {
         private $uri_argument;
         private $request_method;
         private $route_id;
+        private $app_url_list;
         /**
          * Request constructor.
          * @param array $uri_argument []
@@ -111,6 +113,21 @@ namespace Core {
             return $this;
         }
         /**
+         * @return array|null
+         */
+        public function getAppUrlList(): ?array {
+            return $this->app_url_list;
+        }
+        /**
+         * @param array $app_url_list null
+         * @return self
+         */
+        public function setAppUrlList(?array $app_url_list): self {
+            $this->app_url_list = $app_url_list;
+
+            return $this;
+        }
+        /**
          * @return array
          */
         public function getHttpGet(): array {
@@ -181,23 +198,31 @@ namespace Core {
          * @throws WException
          */
         public function getRoute(string $id,array $url_match = []): string {
-            $load_var = Util::load('config');
+            $app_url_list = $this->getAppUrlList();
 
-            $url_list = [];
+            if (empty($app_url_list)) {
+                $wutil = new WUtil;
 
-            foreach ($load_var['app'] as $app) {
-                $app_url_class = vsprintf('\Application\%s\Url',[$app]);
+                $load_var = $wutil::load('config');
 
-                if (!class_exists($app_url_class,true)) {
-                    throw new WException(vsprintf('class "%s" not found',[$app_url_class,]));
+                $app_url_list = [];
+
+                foreach ($load_var['app'] as $app) {
+                    $app_url_class = vsprintf('\Application\%s\Url',[$app]);
+
+                    if (!class_exists($app_url_class,true)) {
+                        throw new WException(vsprintf('class "%s" not found',[$app_url_class,]));
+                    }
+
+                    $app_url_list = array_merge($app_url_list,$app_url_class::url());
                 }
 
-                $url_list = array_merge($url_list,$app_url_class::url());
+                $this->setAppUrlList($app_url_list);
             }
 
             $flag_id = false;
 
-            foreach ($url_list as $route => $url_config) {
+            foreach ($app_url_list as $route => $url_config) {
                 if (count($url_config) != 3) {
                     throw new WException(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
                 }

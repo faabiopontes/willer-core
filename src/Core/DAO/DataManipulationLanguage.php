@@ -344,10 +344,10 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param null $column
+         * @return self
          * @throws WException
          */
-        protected function definePrimaryKey() {
+        protected function definePrimaryKey(): self {
             $table_schema = $this->schema();
 
             $column = null;
@@ -363,12 +363,14 @@ namespace Core\DAO {
             }
 
             $this->setPrimaryKey($column);
+
+            return $this;
         }
         /**
-         * @param array $order_by
+         * @param array $order_by []
          * @return $this
          */
-        public function orderBy($order_by = []) {
+        public function orderBy(array $order_by): self {
             if (!empty($order_by)) {
                 $order_by_list = [];
 
@@ -388,11 +390,11 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param int $page
-         * @param int $limit
-         * @return $this
+         * @param integer $page
+         * @param integer $limit
+         * @return self
          */
-        public function limit($page = 1, $limit = null) {
+        public function limit(integer $page,integer $limit): self {
             if (empty($limit)) {
                 $limit = defined(QUERY_LIMIT) ? QUERY_LIMIT : $this->QUERY_LIMIT_DEFAULT;
             }
@@ -419,12 +421,13 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param $table_related
-         * @param array $query_list
-         * @param bool $join
+         * @param object $table_related
+         * @param array $query_list []
+         * @param boolean $join false
+         * @param string $table_related_name_alias null
          * @return array
          */
-        private function related($table_related, $query_list = [], $join = false, $table_related_name_alias = null) {
+        private function related(object $table_related,array $query_list = [],boolean $join = false,?string $table_related_name_alias): array {
             $table_name = $table_related->getTableName();
             $table_schema = $table_related->getTableSchema();
 
@@ -483,10 +486,10 @@ namespace Core\DAO {
         }
         /**
          * @param array $where
-         * @return $this
+         * @return self
          * @throws WException
          */
-        public function where($where = []) {
+        public function where(array $where): self {
             $where_value_list = [];
 
             if (empty($where)) {
@@ -532,10 +535,10 @@ namespace Core\DAO {
         }
         /**
          * @param array $like
-         * @return $this
+         * @return self
          * @throws WException
          */
-        public function like($like = []) {
+        public function like(array $like): self {
             $like_value_list = [];
 
             if (empty($like)) {
@@ -570,10 +573,10 @@ namespace Core\DAO {
         }
         /**
          * @param array $between
-         * @return $this
+         * @return self
          * @throws WException
          */
-        public function between($between = []) {
+        public function between(array $between): self {
             $between_value_list = [];
 
             if (empty($between)) {
@@ -613,10 +616,10 @@ namespace Core\DAO {
         }
         /**
          * @param array $where
-         * @return mixed
+         * @return object
          * @throws WException
          */
-        public function get($where = []) {
+        public function get(array $where): object {
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -751,11 +754,11 @@ namespace Core\DAO {
             return $related_fetch;
         }
         /**
-         * @param null $field
-         * @return $this
+         * @param array $column null
+         * @return self
          * @throws WException
          */
-        public function save($field = null) {
+        public function save(?array $column): self {
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -787,19 +790,19 @@ namespace Core\DAO {
             $set_escape = [];
             $flag_getdiscard = false;
 
-            if (!empty($field)) {
-                if (!is_array($field)) {
+            if (!empty($column)) {
+                if (!is_array($column)) {
                     throw new WException(vsprintf('[save]incorrect type of parameter, in model instance "%s"',[$this->name(),]));
                 }
 
                 $this->setLastInsertId(null);
 
-                $table_column = $field;
+                $table_column = $column;
             }
 
             foreach ($table_column as $key => $value) {
                 if (!array_key_exists($key,$table_schema)) {
-                    throw new WException(vsprintf('[save]field missing "%s", check your schema, in model instance "%s"',[$key,$this->name(),]));
+                    throw new WException(vsprintf('[save]column missing "%s", check your schema, in model instance "%s"',[$key,$this->name(),]));
                 }
 
                 if ($primary_key != $key) {
@@ -822,7 +825,7 @@ namespace Core\DAO {
             $column_list = implode(',',$column_list);
             $query_escape_list = implode(',',$query_escape_list);
 
-            if (empty($field) && (!empty($last_insert_id) || !empty($table_column[$primary_key]))) {
+            if (empty($column) && (!empty($last_insert_id) || !empty($table_column[$primary_key]))) {
                 if (!empty($table_column[$primary_key])) {
                     $where = vsprintf('%s=%s',[$primary_key,$table_column[$primary_key]]);
 
@@ -884,11 +887,11 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param null $set
-         * @return $this
+         * @param array $set
+         * @return self
          * @throws WException
          */
-        public function update($set = null) {
+        public function update(array $set): self {
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -995,11 +998,11 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param null $where
-         * @return $this
+         * @param array $where null
+         * @return self
          * @throws WException
          */
-        public function delete($where = null) {
+        public function delete(?array $where): self {
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -1123,11 +1126,11 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param array $setting
-         * @return array
+         * @param array $setting null
+         * @return object
          * @throws WException
          */
-        public function execute($setting = []) {
+        public function execute(?array $setting): object {
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -1356,14 +1359,14 @@ namespace Core\DAO {
             return $result;
         }
         /**
-         * @param $obj_column_list
-         * @param $obj_schema_dict
-         * @param $fetch
-         * @param $transaction
-         * @param $obj
-         * @return mixed
+         * @param array $obj_column_list
+         * @param array $obj_schema_dict
+         * @param object $fetch
+         * @param object $transaction
+         * @param object $obj
+         * @return object
          */
-        private function relatedFetch($obj_column_list, $obj_schema_dict, $fetch, $transaction, $obj) {
+        private function relatedFetch(array $obj_column_list,array $obj_schema_dict,object $fetch,object $transaction,object $obj): object {
             $table_name = $obj->getTableName();
 
             foreach ($obj_column_list as $column => $value) {
@@ -1394,7 +1397,7 @@ namespace Core\DAO {
         /**
          * @return array
          */
-        public function dumpQuery() {
+        public function dumpQuery(): array {
             $query = $this->getQuery();
 
             return $query;
