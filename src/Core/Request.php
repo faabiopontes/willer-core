@@ -35,15 +35,17 @@ namespace Core {
          * @throws WException
          */
         public function getArgument(string $key): string {
-            if (empty($this->uri_argument)) {
+            $uri_argument = $this->getAllArgument();
+
+            if (empty($uri_argument)) {
                 throw new WException('URI arguments is empty');
             }
 
-            if (!array_key_exists($key,$this->uri_argument)) {
+            if (!array_key_exists($key,$uri_argument)) {
                 throw new WException(vsprintf('URI arguments key "%s" dont find',[$key,]));
             }
 
-            return $this->uri_argument[$key];
+            return $uri_argument[$key];
         }
         /**
          * @return array
@@ -158,7 +160,7 @@ namespace Core {
          * @param string $session_key
          * @return self
          */
-        public function cleanHttpSession(?string $session_key): self {
+        public function cleanHttpSession(?string $session_key = null): self {
             if (!empty($session_key)) {
                 if (isset($_SESSION[self::SESSION_KEY_DEFAULT][$session_key])) {
                     unset($_SESSION[self::SESSION_KEY_DEFAULT][$session_key]);

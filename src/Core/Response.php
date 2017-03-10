@@ -8,13 +8,10 @@ namespace Core {
     use Core\Exception\WException;
     /**
      * Class Response
-     * @constant string CODE_STATUS_OK '200'
      * @var string $body
      * @var integer $code
      */
     class Response {
-        private const CODE_STATUS_OK = '200'
-
         private $body;
         private $code;
         /**
@@ -22,14 +19,7 @@ namespace Core {
          * @param string $body null
          * @param string $code
          */
-        public function __construct(?string $body,?string $code) {
-            if (empty($code)) {
-                $code = self::CODE_STATUS_OK;
-            }
-
-            $this->setBody($body);
-            $this->setCode($code);
-        }
+        public function __construct() {}
         /**
          * @return string
          */
@@ -124,9 +114,9 @@ namespace Core {
             $this->setHeader('Location',$url);
         }
         /**
-         * @return array
+         * @return array|null
          */
-        public function getFlashMessage(): array {
+        public function getFlashMessage(): ?array {
             $flash_message = null;
 
             if (isset($_SESSION['wf']['flash_message']) && !empty($_SESSION['wf']['flash_message'])) {

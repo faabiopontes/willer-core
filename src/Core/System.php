@@ -29,6 +29,9 @@ namespace Core {
         public function __construct() {
             session_start();
 
+            $request = new Request();
+            $request->cleanHttpSession();
+
             $wutil = new WUtil;
 
             $load_var = $wutil->load('config');

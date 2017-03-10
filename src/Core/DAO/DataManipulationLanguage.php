@@ -9,9 +9,6 @@
  */
 namespace Core\DAO {
     use Core\Exception\WException;
-    use \PDOException as PDOException;
-    use \PDO as PDO;
-    use \stdClass as stdClass;
     /**
      * Class DataManipulationLanguage
      * @constant QUERY_LIMIT_DEFAULT 1000
@@ -22,7 +19,7 @@ namespace Core\DAO {
      * @var array $limit_value
      * @var array $order_by
      * @var string $primary_key
-     * @var integer $last_insert_id
+     * @var int $last_insert_id
      * @var array $where_unique
      * @var array $where_unique_value
      * @var array $where
@@ -57,9 +54,9 @@ namespace Core\DAO {
         private $flag_new_or_update;
         /**
          * DataManipulationLanguage constructor.
-         * @param object $transaction null
+         * @param object $transaction \Core\DAO\Transaction|null
          */
-        public function __construct(object $transaction = null) {
+        public function __construct(?\Core\DAO\Transaction $transaction = null) {
             if (empty($transaction)) {
                 throw new WException(vsprintf('Transaction object not loaded, in model instance "%s"',[$this->name(),]));
             }
@@ -112,15 +109,15 @@ namespace Core\DAO {
         /**
          * @return object|null
          */
-        protected function getTransaction(): ?object {
+        protected function getTransaction(): ?\Core\DAO\Transaction {
             return $this->transaction;
         }
 
         /**
-         * @param object $transaction
+         * @param object $transaction \Core\DAO\Transaction
          * @return self
          */
-        protected function setTransaction(object $transaction): self {
+        protected function setTransaction(\Core\DAO\Transaction $transaction): self {
             $this->transaction = $transaction;
 
             return $this;
@@ -151,7 +148,7 @@ namespace Core\DAO {
          * @param string $limit
          * @return self
          */
-        private function setLimitValue(integer $page,integer $limit): self {
+        private function setLimitValue(int $page,int $limit): self {
             $this->limit_value = [
                 'page' => $page,
                 'limit' => $limit,
@@ -190,16 +187,16 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @return integer|null
+         * @return int|null
          */
-        private function getLastInsertId(): ?integer {
+        private function getLastInsertId(): ?int {
             return $this->last_insert_id;
         }
         /**
-         * @param integer $id null
+         * @param int $id null
          * @return self
          */
-        private function setLastInsertId(?integer $id): self {
+        private function setLastInsertId(?int $id): self {
             $this->last_insert_id = $id;
 
             return $this;
@@ -390,11 +387,11 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param integer $page
-         * @param integer $limit
+         * @param int $page
+         * @param int $limit
          * @return self
          */
-        public function limit(integer $page,integer $limit): self {
+        public function limit(int $page,int $limit): self {
             if (empty($limit)) {
                 $limit = defined(QUERY_LIMIT) ? QUERY_LIMIT : $this->QUERY_LIMIT_DEFAULT;
             }
@@ -421,13 +418,15 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param object $table_related
+         * @param stdClass $table_related
          * @param array $query_list []
-         * @param boolean $join false
+         * @param string $join null
          * @param string $table_related_name_alias null
          * @return array
          */
-        private function related(object $table_related,array $query_list = [],boolean $join = false,?string $table_related_name_alias): array {
+        private function related(\stdClass $table_related,array $query_list = [],?string $join = null,?string $table_related_name_alias = null): array {
+            $table_related = $table_related->model;
+
             $table_name = $table_related->getTableName();
             $table_schema = $table_related->getTableSchema();
 
@@ -477,6 +476,11 @@ namespace Core\DAO {
                     $query_list['join'][] = vsprintf('%s JOIN %s AS %s on %s.%s = %s.%s',[$join,$table_related_table_name_with_escape,$table_name_alias_with_escape,$table_name_alias_with_escape,$table_related_primary_key,$table_name_with_escape,$table_foreign_key]);
 
                     $table_related_name_alias = $table_name;
+
+                    $object = new \stdClass;
+                    $object->model = $table_related;
+
+                    $table_related = $object;
 
                     $query_list = $this->related($table_related,$query_list,$join,$table_related_name_alias);
                 }
@@ -616,10 +620,10 @@ namespace Core\DAO {
         }
         /**
          * @param array $where
-         * @return object
+         * @return self
          * @throws WException
          */
-        public function get(array $where): object {
+        public function get(array $where): self {
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -643,7 +647,11 @@ namespace Core\DAO {
             $table_column = $this->getTableColumn();
             $table_name = $this->getTableName();
             $table_schema = $this->getTableSchema();
-            $related = $this->related($this);
+
+            $table_related = new \stdClass;
+            $table_related->model = $this;
+
+            $related = $this->related($table_related);
 
             $table_name_with_escape = vsprintf('%s%s%s',[$this->db_escape,$table_name,$this->db_escape]);
 
@@ -695,7 +703,7 @@ namespace Core\DAO {
                     }
 
                     $pdo_query_total->execute($query_value_list);
-                    $pdo_query_total = $pdo_query_total->fetch(PDO::FETCH_OBJ);
+                    $pdo_query_total = $pdo_query_total->fetch(\PDO::FETCH_OBJ);
 
                     $this->setQuery($query_total,$query_value_list);
 
@@ -723,9 +731,9 @@ namespace Core\DAO {
                 }
 
                 $pdo_query->execute($query_value_list);
-                $pdo_query_fetch = $pdo_query->fetch(PDO::FETCH_OBJ);
+                $pdo_query_fetch = $pdo_query->fetch(\PDO::FETCH_OBJ);
 
-            } catch (PDOException | WException $error) {
+            } catch (\PDOException | WException $error) {
                 throw $error;
             }
 
@@ -739,9 +747,13 @@ namespace Core\DAO {
             $obj_schema_dict = $table_schema;
 
             $query_fetch = $pdo_query_fetch;
-            $obj = $this;
 
-            $related_fetch = $this->relatedFetch($obj_column_list,$obj_schema_dict,$query_fetch,$transaction,$obj);
+            $object = new \stdClass;
+            $object->model = $this;
+
+            $related_fetch = $this->relatedFetch($obj_column_list,$obj_schema_dict,$query_fetch,$transaction,$object);
+
+            $related_fetch = $related_fetch->model;
 
             $this->setWhere(null);
             $this->setWhereValue(null);
@@ -758,7 +770,7 @@ namespace Core\DAO {
          * @return self
          * @throws WException
          */
-        public function save(?array $column): self {
+        public function save(?array $column = null): self {
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -809,13 +821,13 @@ namespace Core\DAO {
                     $method = $table_schema[$key]->method;
                     $rule = $table_schema[$key]->rule;
 
-                    $value = $this->$method($rule,$value,true);
+                    $object = $this->$method($rule,$value,true);
 
                     $set_escape[] = vsprintf('%s=?',[$key,]);
-                    $query_value_update_list[] = $value;
+                    $query_value_update_list[] = $object->value;
 
                     $column_list[] = $key;
-                    $query_value_add_list[] = $value;
+                    $query_value_add_list[] = $object->value;
                     $query_escape_list[] = '?';
                 }
             }
@@ -854,7 +866,7 @@ namespace Core\DAO {
 
                 $pdo_query->execute($query_value_list);
 
-            } catch (PDOException | WException $error) {
+            } catch (\PDOException | WException $error) {
                 throw $error;
             }
 
@@ -935,10 +947,10 @@ namespace Core\DAO {
                 $method = $table_schema[$key]->method;
                 $rule = $table_schema[$key]->rule;
 
-                $value = $this->$method($rule,$value,true);
+                $object = $this->$method($rule,$value,true);
 
                 $set_escape[] = vsprintf('%s=?',[$key,]);
-                $query_value_update_list[] = $value;
+                $query_value_update_list[] = $object->value;
             }
 
             $set_escape = implode(',',$set_escape);
@@ -985,7 +997,7 @@ namespace Core\DAO {
 
                 $query->execute($query_value);
 
-            } catch (PDOException | WException $error) {
+            } catch (\PDOException | WException $error) {
                 throw $error;
             }
 
@@ -1112,7 +1124,7 @@ namespace Core\DAO {
 
                 $pdo_query->execute($query_value);
 
-            } catch (PDOException | WException $error) {
+            } catch (\PDOException | WException $error) {
                 throw $error;
 
             }
@@ -1130,7 +1142,7 @@ namespace Core\DAO {
          * @return object
          * @throws WException
          */
-        public function execute(?array $setting): object {
+        public function execute(?array $setting = null): \stdClass {
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -1164,7 +1176,11 @@ namespace Core\DAO {
             $get_like = $this->getLike();
             $get_like_value = $this->getLikeValue();
             $order_by = $this->getOrderBy();
-            $related = $this->related($this,[],$join);
+
+            $table_related = new \stdClass;
+            $table_related->model = $this;
+
+            $related = $this->related($table_related,[],$join);
             $limit = $this->getLimit();
 
             if (empty($limit)) {
@@ -1284,9 +1300,9 @@ namespace Core\DAO {
                 }
 
                 $pdo_query_total->execute($query_value);
-                $pdo_query_total = $pdo_query_total->fetch(PDO::FETCH_OBJ);
+                $pdo_query_total = $pdo_query_total->fetch(\PDO::FETCH_OBJ);
 
-            } catch (PDOException | WException $error) {
+            } catch (\PDOException | WException $error) {
                 throw $error;
             }
 
@@ -1307,9 +1323,9 @@ namespace Core\DAO {
                 }
 
                 $pdo_query->execute($query_value);
-                $query_fetch_all = $pdo_query->fetchAll(PDO::FETCH_OBJ);
+                $query_fetch_all = $pdo_query->fetchAll(\PDO::FETCH_OBJ);
 
-            } catch (PDOException | WException $error) {
+            } catch (\PDOException | WException $error) {
                 throw $error;
             }
 
@@ -1322,18 +1338,21 @@ namespace Core\DAO {
                 $transaction = $this->getTransaction();
 
                 foreach ($query_fetch_all as $i => $query_fetch) {
-                    $obj = new $class_name($transaction);
+                    $object = new \stdClass;
+                    $object->model = new $class_name($transaction);
 
                     foreach ($column_list as $column => $value) {
                         $table_column = vsprintf('%s__%s',[$table_name,$column]);
 
-                        $obj->$column = $query_fetch->$table_column;
+                        $object->model->$column = $query_fetch->$table_column;
                     }
 
-                    $obj_column_list = $obj->getTableColumn();
-                    $obj_schema_dict = $obj->schema();
+                    $obj_column_list = $object->model->getTableColumn();
+                    $obj_schema_dict = $object->model->schema();
 
-                    $related_fetch = $this->relatedFetch($obj_column_list,$obj_schema_dict,$query_fetch,$transaction,$obj);
+                    $related_fetch = $this->relatedFetch($obj_column_list,$obj_schema_dict,$query_fetch,$transaction,$object);
+
+                    $related_fetch = $related_fetch->model;
 
                     $query_fetch_all_list[] = $related_fetch;
                 }
@@ -1347,7 +1366,7 @@ namespace Core\DAO {
             $page_next = $page_current + 1 >= $page_total ? $page_total : $page_current + 1;
             $page_previous = $page_current - 1 <= 0 ? 1 : $page_current - 1;
 
-            $result = new stdClass;
+            $result = new \stdClass;
             $result->register_total = $register_total;
             $result->register_perpage = $register_perpage;
             $result->page_total = $page_total;
@@ -1361,13 +1380,13 @@ namespace Core\DAO {
         /**
          * @param array $obj_column_list
          * @param array $obj_schema_dict
-         * @param object $fetch
+         * @param object $fetch PDOStatement
          * @param object $transaction
          * @param object $obj
-         * @return object
+         * @return stdClass
          */
-        private function relatedFetch(array $obj_column_list,array $obj_schema_dict,object $fetch,object $transaction,object $obj): object {
-            $table_name = $obj->getTableName();
+        private function relatedFetch(array $obj_column_list,array $obj_schema_dict,\stdClass $fetch,\Core\DAO\Transaction $transaction,\stdClass $obj): \stdClass {
+            $table_name = $obj->model->getTableName();
 
             foreach ($obj_column_list as $column => $value) {
                 if ($obj_schema_dict[$column]->method == 'foreignKey') {
@@ -1386,7 +1405,12 @@ namespace Core\DAO {
                         $obj_foreignkey->$column_ = $fetch->$table_column;
                     }
 
-                    $obj->$column = $obj_foreignkey;
+                    $obj->model->$column = $obj_foreignkey;
+
+                    $object = new \stdClass;
+                    $object->model = $obj_foreignkey;
+
+                    $obj_foreignkey = $object;
 
                     $this->relatedFetch($obj_foreignkey_column_list,$obj_foreignkey_schema_dict,$fetch,$transaction,$obj_foreignkey);
                 }
