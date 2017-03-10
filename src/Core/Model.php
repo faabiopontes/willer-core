@@ -18,7 +18,7 @@ namespace Core {
          * Model constructor.
          * @param Transaction $transaction
          */
-        public function __construct(?Transaction $transaction): void {
+        public function __construct(?Transaction $transaction) {
             $this->definePrimaryKey();
 
             if (!empty($transaction)) {

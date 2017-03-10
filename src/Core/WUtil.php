@@ -7,7 +7,7 @@
 namespace Core {
     use \SplFileInfo as SplFileInfo;
     /**
-     * Class Util
+     * Class WUtil
      * @var $return
      */
     class WUtil {
@@ -15,21 +15,23 @@ namespace Core {
         /**
          * @param iterable $input
          * @param string $key
-         * @return void
+         * @return self
          */
-        public function contains(iterable $input,string $key): void {
+        public function contains(iterable $input,string $key): self {
             if (is_array($input)) {
                 $this->return = isset($input[$key]) ? !empty($input[$key]) || $input[$key] === '0' ? $input[$key] : null : null;
 
             } else if (is_object()) {
                 $this->return = isset($input->$key) ? !empty($input->$key) || $input->$key === '0' ? $input->$key : null : null;
             }
+
+            return $this;
         }
         /**
          * @param string $string_default null
          * @return string|null
          */
-        public function getString(?string $string_default): ?string {
+        public function getString(?string $string_default = null): ?string {
             if (empty($this->return)) {
                 return $string_default;
             }
@@ -40,7 +42,7 @@ namespace Core {
          * @param object $object_default null
          * @return object|null
          */
-        public function getObject(?object $object_default): ?object {
+        public function getObject(?object $object_default = null): ?object {
             if (empty($this->return)) {
                 return $object_default;
             }
@@ -51,7 +53,7 @@ namespace Core {
          * @param array $array_default null
          * @return array|null
          */
-        public function getArray(?array $array_default): ?array {
+        public function getArray(?array $array_default = null): ?array {
             if (empty($this->return)) {
                 return $array_default;
             }

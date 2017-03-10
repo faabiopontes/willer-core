@@ -27,15 +27,8 @@ namespace Core {
         private $app_url_list;
         /**
          * Request constructor.
-         * @param array $uri_argument []
-         * @param array $request_method []
-         * @param string $route_id null
          */
-        public function __construct(array $uri_argument = [],array $request_method = [],?string $route_id): void {
-            $this->setArgument($uri_argument);
-            $this->setRequestMethod($request_method);
-            $this->setRouteId($route_id);
-        }
+        public function __construct() {}
         /**
          * @param string $key
          * @return string

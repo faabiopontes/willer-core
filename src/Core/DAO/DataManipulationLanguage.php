@@ -59,7 +59,7 @@ namespace Core\DAO {
          * DataManipulationLanguage constructor.
          * @param object $transaction null
          */
-        public function __construct(object $transaction = null): void {
+        public function __construct(object $transaction = null) {
             if (empty($transaction)) {
                 throw new WException(vsprintf('Transaction object not loaded, in model instance "%s"',[$this->name(),]));
             }

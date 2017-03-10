@@ -28,9 +28,8 @@ namespace Core\DAO {
         /**
          * Transaction constructor.
          * @param string $database null
-         * @return void
          */
-        public function __construct(?string $database): void {
+        public function __construct(?string $database) {
             if (empty(defined('DATABASE_PATH'))) {
                 throw new WException('constant DATABASE_PATH not defined');
             }

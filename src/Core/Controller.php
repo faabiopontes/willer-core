@@ -19,21 +19,21 @@ namespace Core {
          * Controller constructor.
          * @param object $request Request
          */
-        public function __construct(Request $request): void {
+        public function __construct(Request $request) {
             $this->setRequest($request);
             $this->requestMethodAccess();
         }
         /**
          * @return object
          */
-        protected function getRequest(): object {
+        protected function getRequest(): Request {
             return $this->request;
         }
         /**
          * @param object $request
          * @return self
          */
-        protected function setRequest(object $request): self {
+        protected function setRequest(Request $request): self {
             $this->request = $request;
 
             return $this;

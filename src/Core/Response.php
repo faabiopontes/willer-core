@@ -21,9 +21,8 @@ namespace Core {
          * Response constructor.
          * @param string $body null
          * @param string $code
-         * @return void
          */
-        public function __construct(?string $body,?string $code): void {
+        public function __construct(?string $body,?string $code) {
             if (empty($code)) {
                 $code = self::CODE_STATUS_OK;
             }
