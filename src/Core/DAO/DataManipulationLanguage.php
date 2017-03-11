@@ -344,10 +344,10 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param null $column
+         * @return self
          * @throws WException
          */
-        protected function definePrimaryKey() {
+        protected function definePrimaryKey(): self {
             $table_schema = $this->schema();
 
             $column = null;
@@ -363,12 +363,14 @@ namespace Core\DAO {
             }
 
             $this->setPrimaryKey($column);
+
+            return $this;
         }
         /**
-         * @param array $order_by
-         * @return $this
+         * @param array $order_by []
+         * @return self
          */
-        public function orderBy($order_by = []) {
+        public function orderBy(array $order_by = []): self {
             if (!empty($order_by)) {
                 $order_by_list = [];
 
@@ -388,11 +390,11 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param int $page
-         * @param int $limit
-         * @return $this
+         * @param integer $page 1
+         * @param integer $limit null
+         * @return self
          */
-        public function limit($page = 1, $limit = null) {
+        public function limit(integer $page = 1,?integer $limit): self {
             if (empty($limit)) {
                 $limit = defined(QUERY_LIMIT) ? QUERY_LIMIT : $this->QUERY_LIMIT_DEFAULT;
             }
@@ -419,12 +421,13 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param $table_related
-         * @param array $query_list
-         * @param bool $join
+         * @param object $table_related
+         * @param array $query_list []
+         * @param boolean $join false
+         * @param string $table_related_name_alias null
          * @return array
          */
-        private function related($table_related, $query_list = [], $join = false, $table_related_name_alias = null) {
+        private function related(object $table_related,array $query_list = [],boolean $join = false,?string $table_related_name_alias): array {
             $table_name = $table_related->getTableName();
             $table_schema = $table_related->getTableSchema();
 
@@ -482,11 +485,11 @@ namespace Core\DAO {
             return $query_list;
         }
         /**
-         * @param array $where
-         * @return $this
+         * @param array $where []
+         * @return self
          * @throws WException
          */
-        public function where($where = []) {
+        public function where(array $where = []): self {
             $where_value_list = [];
 
             if (empty($where)) {
@@ -531,11 +534,11 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @param array $like
-         * @return $this
+         * @param array $like []
+         * @return self
          * @throws WException
          */
-        public function like($like = []) {
+        public function like(array $like = []): array {
             $like_value_list = [];
 
             if (empty($like)) {
