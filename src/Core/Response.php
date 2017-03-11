@@ -18,12 +18,8 @@ namespace Core {
          * Response constructor.
          * @param string $body null
          * @param string $code
-         * @return void
          */
-        public function __construct(?string $body,string $code = '200'): void {
-            $this->setBody($body);
-            $this->setCode($code);
-        }
+        public function __construct() {}
         /**
          * @return string
          */
@@ -118,9 +114,9 @@ namespace Core {
             $this->setHeader('Location',$url);
         }
         /**
-         * @return array
+         * @return array|null
          */
-        public function getFlashMessage(): array {
+        public function getFlashMessage(): ?array {
             $flash_message = null;
 
             if (isset($_SESSION['wf']['flash_message']) && !empty($_SESSION['wf']['flash_message'])) {

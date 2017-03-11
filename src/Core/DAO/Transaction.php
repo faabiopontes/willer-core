@@ -15,7 +15,7 @@ namespace Core\DAO {
      * @constant PDO_DRIVE ['mysql','pgsql','sqlite']
      * @var object $resource
      * @var string $database
-     * @var integer $last_insert_id
+     * @var int $last_insert_id
      * @var string $database_path
      */
     class Transaction {
@@ -27,62 +27,48 @@ namespace Core\DAO {
         private $database_path;
         /**
          * Transaction constructor.
-         * @param string $database null
-         * @return void
          */
-        public function __construct(?string $database = null): void {
+        public function __construct() {
             if (empty(defined('DATABASE_PATH'))) {
                 throw new WException('constant DATABASE_PATH not defined');
             }
-
-            $this->setDatabasePath(DATABASE_PATH);
 
             if (empty(defined('DATABASE'))) {
                 throw new WException('constant DATABASE not defined');
             }
 
-            $this->setDatabase(DATABASE);
-
-            if (empty($database)) {
-                $database = $this->getDatabase();
-
-                $this->setDatabase($database);
+            if (!file_exists(DATABASE_PATH)) {
+                throw new WException(vsprintf('database path dont find in "%s"',[DATABASE_PATH,]));
             }
 
-            $database_path = $this->getDatabasePath();
-
-            if (!file_exists($database_path)) {
-                throw new WException(vsprintf('database path dont find in "%s"',[$database_path,]));
-            }
-
-            $database_path = json_decode(file_get_contents($database_path),true);
+            $database_path = json_decode(file_get_contents(DATABASE_PATH),true);
             $this->setDatabasePath($database_path);
 
             if (empty($database_path)) {
                 throw new WException(vsprintf('json encode error in database path "%s"',[$this->getDatabasePath(),]));
             }
 
-            if (!array_key_exists($database,$database_path)) {
-                throw new WException(vsprintf('database "%s" dont find in object "%s"',[$database,print_r($database_path,true),]));
+            if (!array_key_exists(DATABASE,$database_path)) {
+                throw new WException(vsprintf('database "%s" dont find in object "%s"',[DATABASE,print_r($database_path,true),]));
             }
 
-            if (!array_key_exists('driver',$database_path[$database])) {
+            if (!array_key_exists('driver',$database_path[DATABASE])) {
                 throw new WException(vsprintf('database driver key not registered in database object "%s"',[print_r($database_path,true)]));
             }
 
-            $this->setDatabase($database);
+            $this->setDatabase(DATABASE);
         }
         /**
          * @return object
          */
-        public function getResource(): object {
+        public function getResource(): PDO {
             return $this->resource;
         }
         /**
-         * @param object $resource
+         * @param object $resource PDO
          * @return self
          */
-        protected function setResource(object $resource): self {
+        protected function setResource(PDO $resource): self {
             $this->resource = $resource;
 
             return $this;
@@ -118,16 +104,16 @@ namespace Core\DAO {
             return $this;
         }
         /**
-         * @return integer
+         * @return int
          */
-        public function getLastInsertId(): integer {
+        public function getLastInsertId(): int {
             return $this->last_insert_id;
         }
         /**
-         * @param integer $id
+         * @param int $id
          * @return self
          */
-        protected function setLastInsertId(integer $id): self {
+        protected function setLastInsertId(int $id): self {
             $this->last_insert_id = $id;
 
             return $this;
@@ -265,11 +251,11 @@ namespace Core\DAO {
         /**
          * @param string $query_raw
          * @param array $value []
-         * @param boolean $cud false
+         * @param bool $cud null
          * @return array
          * @throws PDOException | WException
          */
-        public function queryRaw(string $query_raw,array $value = [],boolean $cud = false): array {
+        public function queryRaw(string $query_raw,array $value = [],?bool $cud = false): array {
             $resource = $this->getResource();
 
             if (empty($resource)) {

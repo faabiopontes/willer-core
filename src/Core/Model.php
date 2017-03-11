@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @author William Borba
  * @package Core
@@ -16,9 +17,9 @@ namespace Core {
         private const RULE = ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled'];
         /**
          * Model constructor.
-         * @param Transaction $transaction
+         * @param object $transaction \Core\DAO\Transaction|null
          */
-        public function __construct(?Transaction $transaction): void {
+        public function __construct(?\Core\DAO\Transaction $transaction = null) {
             $this->definePrimaryKey();
 
             if (!empty($transaction)) {
@@ -45,14 +46,14 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param integer $value null
-         * @param bool $flag false
-         * @return integer
+         * @param int $value null
+         * @param bool $flag null
+         * @return \stdClass
          */
-        protected static function primaryKey(array $rule = [],?integer $value,boolean $flag = false): integer {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function primaryKey(array $rule = [],?int $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -63,19 +64,21 @@ namespace Core {
                 throw new WException('"primaryKey" field can not be null');
             }
 
-            return $value;
+            $object->value = $value;
+
+            return $object;
         }
         /**
          * @param array $rule
          * @param object $value null
-         * @param bool $flag false
-         * @return integer|null
+         * @param bool $flag null
+         * @return \stdClass
          * @throws WException
          */
-        protected static function foreignKey(array $rule = [],?object $value,boolean $flag = false) ?integer {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function foreignKey(array $rule = [],?object $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -111,19 +114,21 @@ namespace Core {
                 throw new WException('"foreignKey" field error, dont find primaryKey field');
             }
 
-            return $value->$primary_key;
+            $object->value = $value->$primary_key;
+
+            return $object;
         }
         /**
          * @param array $rule []
          * @param string $value null
-         * @param bool $flag false
-         * @return string|null
+         * @param bool $flag null
+         * @return \stdClass
          * @throws WException
          */
-        protected static function char(array $rule = [],?string $value,?boolean $flag = false) ?string {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function char(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -131,7 +136,9 @@ namespace Core {
             }
 
             if (!empty($rule)) {
-                return $value;
+                $object->value = $value;
+
+                return $object;
             }
 
             $rule_null = null;
@@ -164,19 +171,21 @@ namespace Core {
                 }
             }
 
-            return $value;
+            $object->value = $value;
+
+            return $object;
         }
         /**
          * @param array $rule []
          * @param string $value null
-         * @param bool $flag false
-         * @return string|null
+         * @param bool $flag null
+         * @return object
          * @throws WException
          */
-        protected static function text(array $rule = [],?string $value,boolean $flag = false): ?string {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function text(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -184,7 +193,9 @@ namespace Core {
             }
 
             if (!empty($rule)) {
-                return $value;
+                $object->value = $value;
+
+                return $object;
             }
 
             $rule_null = null;
@@ -216,20 +227,22 @@ namespace Core {
                     }
                 }
             }
+
+            $object->value = $value;
             
-            return $value;
+            return $object;
         }
         /**
          * @param array $rule []
-         * @param integer $value null
-         * @param bool $flag false
-         * @return integer|null
+         * @param int $value null
+         * @param bool $flag null
+         * @return \stdClass
          * @throws WException
          */
-        protected static function integer(array $rule = [],?integer $value,boolean $flag = false): ?integer {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function integer(array $rule = [],?int $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -237,7 +250,9 @@ namespace Core {
             }
 
             if (!empty($rule)) {
-                return $value;
+                $object->value = $value;
+
+                return $object;
             }
 
             $rule_null = null;
@@ -269,20 +284,22 @@ namespace Core {
                     }
                 }
             }
+
+            $object->value = $value;
             
-            return $value;
+            return $object;
         }
         /**
          * @param array $rule []
-         * @param boolean $value null
-         * @param bool $flag false
-         * @return boolean|object
+         * @param bool $value null
+         * @param bool $flag null
+         * @return \stdClass
          * @throws WException
          */
-        protected static function boolean(array $rule = [],?boolean $value,boolean $flag = false): ?boolean {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function boolean(array $rule = [],?bool $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -290,7 +307,9 @@ namespace Core {
             }
 
             if (!empty($rule)) {
-                return $value;
+                $object->value = $value;
+
+                return $object;
             }
 
             $rule_null = null;
@@ -304,20 +323,22 @@ namespace Core {
                     throw new WException('"boolean" field value can not be null');
                 }
             }
-            
-            return $value;
+
+            $object->value = $value;
+
+            return $object;
         }
         /**
          * @param array $rule []
          * @param string $value null
-         * @param bool $flag false
-         * @return string|null
+         * @param bool $flag null
+         * @return \stdClass
          * @throws WException
          */
-        protected static function datetime(array $rule = [],?string $value,boolean $flag = false): ?string {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function datetime(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -325,7 +346,9 @@ namespace Core {
             }
 
             if (!empty($rule)) {
-                return $value;
+                $object->value = $value;
+
+                return $object;
             }
 
             $rule_null = null;
@@ -352,19 +375,21 @@ namespace Core {
                 }
             }
 
-            return $value;
+            $object->value = $value;
+
+            return $object;
         }
         /**
          * @param array $rule []
          * @param string $value null
-         * @param bool $flag false
-         * @return string|null
+         * @param bool $flag null
+         * @return \stdClass
          * @throws WException
          */
-        protected static function date(array $rule = [],?string $value,boolean $flag = false): ?string {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function date(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -372,7 +397,9 @@ namespace Core {
             }
 
             if (!empty($rule)) {
-                return $value;
+                $object->value = $value;
+
+                return $object;
             }
 
             $rule_null = null;
@@ -399,19 +426,21 @@ namespace Core {
                 }
             }
 
-            return $value;
+            $object->value = $value;
+
+            return $object;
         }
         /**
          * @param array $rule []
          * @param string $value null
-         * @param bool $flag false
-         * @return false|object
+         * @param bool $flag null
+         * @return \stdClass
          * @throws WException
          */
-        protected static function time(array $rule = [],?string $value,boolean $flag = false): string {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function time(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -419,7 +448,9 @@ namespace Core {
             }
 
             if (!empty($rule)) {
-                return $value;
+                $object->value = $value;
+
+                return $object;
             }
 
             $rule_null = null;
@@ -446,19 +477,21 @@ namespace Core {
                 }
             }
 
-            return $value;
+            $object->value = $value;
+
+            return $object;
         }
         /**
          * @param array $rule []
          * @param float $value null
-         * @param bool $flag false
-         * @return float|object
+         * @param bool $flag null
+         * @return \stdClass
          * @throws WException
          */
-        protected static function float(array $rule = [],?float $value,boolean $flag = false): ?float {
-            if (empty($flag)) {
-                $object = new stdClass;
+        protected static function float(array $rule = [],?float $value = null,?bool $flag = false): \stdClass {
+            $object = new \stdClass;
 
+            if (empty($flag)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -466,7 +499,9 @@ namespace Core {
             }
 
             if (!empty($rule)) {
-                return $value;
+                $object->value = $value;
+
+                return $object;
             }
 
             $rule_null = null;
@@ -493,7 +528,9 @@ namespace Core {
                 }
             }
 
-            return $value;
+            $object->value = $value;
+
+            return $object;
         }
     }
 }

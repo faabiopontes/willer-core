@@ -11,6 +11,7 @@ namespace Core {
     use Core\{Request,WUtil};
     use Core\Exception\WException;
     use \DateTime as DateTime;
+    use \stdClass as stdClass;
     /**
      * Class System
      * @constant EXTENSION_STATIC ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map']
@@ -24,10 +25,12 @@ namespace Core {
         private $load_var;
         /**
          * System constructor.
-         * @return void
          */
-        public function __construct(): void {
+        public function __construct() {
             session_start();
+
+            $request = new Request();
+            $request->cleanHttpSession();
 
             $wutil = new WUtil;
 
@@ -106,8 +109,8 @@ namespace Core {
 
             $get_defined_constants = get_defined_constants();
 
-            $log_level = wutil::contains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
-            $log_path = wutil::contains($get_defined_constants,'SWOOLE_LOG_PATH',false)->getString();
+            $log_level = $wutil->contains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
+            $log_path = $wutil->contains($get_defined_constants,'SWOOLE_LOG_PATH',false)->getString();
 
             if (!empty($log_level) && !empty($log_path)) {
                 $log_path = vsprintf('%s%s',[UPKEEP_PATH,$log_path,]);
@@ -154,7 +157,7 @@ namespace Core {
                 print "\n------------------------------------------------------\n";
             });
 
-            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) {
+            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($request,$wutil) {
                 $_GET = $http_request->get ?? [];
                 $_POST = $http_request->post ?? [];
                 $_COOKIE = $http_request->cookie ?? [];
@@ -235,7 +238,7 @@ namespace Core {
          * @return object
          * @throws WException
          */
-        private function readyRoute(string $request_uri): object {
+        private function readyRoute(string $request_uri): stdClass {
             if (!empty(defined('URL_PREFIX'))) {
                 $request_uri = str_replace(URL_PREFIX,'',$request_uri);
             }
@@ -316,7 +319,7 @@ namespace Core {
          * @return object
          * @throws WException
          */
-        private function urlMatch(array $application_route,array $match): object {
+        private function urlMatch(array $application_route,array $match): stdClass {
             $application_route_list = explode('\\',$application_route[0]);
 
             $bundle = array_shift($application_route_list);
@@ -335,7 +338,10 @@ namespace Core {
             $request_method = $application_route[1];
             $route_id = $application_route[2];
 
-            $request = new Request($match,$request_method,$route_id);
+            $request = new Request();
+            $request->setArgument($match);
+            $request->setRequestMethod($request_method);
+            $request->setRouteId($route_id);
             $request->setUri($uri);
 
             $new_application = new $application($request);

@@ -8,8 +8,6 @@ namespace Core\Exception {
 	use \Exception as Exception;
 	/**
 	 * Class WException
-	 * @package Core\Exception
-	 * @extends \Exception
 	 */
 	class WException extends Exception {
 		/**
@@ -18,7 +16,7 @@ namespace Core\Exception {
 		 * @param null $code
 		 * @param null $previous
          */
-		public function __construct($name = null, $code = null, $previous = null) {
+		public function __construct(?string $name = null,?string $code = null,?string $previous = null) {
             parent::__construct($name,$code,$previous);
         }
 	}
