@@ -3,11 +3,9 @@
  * @author William Borba
  * @package Core
  * @uses Core\WUtil
- * @uses Core\Exception\WException
  */
 namespace Core {
     use Core\WUtil;
-    use Core\Exception\WException;
     /**
      * Class Request
      * @constant SESSION_KEY_DEFAULT 'wf'
@@ -32,17 +30,17 @@ namespace Core {
         /**
          * @param string $key
          * @return string
-         * @throws WException
+         * @throws \Error
          */
         public function getArgument(string $key): string {
             $uri_argument = $this->getAllArgument();
 
             if (empty($uri_argument)) {
-                throw new WException('URI arguments is empty');
+                throw new \Error('URI arguments is empty');
             }
 
             if (!array_key_exists($key,$uri_argument)) {
-                throw new WException(vsprintf('URI arguments key "%s" dont find',[$key,]));
+                throw new \Error(vsprintf('URI arguments key "%s" dont find',[$key,]));
             }
 
             return $uri_argument[$key];
@@ -117,7 +115,7 @@ namespace Core {
          * @param array $app_url_list null
          * @return self
          */
-        public function setAppUrlList(?array $app_url_list): self {
+        public function setAppUrlList(?array $app_url_list = null): self {
             $this->app_url_list = $app_url_list;
 
             return $this;
@@ -147,12 +145,11 @@ namespace Core {
             return $_SESSION[self::SESSION_KEY_DEFAULT];
         }
         /**
-         * @param string $session_key
-         * @param string $session_value
+         * @param array $session_key_value
          * @return self
          */
-        public function setHttpSession(string $session_key,string $session_value): self {
-            $_SESSION[self::SESSION_KEY_DEFAULT][$session_key] = $session_value;
+        public function setHttpSession(array $session_key_value): self {
+            $_SESSION[self::SESSION_KEY_DEFAULT] = array_merge($_SESSION[self::SESSION_KEY_DEFAULT],$session_key_value);
 
             return $this;
         }
@@ -190,7 +187,7 @@ namespace Core {
          * @param string $id
          * @param array $url_match []
          * @return string
-         * @throws WException
+         * @throws \Error
          */
         public function getRoute(string $id,array $url_match = []): string {
             $app_url_list = $this->getAppUrlList();
@@ -206,7 +203,7 @@ namespace Core {
                     $app_url_class = vsprintf('\Application\%s\Url',[$app]);
 
                     if (!class_exists($app_url_class,true)) {
-                        throw new WException(vsprintf('class "%s" not found',[$app_url_class,]));
+                        throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
                     }
 
                     $app_url_list = array_merge($app_url_list,$app_url_class::url());
@@ -219,7 +216,7 @@ namespace Core {
 
             foreach ($app_url_list as $route => $url_config) {
                 if (count($url_config) != 3) {
-                    throw new WException(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
+                    throw new \Error(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
                 }
 
                 $route = str_replace(' ','',$route);
@@ -232,7 +229,7 @@ namespace Core {
             }
 
             if (empty($flag_id)) {
-                throw new WException(vsprintf('route id %s dont exists',[$id,]));
+                throw new \Error(vsprintf('route id %s dont exists',[$id,]));
             }
 
             $route = str_replace(' ','',$route);
@@ -248,7 +245,7 @@ namespace Core {
 
                 } else {
                     if (empty($url_match) || count($url_match) != count($match[0])) {
-                        throw new WException(vsprintf('route id %s of format %s, contains vars missing',[$id,$route,]));
+                        throw new \Error(vsprintf('route id %s of format %s, contains vars missing',[$id,$route,]));
                     }
 
                     $route_split_list = explode('/',$route);
@@ -263,7 +260,7 @@ namespace Core {
                             $match = explode(':',$match[0]);
 
                             if (!array_key_exists($match[0],$url_match)) {
-                                throw new WException(vsprintf('var %s missing in route %s(%s)',[$match[0],$route,$id]));
+                                throw new \Error(vsprintf('var %s missing in route %s(%s)',[$match[0],$route,$id]));
                             }
 
                             $route_split_list[$key] = $url_match[$match[0]];
@@ -276,7 +273,7 @@ namespace Core {
                 }
             }
 
-            throw new WException(vsprintf('route id %s dont exists',[$id,]));
+            throw new \Error(vsprintf('route id %s dont exists',[$id,]));
         }
     }
 }

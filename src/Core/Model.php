@@ -4,11 +4,9 @@ declare(strict_types=1);
  * @author William Borba
  * @package Core
  * @uses Core\DAO\DataManipulationLanguage
- * @uses Core\Exception\WException
  */
 namespace Core {
     use Core\DAO\DataManipulationLanguage;
-    use Core\Exception\WException;
     /**
      * Class Model
      * @constant RULE ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled']
@@ -46,11 +44,12 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param int $value null
+         * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return \stdClass
          */
-        protected static function primaryKey(array $rule = [],?int $value = null,?bool $flag = false): \stdClass {
+        protected static function primaryKey(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -60,8 +59,14 @@ namespace Core {
                 return $object;
             }
 
+            $value = $callback();
+
             if (empty($value)) {
-                throw new WException('"primaryKey" field can not be null');
+                throw new \Error(vsprintf('"%s primaryKey" field can not be null',[$column,]));
+            }
+
+            if (!is_int($value)) {
+                throw new \Error(vsprintf('"%s primaryKey" field must be integer',[$column,]));
             }
 
             $object->value = $value;
@@ -70,12 +75,13 @@ namespace Core {
         }
         /**
          * @param array $rule
-         * @param object $value null
+         * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return \stdClass
-         * @throws WException
+         * @throws \Error
          */
-        protected static function foreignKey(array $rule = [],?object $value = null,?bool $flag = false): \stdClass {
+        protected static function foreignKey(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -86,32 +92,38 @@ namespace Core {
             }
 
             if (empty($rule)) {
-                throw new WException('"foreignKey" field require one object');
+                throw new \Error(vsprintf('"%s foreignKey" field require one object',[$column,]));
             }
 
             if (!array_key_exists('table',$rule)) {
-                throw new WException('"foreignKey" field require one object');
+                throw new \Error(vsprintf('"%s foreignKey" field require one object',[$column,]));
             }
 
-            if (empty($value)) {
+            $value = $callback();
+
+            if (is_null($value)) {
                 if (!array_key_exists('null',$rule) || empty($rule['null'])) {
-                    throw new WException('"foreignKey" field value can not be null');
+                    throw new \Error(vsprintf('"%s foreignKey" field value can not be null',[$column,]));
                 }
 
             } else {
+                if (!is_object($value)) {
+                    throw new \Error(vsprintf('"%s foreignKey" field value must be an object',[$column,]));
+                }
+
                 if (!is_object($rule['table'])) {
-                    throw new WException('"foreignKey" field value must be an object');
+                    throw new \Error(vsprintf('"%s foreignKey" field reference must be an object',[$column,]));
                 }
 
                 if (!$value instanceof $rule['table']) {
-                    throw new WException('"foreignKey" field value must be an instance of the reference object');
+                    throw new \Error(vsprintf('"%s foreignKey" field value must be an instance of the reference object',[$column,]));
                 }
             }
 
             $primary_key = $value->getPrimaryKey();
 
             if (empty($primary_key)) {
-                throw new WException('"foreignKey" field error, dont find primaryKey field');
+                throw new \Error(vsprintf('"%s foreignKey" field error, dont find primaryKey field',[$column,]));
             }
 
             $object->value = $value->$primary_key;
@@ -120,12 +132,13 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param string $value null
+         * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return \stdClass
-         * @throws WException
+         * @throws \Error
          */
-        protected static function char(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+        protected static function char(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -135,7 +148,9 @@ namespace Core {
                 return $object;
             }
 
-            if (!empty($rule)) {
+            $value = $callback();
+
+            if (empty($rule)) {
                 $object->value = $value;
 
                 return $object;
@@ -153,20 +168,19 @@ namespace Core {
                 $rule_length = $rule['length'];
             }
 
-            if (empty($rule_null)) {
+            if (is_null($rule_null)) {
                 if (is_null($value)) {
-                    throw new WException('"char" field value can not be null');
+                    throw new \Error(vsprintf('"%s char" field value can not be null',[$column,]));
                 }
-            }
 
-            if (!is_null($value)) {
+            } else {
                 if (!empty($rule_length)) {
                     if (!is_numeric($rule_length)) {
-                        throw new WException('rule key length must be an numeric, to field "char"');
+                        throw new \Error(vsprintf('rule key length must be an numeric, to field "%s char"',[$column,]));
                     }
 
                     if (strlen($value) > intval($rule_length)) {
-                        throw new WException(vsprintf('"char" field length is greater than "%s"',[$rule_length,]));
+                        throw new \Error(vsprintf('"%s char" field length is greater than "%s"',[$rule_length,$column]));
                     }
                 }
             }
@@ -177,12 +191,12 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param string $value null
+         * @param callable $callback null
          * @param bool $flag null
          * @return object
-         * @throws WException
+         * @throws \Error
          */
-        protected static function text(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+        protected static function text(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -192,7 +206,9 @@ namespace Core {
                 return $object;
             }
 
-            if (!empty($rule)) {
+            $value = $callback();
+
+            if (empty($rule)) {
                 $object->value = $value;
 
                 return $object;
@@ -212,18 +228,18 @@ namespace Core {
 
             if (empty($rule_null)) {
                 if (is_null($value)) {
-                    throw new WException('"text" field value can not be null');
+                    throw new \Error('"text" field value can not be null');
                 }
             }
 
             if (!is_null($value)) {
                 if (!empty($rule_length)) {
                     if (!is_numeric($rule_length)) {
-                        throw new WException('rule key length must be an numeric, to field "text"');
+                        throw new \Error('rule key length must be an numeric, to field "text"');
                     }
 
                     if (strlen($value) > intval($rule_length)) {
-                        throw new WException(vsprintf('"text" field length is greater than "%s"',[$rule_length,]));
+                        throw new \Error(vsprintf('"text" field length is greater than "%s"',[$rule_length,]));
                     }
                 }
             }
@@ -234,12 +250,12 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param int $value null
+         * @param callable $callback null
          * @param bool $flag null
          * @return \stdClass
-         * @throws WException
+         * @throws \Error
          */
-        protected static function integer(array $rule = [],?int $value = null,?bool $flag = false): \stdClass {
+        protected static function integer(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -249,7 +265,9 @@ namespace Core {
                 return $object;
             }
 
-            if (!empty($rule)) {
+            $value = $callback();
+
+            if (empty($rule)) {
                 $object->value = $value;
 
                 return $object;
@@ -269,18 +287,18 @@ namespace Core {
 
             if (empty($rule_null)) {
                 if (is_null($value)) {
-                    throw new WException('"integer" field value can not be null');
+                    throw new \Error('"integer" field value can not be null');
                 }
             }
 
             if (!is_null($value)) {
                 if (!empty($rule_length)) {
                     if (!is_numeric($rule_length)) {
-                        throw new WException('rule key length must be an numeric, to field "integer"');
+                        throw new \Error('rule key length must be an numeric, to field "integer"');
                     }
 
                     if (strlen($value) > intval($rule_length)) {
-                        throw new WException(vsprintf('"integer" field length is greater than "%s"',[$rule_length,]));
+                        throw new \Error(vsprintf('"integer" field length is greater than "%s"',[$rule_length,]));
                     }
                 }
             }
@@ -291,12 +309,12 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param bool $value null
+         * @param callable $callback null
          * @param bool $flag null
          * @return \stdClass
-         * @throws WException
+         * @throws \Error
          */
-        protected static function boolean(array $rule = [],?bool $value = null,?bool $flag = false): \stdClass {
+        protected static function boolean(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -306,7 +324,9 @@ namespace Core {
                 return $object;
             }
 
-            if (!empty($rule)) {
+            $value = $callback();
+
+            if (empty($rule)) {
                 $object->value = $value;
 
                 return $object;
@@ -320,7 +340,7 @@ namespace Core {
 
             if (empty($rule_null)) {
                 if (is_null($value)) {
-                    throw new WException('"boolean" field value can not be null');
+                    throw new \Error('"boolean" field value can not be null');
                 }
             }
 
@@ -330,12 +350,12 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param string $value null
+         * @param callable $callback null
          * @param bool $flag null
          * @return \stdClass
-         * @throws WException
+         * @throws \Error
          */
-        protected static function datetime(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+        protected static function datetime(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -345,7 +365,9 @@ namespace Core {
                 return $object;
             }
 
-            if (!empty($rule)) {
+            $value = $callback();
+
+            if (empty($rule)) {
                 $object->value = $value;
 
                 return $object;
@@ -359,7 +381,7 @@ namespace Core {
 
             if (empty($rule_null)) {
                 if (is_null($value)) {
-                    throw new WException('"datetime" field value can not be null');
+                    throw new \Error('"datetime" field value can not be null');
                 }
             }
 
@@ -371,7 +393,7 @@ namespace Core {
                     'flags' => []];
 
                 if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                    throw new WException(vsprintf('"datetime" field value "%s" incorrect',[$value,]));
+                    throw new \Error(vsprintf('"datetime" field value "%s" incorrect',[$value,]));
                 }
             }
 
@@ -381,12 +403,12 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param string $value null
+         * @param callable $callback null
          * @param bool $flag null
          * @return \stdClass
-         * @throws WException
+         * @throws \Error
          */
-        protected static function date(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+        protected static function date(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -396,7 +418,9 @@ namespace Core {
                 return $object;
             }
 
-            if (!empty($rule)) {
+            $value = $callback();
+
+            if (empty($rule)) {
                 $object->value = $value;
 
                 return $object;
@@ -410,7 +434,7 @@ namespace Core {
 
             if (empty($rule_null)) {
                 if (is_null($value)) {
-                    throw new WException('"datetime" field value can not be null');
+                    throw new \Error('"datetime" field value can not be null');
                 }
             }
 
@@ -422,7 +446,7 @@ namespace Core {
                     'flags' => []];
 
                 if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                    throw new WException(vsprintf('date field value "%s" incorrect',[$value,]));
+                    throw new \Error(vsprintf('date field value "%s" incorrect',[$value,]));
                 }
             }
 
@@ -432,12 +456,12 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param string $value null
+         * @param callable $callback null
          * @param bool $flag null
          * @return \stdClass
-         * @throws WException
+         * @throws \Error
          */
-        protected static function time(array $rule = [],?string $value = null,?bool $flag = false): \stdClass {
+        protected static function time(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -447,7 +471,9 @@ namespace Core {
                 return $object;
             }
 
-            if (!empty($rule)) {
+            $value = $callback();
+
+            if (empty($rule)) {
                 $object->value = $value;
 
                 return $object;
@@ -461,7 +487,7 @@ namespace Core {
 
             if (empty($rule_null)) {
                 if (is_null($value)) {
-                    throw new WException('"time" field value can not be null');
+                    throw new \Error('"time" field value can not be null');
                 }
             }
 
@@ -473,7 +499,7 @@ namespace Core {
                     'flags' => []];
 
                 if (filter_var($value,FILTER_VALIDATE_FLOAT,$filter_var_option) === false) {
-                    throw new WException(vsprintf('float field value "%s" incorrect',[$value,]));
+                    throw new \Error(vsprintf('float field value "%s" incorrect',[$value,]));
                 }
             }
 
@@ -483,12 +509,12 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param float $value null
+         * @param callable $callback null
          * @param bool $flag null
          * @return \stdClass
-         * @throws WException
+         * @throws \Error
          */
-        protected static function float(array $rule = [],?float $value = null,?bool $flag = false): \stdClass {
+        protected static function float(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -498,7 +524,9 @@ namespace Core {
                 return $object;
             }
 
-            if (!empty($rule)) {
+            $value = $callback();
+
+            if (empty($rule)) {
                 $object->value = $value;
 
                 return $object;
@@ -512,7 +540,7 @@ namespace Core {
 
             if (empty($rule_null)) {
                 if (is_null($value)) {
-                    throw new WException('"float" field value can not be null');
+                    throw new \Error('"float" field value can not be null');
                 }
             }
 
@@ -524,7 +552,7 @@ namespace Core {
                     'flags' => []];
 
                 if (filter_var($value,FILTER_VALIDATE_FLOAT,$filter_var_option) === false) {
-                    throw new WException(vsprintf('float field value "%s" incorrect',[$value,]));
+                    throw new \Error(vsprintf('float field value "%s" incorrect',[$value,]));
                 }
             }
 

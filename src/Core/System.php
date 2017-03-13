@@ -4,14 +4,9 @@
  * @package Core
  * @uses Core\Request
  * @uses Core\WUtil
- * @uses Core\Exception\WException
- * @uses \DateTime
  */
 namespace Core {
     use Core\{Request,WUtil};
-    use Core\Exception\WException;
-    use \DateTime as DateTime;
-    use \stdClass as stdClass;
     /**
      * Class System
      * @constant EXTENSION_STATIC ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map']
@@ -54,7 +49,7 @@ namespace Core {
         }
         /**
          * @return void
-         * @throws WException
+         * @throws \Error
          */
         public function ready(): void {
             $load_var = $this->getLoadVar();
@@ -71,7 +66,7 @@ namespace Core {
                 try {
                     $this->readyWithSwoole();
 
-                } catch (WException $error) {
+                } catch (\Error $error) {
                     throw $error;
                 }
 
@@ -90,7 +85,7 @@ namespace Core {
 
                 $content = $controller->$action();
 
-            } catch (WException $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
@@ -142,12 +137,12 @@ namespace Core {
                 'ssl_method' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_METHOD',false)->getString(),
             ]);
 
-            $http_server->on('connect',function(\swoole_http_server $http_server_client) {
-                if (!empty($log_level) && $log_level < '2') {
+            $http_server->on('connect',function(\swoole_http_server $http_server_client) use ($log_level) {
+                if (!empty($log_level) || $log_level < 2) {
                     return;
                 }
 
-                $date = new DateTime('now');
+                $date = new \DateTime('now');
 
                 print "\n------------------------------------------------------\n";
                 print "Client connect...\n";
@@ -194,8 +189,8 @@ namespace Core {
 
                     $content = $controller->$action();
 
-                } catch (WException $error) {
-                    $date = new DateTime('now');
+                } catch (\Error $error) {
+                    $date = new \DateTime('now');
 
                     print "\n------------------------------------------------------\n";
                     print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
@@ -236,9 +231,9 @@ namespace Core {
         /**
          * @param string $request_uri
          * @return object
-         * @throws WException
+         * @throws \Error
          */
-        private function readyRoute(string $request_uri): stdClass {
+        private function readyRoute(string $request_uri): \stdClass {
             if (!empty(defined('URL_PREFIX'))) {
                 $request_uri = str_replace(URL_PREFIX,'',$request_uri);
             }
@@ -252,25 +247,25 @@ namespace Core {
             $load_var = $this->getLoadVar();
 
             if (empty(defined('ROOT_PATH'))) {
-                throw new WException('constant ROOT_PATH not defined');
+                throw new \Error('constant ROOT_PATH not defined');
             }
 
             if (!array_key_exists('app',$load_var)) {
-                throw new WException(vsprintf('file app.json not found in directory "%s/config"',[ROOT_PATH,]));
+                throw new \Error(vsprintf('file app.json not found in directory "%s/config"',[ROOT_PATH,]));
             }
 
             foreach ($load_var['app'] as $app) {
                 $app_url_class = vsprintf('\Application\%s\Url',[$app]);
 
                 if (!class_exists($app_url_class,true)) {
-                    throw new WException(vsprintf('class "%s" not found',[$app_url_class,]));
+                    throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
                 }
 
                 $url_list = $app_url_class::url();
 
                 foreach ($url_list as $route => $application_route) {
                     if (count($application_route) != 3) {
-                        throw new WException(vsprintf('route %s incorrect format. EX: "/home/page/test/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
+                        throw new \Error(vsprintf('route %s incorrect format. EX: "/home/page/test/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
                     }
 
                     $application_route[0] = vsprintf('%s\%s',[$app,$application_route[0]]);
@@ -302,7 +297,7 @@ namespace Core {
                         try {
                             $object_route = $this->urlMatch($application_route,$match);
 
-                        } catch (WException $error) {
+                        } catch (\Error $error) {
                             throw $error;
                         }
 
@@ -311,15 +306,15 @@ namespace Core {
                 }
             }
 
-            throw new WException(vsprintf('request "%s" not found in Url.php',[$request_uri,]));
+            throw new \Error(vsprintf('request "%s" not found in Url.php',[$request_uri,]));
         }
         /**
          * @param array $application_route
          * @param array $match
          * @return object
-         * @throws WException
+         * @throws \Error
          */
-        private function urlMatch(array $application_route,array $match): stdClass {
+        private function urlMatch(array $application_route,array $match): \stdClass {
             $application_route_list = explode('\\',$application_route[0]);
 
             $bundle = array_shift($application_route_list);
@@ -347,16 +342,16 @@ namespace Core {
             $new_application = new $application($request);
 
             if (empty(method_exists($new_application,$controller_action))) {
-                throw new WException(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
+                throw new \Error(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
             }
 
-            $object_route = new stdClass;
+            $object_route = new \stdClass;
 
             try {
                 $object_route->controller = $new_application;
                 $object_route->action = $controller_action;
 
-            } catch (WException $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 

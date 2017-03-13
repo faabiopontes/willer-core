@@ -2,14 +2,12 @@
 /**
  * @author William Borba
  * @package Core
- * @uses Core\Exception\WException
  */
 namespace Core {
-    use Core\Exception\WException;
     /**
      * Class Response
      * @var string $body
-     * @var integer $code
+     * @var int $code
      */
     class Response {
         private $body;
@@ -55,13 +53,13 @@ namespace Core {
         /**
          * @param string $header_key
          * @return string
-         * @throws WException
+         * @throws \Error
          */
         public function getHeader(string $header_key): string {
             $header = getallheaders();
 
             if (!array_key_exists($header_key,$header)) {
-                throw new WException(vsprintf('Header key "%s" dont find in header list',[$header_key,]));
+                throw new \Error(vsprintf('Header key "%s" dont find in header list',[$header_key,]));
             }
 
             return $header[$header_key];

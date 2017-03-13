@@ -4,11 +4,9 @@
  * @package Core
  * @uses Core\Request
  * @uses Core\WUtil
- * @uses Core\Exception\WException
  */
 namespace Core {
     use Core\{Request,WUtil};
-    use Core\Exception\WException;
     /**
      * Class Controller
      * @var object $request
@@ -40,7 +38,7 @@ namespace Core {
         }
         /**
          * @return self
-         * @throws WException
+         * @throws \Error
          */
         private function requestMethodAccess(): self {
             $request = $this->getRequest();
@@ -50,18 +48,18 @@ namespace Core {
             $wutil = new WUtil;
 
             if (empty($wutil->contains($request_server,'REQUEST_METHOD')->getString())) {
-                throw new WException('php $_SERVER["REQUEST_METHOD"] is empty');
+                throw new \Error('php $_SERVER["REQUEST_METHOD"] is empty');
             }
 
             if (!empty($request_method)) {
                 if (is_array($request_method)) {
                     if (!in_array($request_server['REQUEST_METHOD'],$request_method)) {
-                        throw new WException(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],print_r($request_method,true)]));
+                        throw new \Error(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],print_r($request_method,true)]));
                     }
 
                 } else {
                     if ($request_server['REQUEST_METHOD'] != $request_method) {
-                        throw new WException(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],$request_method]));
+                        throw new \Error(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],$request_method]));
                     }
                 }
             }

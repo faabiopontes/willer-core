@@ -2,10 +2,8 @@
 /**
  * @author William Borba
  * @package Core
- * @uses \SplFileInfo
  */
 namespace Core {
-    use \SplFileInfo as SplFileInfo;
     /**
      * Class WUtil
      * @var $return
@@ -39,12 +37,23 @@ namespace Core {
             return $this->return;
         }
         /**
-         * @param object $object_default null
-         * @return object|null
+         * @param int $integer_default null
+         * @return string|null
          */
-        public function getObject(?object $object_default = null): ?object {
+        public function getInteger(?int $integer_default = null): ?int {
             if (empty($this->return)) {
-                return $object_default;
+                return $integer_default;
+            }
+
+            return $this->return;
+        }
+        /**
+         * @param bool $boolean_default null
+         * @return string|null
+         */
+        public function getBoolean(?bool $boolean_default = null): ?bool {
+            if (empty($this->return)) {
+                return $boolean_default;
             }
 
             return $this->return;
@@ -80,7 +89,7 @@ namespace Core {
             $load_var = [];
 
             foreach ($scandir_root as $file) {
-                $spl_file_info = new SplFileInfo($file);
+                $spl_file_info = new \SplFileInfo($file);
 
                 if ($spl_file_info->getExtension() == 'json') {
                     $key = $spl_file_info->getBasename('.json');
@@ -91,7 +100,7 @@ namespace Core {
 
             if (!empty($scandir_application)) {
                 foreach ($scandir_application as $file) {
-                    $spl_file_info = new SplFileInfo($file);
+                    $spl_file_info = new \SplFileInfo($file);
 
                     if ($spl_file_info->getExtension() == 'json') {
                         $key = $spl_file_info->getBasename('.json');
