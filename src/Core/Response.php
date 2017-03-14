@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @author William Borba
  * @package Core
@@ -34,16 +35,16 @@ namespace Core {
             return $this;
         }
         /**
-         * @return string
+         * @return int
          */
-        public function getCode(): string {
+        public function getCode(): int {
             return $this->code;
         }
         /**
-         * @param string $code
+         * @param int $code
          * @return self
          */
-        public function setCode(string $code): self {
+        public function setCode(int $code): self {
             $this->code = $code;
 
             http_response_code($code);

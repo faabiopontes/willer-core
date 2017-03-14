@@ -49,7 +49,7 @@ namespace Core {
          * @param bool $flag null
          * @return \stdClass
          */
-        protected static function primaryKey(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function primaryKey(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -81,7 +81,7 @@ namespace Core {
          * @return \stdClass
          * @throws \Error
          */
-        protected static function foreignKey(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function foreignKey(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -144,7 +144,7 @@ namespace Core {
          * @return \stdClass
          * @throws \Error
          */
-        protected static function char(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function char(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -203,7 +203,7 @@ namespace Core {
          * @return object
          * @throws \Error
          */
-        protected static function text(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function text(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -262,7 +262,7 @@ namespace Core {
          * @return \stdClass
          * @throws \Error
          */
-        protected static function integer(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function integer(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -321,7 +321,7 @@ namespace Core {
          * @return \stdClass
          * @throws \Error
          */
-        protected static function boolean(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function boolean(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -363,7 +363,7 @@ namespace Core {
          * @return \stdClass
          * @throws \Error
          */
-        protected static function datetime(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function datetime(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -416,7 +416,7 @@ namespace Core {
          * @return \stdClass
          * @throws \Error
          */
-        protected static function date(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function date(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -469,7 +469,7 @@ namespace Core {
          * @return \stdClass
          * @throws \Error
          */
-        protected static function time(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function time(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -522,7 +522,7 @@ namespace Core {
          * @return \stdClass
          * @throws \Error
          */
-        protected static function float(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
+        protected static function float(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {

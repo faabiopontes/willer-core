@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @author William Borba
  * @package Core/DAO
@@ -388,7 +389,7 @@ namespace Core\DAO {
          */
         public function limit(int $page,int $limit): self {
             if (empty($limit)) {
-                $limit = defined(QUERY_LIMIT) ? QUERY_LIMIT : self::QUERY_LIMIT_DEFAULT;
+                $limit = defined('QUERY_LIMIT') ? QUERY_LIMIT : self::QUERY_LIMIT_DEFAULT;
             }
 
             $limit_value = null;
@@ -1184,7 +1185,7 @@ namespace Core\DAO {
             $limit = $this->getLimit();
 
             if (empty($limit)) {
-                $limit = defined(QUERY_LIMIT) ? QUERY_LIMIT : self::QUERY_LIMIT_DEFAULT;
+                $limit = defined('QUERY_LIMIT') ? QUERY_LIMIT : self::QUERY_LIMIT_DEFAULT;
 
                 $this->setLimit(vsprintf('LIMIT %s OFFSET 0',[$limit,]));
                 $this->setLimitValue(1,$limit);

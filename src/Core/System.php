@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @author William Borba
  * @package Core
@@ -104,7 +105,7 @@ namespace Core {
 
             $get_defined_constants = get_defined_constants();
 
-            $log_level = $wutil->contains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
+            $log_level = $wutil->contains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getInteger();
             $log_path = $wutil->contains($get_defined_constants,'SWOOLE_LOG_PATH',false)->getString();
 
             if (!empty($log_level) && !empty($log_path)) {
@@ -121,20 +122,19 @@ namespace Core {
                 $page_error_content = file_get_contents(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]));
             }
 
-            $gzip = $wutil->contains($get_defined_constants,'SWOOLE_GZIP',false)->getString();
-            $log_level = $wutil->contains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getString();
+            $gzip = $wutil->contains($get_defined_constants,'SWOOLE_GZIP',false)->getInteger();
 
             $http_server->set([
-                'worker_num' => $wutil->contains($get_defined_constants,'SWOOLE_WORKER_NUM','1')->getString(),
-                'reactor_num' => $wutil->contains($get_defined_constants,'SWOOLE_REACTOR_NUM','1')->getString(),
-                'daemonize' => $wutil->contains($get_defined_constants,'SWOOLE_DAEMONIZE','1')->getString(),
+                'worker_num' => $wutil->contains($get_defined_constants,'SWOOLE_WORKER_NUM',1)->getInteger(),
+                'reactor_num' => $wutil->contains($get_defined_constants,'SWOOLE_REACTOR_NUM',1)->getInteger(),
+                'daemonize' => $wutil->contains($get_defined_constants,'SWOOLE_DAEMONIZE',1)->getInteger(),
                 'backlog' => '',
-                'max_connection' => $wutil->contains($get_defined_constants,'SWOOLE_MAX_CONNECTION','1024')->getString(),
-                'max_request' => $wutil->contains($get_defined_constants,'SWOOLE_MAX_REQUEST','10')->getString(),
+                'max_connection' => $wutil->contains($get_defined_constants,'SWOOLE_MAX_CONNECTION',1024)->getInteger(),
+                'max_request' => $wutil->contains($get_defined_constants,'SWOOLE_MAX_REQUEST',10)->getInteger(),
                 'log_file' => $log_path,
-                'ssl_cert_file' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_CERT_FILE',false)->getString(),
-                'ssl_key_file' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_KEY_FILE',false)->getString(),
-                'ssl_method' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_METHOD',false)->getString(),
+                'ssl_cert_file' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_CERT_FILE',null)->getString(),
+                'ssl_key_file' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_KEY_FILE',null)->getString(),
+                'ssl_method' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_METHOD',null)->getString(),
             ]);
 
             $http_server->on('connect',function(\swoole_http_server $http_server_client) use ($log_level) {
@@ -193,10 +193,9 @@ namespace Core {
                     $date = new \DateTime('now');
 
                     print "\n------------------------------------------------------\n";
-                    print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
                     print "Client connect...\n";
-                    print "Throw Exception...\n";
                     print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
+                    print "Throw Exception...\n";
                     print vsprintf("HTTP GET...\n%s",[print_r($request->getHttpGet(),true),]);
                     print vsprintf("HTTP POST...\n%s",[print_r($request->getHttpPost(),true),]);
                     print vsprintf("HTTP SESSION...\n%s",[print_r($request->getHttpSession(),true),]);
