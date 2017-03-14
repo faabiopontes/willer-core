@@ -61,7 +61,7 @@ namespace Core {
 
             $value = $callback();
 
-            if (empty($value)) {
+            if (is_null($value)) {
                 throw new \Error(vsprintf('"%s primaryKey" field can not be null',[$column,]));
             }
 
@@ -101,8 +101,14 @@ namespace Core {
 
             $value = $callback();
 
+            $rule_null = null;
+
+            if (array_key_exists('null',$rule)) {
+                $rule_null = $rule['null'];
+            }
+
             if (is_null($value)) {
-                if (!array_key_exists('null',$rule) || empty($rule['null'])) {
+                if (empty($rule_null)) {
                     throw new \Error(vsprintf('"%s foreignKey" field value can not be null',[$column,]));
                 }
 
@@ -168,8 +174,8 @@ namespace Core {
                 $rule_length = $rule['length'];
             }
 
-            if (is_null($rule_null)) {
-                if (is_null($value)) {
+            if (is_null($value)) {
+                if (empty($rule_null)) {
                     throw new \Error(vsprintf('"%s char" field value can not be null',[$column,]));
                 }
 
@@ -192,11 +198,12 @@ namespace Core {
         /**
          * @param array $rule []
          * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return object
          * @throws \Error
          */
-        protected static function text(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
+        protected static function text(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -226,20 +233,19 @@ namespace Core {
                 $rule_length = $rule['length'];
             }
 
-            if (empty($rule_null)) {
-                if (is_null($value)) {
-                    throw new \Error('"text" field value can not be null');
+            if (is_null($value)) {
+                if (empty($rule_null)) {
+                    throw new \Error(vsprintf('"%s text" field value can not be null',[$column,]));
                 }
-            }
 
-            if (!is_null($value)) {
+            } else {
                 if (!empty($rule_length)) {
                     if (!is_numeric($rule_length)) {
-                        throw new \Error('rule key length must be an numeric, to field "text"');
+                        throw new \Error(vsprintf('rule key length must be an numeric, to field "%s text"',[$column,]));
                     }
 
                     if (strlen($value) > intval($rule_length)) {
-                        throw new \Error(vsprintf('"text" field length is greater than "%s"',[$rule_length,]));
+                        throw new \Error(vsprintf('"%s text" field length is greater than "%s"',[$column,$rule_length,]));
                     }
                 }
             }
@@ -251,11 +257,12 @@ namespace Core {
         /**
          * @param array $rule []
          * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function integer(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
+        protected static function integer(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -285,20 +292,19 @@ namespace Core {
                 $rule_length = $rule['length'];
             }
 
-            if (empty($rule_null)) {
-                if (is_null($value)) {
-                    throw new \Error('"integer" field value can not be null');
+            if (is_null($value)) {
+                if (empty($rule_null)) {
+                    throw new \Error(vsprintf('"%s integer" field value can not be null',[$column,]));
                 }
-            }
 
-            if (!is_null($value)) {
+            } else {
                 if (!empty($rule_length)) {
                     if (!is_numeric($rule_length)) {
-                        throw new \Error('rule key length must be an numeric, to field "integer"');
+                        throw new \Error(vsprintf('rule key length must be an numeric, to field "%s integer"',[$column,]));
                     }
 
                     if (strlen($value) > intval($rule_length)) {
-                        throw new \Error(vsprintf('"integer" field length is greater than "%s"',[$rule_length,]));
+                        throw new \Error(vsprintf('"%s integer" field length is greater than "%s"',[$column,$rule_length,]));
                     }
                 }
             }
@@ -310,11 +316,12 @@ namespace Core {
         /**
          * @param array $rule []
          * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function boolean(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
+        protected static function boolean(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -338,9 +345,9 @@ namespace Core {
                 $rule_null = $rule['null'];
             }
 
-            if (empty($rule_null)) {
-                if (is_null($value)) {
-                    throw new \Error('"boolean" field value can not be null');
+            if (is_null($value)) {
+                if (empty($rule_null)) {
+                    throw new \Error(vsprintf('"%s boolean" field value can not be null',[$column,]));
                 }
             }
 
@@ -351,11 +358,12 @@ namespace Core {
         /**
          * @param array $rule []
          * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function datetime(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
+        protected static function datetime(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -379,13 +387,12 @@ namespace Core {
                 $rule_null = $rule['null'];
             }
 
-            if (empty($rule_null)) {
-                if (is_null($value)) {
-                    throw new \Error('"datetime" field value can not be null');
+            if (is_null($value)) {
+                if (empty($rule_null)) {
+                    throw new \Error(vsprintf('"%s datetime" field value can not be null',[$column,]));
                 }
-            }
 
-            if (!is_null($value)) {
+            } else {
                 $filter_var_option = [
                     'options' => [
                         'default' => false,
@@ -393,7 +400,7 @@ namespace Core {
                     'flags' => []];
 
                 if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                    throw new \Error(vsprintf('"datetime" field value "%s" incorrect',[$value,]));
+                    throw new \Error(vsprintf('"%s datetime" field value "%s" incorrect',[$column,$value,]));
                 }
             }
 
@@ -404,11 +411,12 @@ namespace Core {
         /**
          * @param array $rule []
          * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function date(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
+        protected static function date(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -432,13 +440,12 @@ namespace Core {
                 $rule_null = $rule['null'];
             }
 
-            if (empty($rule_null)) {
-                if (is_null($value)) {
-                    throw new \Error('"datetime" field value can not be null');
+            if (is_null($value)) {
+                if (empty($rule_null)) {
+                    throw new \Error(vsprintf('"%s datetime" field value can not be null',[$column,]));
                 }
-            }
 
-            if (!is_null($value)) {
+            } else {
                 $filter_var_option = [
                     'options' => [
                         'default' => false,
@@ -446,7 +453,7 @@ namespace Core {
                     'flags' => []];
 
                 if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
-                    throw new \Error(vsprintf('date field value "%s" incorrect',[$value,]));
+                    throw new \Error(vsprintf('"%s date" field value "%s" incorrect',[$column,$value,]));
                 }
             }
 
@@ -457,11 +464,12 @@ namespace Core {
         /**
          * @param array $rule []
          * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function time(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
+        protected static function time(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -485,21 +493,20 @@ namespace Core {
                 $rule_null = $rule['null'];
             }
 
-            if (empty($rule_null)) {
-                if (is_null($value)) {
-                    throw new \Error('"time" field value can not be null');
+            if (is_null($value)) {
+                if (empty($rule_null)) {
+                    throw new \Error(vsprintf('"%s time" field value can not be null',[$column,]));
                 }
-            }
 
-            if (!is_null($value)) {
+            } else {
                 $filter_var_option = [
                     'options' => [
                         'default' => false,
-                        'decimal' => '.'],
+                        'regexp' => '/^([01][0-9]|2[0123]):([012345][0-9]):([012345][0-9])$/'],
                     'flags' => []];
 
-                if (filter_var($value,FILTER_VALIDATE_FLOAT,$filter_var_option) === false) {
-                    throw new \Error(vsprintf('float field value "%s" incorrect',[$value,]));
+                if (filter_var($value,FILTER_VALIDATE_REGEXP,$filter_var_option) === false) {
+                    throw new WException(vsprintf('"%s time" field value "%s" incorrect',[$column,$value,]));
                 }
             }
 
@@ -510,11 +517,12 @@ namespace Core {
         /**
          * @param array $rule []
          * @param callable $callback null
+         * @param string $column
          * @param bool $flag null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function float(array $rule = [],?callable $callback = null,?bool $flag = false): \stdClass {
+        protected static function float(array $rule = [],?callable $callback = null,string $column,?bool $flag = false): \stdClass {
             $object = new \stdClass;
 
             if (empty($flag)) {
@@ -538,13 +546,12 @@ namespace Core {
                 $rule_null = $rule['null'];
             }
 
-            if (empty($rule_null)) {
-                if (is_null($value)) {
-                    throw new \Error('"float" field value can not be null');
+            if (is_null($value)) {
+                if (empty($rule_null)) {
+                    throw new \Error(vsprintf('"%s float" field value can not be null',[$column,]));
                 }
-            }
 
-            if (!is_null($value)) {
+            } else {
                 $filter_var_option = [
                     'options' => [
                         'default' => false,
@@ -552,7 +559,7 @@ namespace Core {
                     'flags' => []];
 
                 if (filter_var($value,FILTER_VALIDATE_FLOAT,$filter_var_option) === false) {
-                    throw new \Error(vsprintf('float field value "%s" incorrect',[$value,]));
+                    throw new \Error(vsprintf('"%s float" field value "%s" incorrect',[$column,$value,]));
                 }
             }
 
