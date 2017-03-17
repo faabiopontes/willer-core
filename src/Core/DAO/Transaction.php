@@ -129,7 +129,7 @@ namespace Core\DAO {
         }
         /**
          * @return self
-         * @throws \Error|\PDOException
+         * @throws \Error
          */
         public function connect(): self {
             $database_info = $this->getDatabaseInfo();
@@ -164,7 +164,7 @@ namespace Core\DAO {
                     }
                 }
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
@@ -174,7 +174,7 @@ namespace Core\DAO {
         }
         /**
          * @return self
-         * @throws \Error|\PDOException
+         * @throws \Error
          */
         public function beginTransaction(): self {
             $this->connect();
@@ -184,7 +184,7 @@ namespace Core\DAO {
             try {
                 $resource->beginTransaction();
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
@@ -192,7 +192,7 @@ namespace Core\DAO {
         }
         /**
          * @return self
-         * @throws \Error|\PDOException
+         * @throws \Error
          */
         public function commit(): self {
             $resource = $this->getResource();
@@ -201,7 +201,7 @@ namespace Core\DAO {
                 try {
                     $this->resource->commit();
 
-                } catch (\PDOException | \Error $error) {
+                } catch (\Error $error) {
                     throw $error;
                 }
             }
@@ -210,7 +210,7 @@ namespace Core\DAO {
         }
         /**
          * @return self
-         * @throws \Error|\PDOException
+         * @throws \Error
          */
         public function rollBack(): self {
             $resource = $this->getResource();
@@ -219,7 +219,7 @@ namespace Core\DAO {
                 try {
                     $this->resource->rollBack();
 
-                } catch (\PDOException | \Error $error) {
+                } catch (\Error $error) {
                     throw $error;
                 }
             }
@@ -229,15 +229,15 @@ namespace Core\DAO {
         /**
          * @param string $sequence_name null
          * @return int
-         * @throws \Error|\PDOException
+         * @throws \Error
          */
         public function lastInsertId(string $sequence_name = null): int {
             $resource = $this->getResource();
 
             try {
-                $this->setLastInsertId($resource->lastInsertId($sequence_name));
+                $this->setLastInsertId((int) $resource->lastInsertId($sequence_name));
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
@@ -248,7 +248,7 @@ namespace Core\DAO {
          * @param array $value []
          * @param bool $cud null
          * @return array
-         * @throws \PDOException|\Error
+         * @throws \Error
          */
         public function queryRaw(string $query_raw,array $value = [],?bool $cud = false): array {
             $resource = $this->getResource();
@@ -275,7 +275,7 @@ namespace Core\DAO {
                     $result = [$pdo_query->fetch(\PDO::FETCH_OBJ)];
                 }
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
