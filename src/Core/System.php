@@ -30,7 +30,12 @@ namespace Core {
 
             $wutil = new WUtil;
 
-            $load_var = $wutil->load('config');
+            try {
+                $load_var = $wutil->load('config');
+
+            } catch (\Error $error) {
+                throw $error;
+            }
 
             $this->setLoadVar($load_var);
         }

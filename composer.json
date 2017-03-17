@@ -2,7 +2,7 @@
     "name": "wborba/willer-core",
     "description": "Core for Willer Framework",
     "keywords": ["framework"],
-    "homepage": "http://williamborba.github.io/willer-core",
+    "homepage": "http://williamborba.github.io/willer",
     "type": "library",
     "require": {
         "php": ">=7.1"
