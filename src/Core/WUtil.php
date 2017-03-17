@@ -95,7 +95,12 @@ namespace Core {
                 if ($spl_file_info->getExtension() == 'json') {
                     $key = $spl_file_info->getBasename('.json');
 
-                    $load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s',[ROOT_PATH,$file])),true);
+                    try {
+                        $load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s',[ROOT_PATH,$file])),true);
+
+                    } catch (\Error $error) {
+                        throw $error;
+                    }
                 }
             }
 
@@ -106,7 +111,12 @@ namespace Core {
                     if ($spl_file_info->getExtension() == 'json') {
                         $key = $spl_file_info->getBasename('.json');
 
-                        $load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s/%s',[ROOT_PATH,$application_path,$file])),true);
+                        try {
+                            $load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s/%s',[ROOT_PATH,$application_path,$file])),true);
+
+                        } catch (\Error $error) {
+                            throw $error;
+                        }
                     }
                 }
             }

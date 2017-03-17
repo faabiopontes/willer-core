@@ -63,7 +63,7 @@ namespace Core {
                 }
             }
 
-            if (defined('SWOOLE') && SWOOLE == '1' && defined('SWOOLE_IP') && !empty(SWOOLE_IP) && defined('SWOOLE_PORT') && !empty(SWOOLE_PORT)) {
+            if (defined('SWOOLE') && SWOOLE == '1') {
                 try {
                     $this->readyWithSwoole();
 
@@ -76,9 +76,9 @@ namespace Core {
 
             $request = new Request;
 
-            $request_uri = $wutil->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
-
             try {
+                $request_uri = $wutil->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
+
                 $object_route = $this->readyRoute($request_uri);
 
                 $controller = $object_route->controller;
@@ -101,12 +101,30 @@ namespace Core {
             $request = new Request;
             $wutil = new WUtil;
 
-            $http_server = new \swoole_http_server(SWOOLE_IP,SWOOLE_PORT);
+            $get_defined_constants = get_defined_constants(true);
+            $get_defined_constants_user = $get_defined_constants['user'];
 
-            $get_defined_constants = get_defined_constants();
+            try {
+                $ip = $wutil->contains($get_defined_constants_user,'SWOOLE_IP')->getString();
+                $port = $wutil->contains($get_defined_constants_user,'SWOOLE_PORT')->getInteger();
+                $log_level = $wutil->contains($get_defined_constants_user,'SWOOLE_LOG_LEVEL')->getInteger(1);
+                $log_path = $wutil->contains($get_defined_constants_user,'SWOOLE_LOG_PATH')->getString();
+                $page_error_path = $wutil->contains($get_defined_constants_user,'SWOOLE_PAGE_ERROR_PATH')->getString();
+                $gzip = $wutil->contains($get_defined_constants_user,'SWOOLE_GZIP')->getInteger();
+                $worker_num = $wutil->contains($get_defined_constants_user,'SWOOLE_WORKER_NUM')->getInteger(1);
+                $reactor_num = $wutil->contains($get_defined_constants_user,'SWOOLE_REACTOR_NUM')->getInteger(1);
+                $daemonize = $wutil->contains($get_defined_constants_user,'SWOOLE_DAEMONIZE')->getInteger(1);
+                $max_connection = $wutil->contains($get_defined_constants_user,'SWOOLE_MAX_CONNECTION')->getInteger(1024);
+                $max_request = $wutil->contains($get_defined_constants_user,'SWOOLE_MAX_REQUEST')->getInteger(10);
+                $ssl_cert_file = $wutil->contains($get_defined_constants_user,'SWOOLE_SSL_CERT_FILE')->getString();
+                $ssl_key_file = $wutil->contains($get_defined_constants_user,'SWOOLE_SSL_KEY_FILE')->getString();
+                $ssl_method = $wutil->contains($get_defined_constants_user,'SWOOLE_SSL_METHOD')->getString();
 
-            $log_level = $wutil->contains($get_defined_constants,'SWOOLE_LOG_LEVEL',false)->getInteger();
-            $log_path = $wutil->contains($get_defined_constants,'SWOOLE_LOG_PATH',false)->getString();
+            } catch (\Error $error) {
+                throw new \Error(vsprintf('Constants swoole incomplete',[$error->getMessage(),]));
+            }
+
+            $http_server = new \swoole_http_server($ip,$port);
 
             if (!empty($log_level) && !empty($log_path)) {
                 $log_path = vsprintf('%s%s',[UPKEEP_PATH,$log_path,]);
@@ -115,26 +133,23 @@ namespace Core {
                 $log_path = null;
             }
 
-            $page_error_path = $wutil->contains($get_defined_constants,'SWOOLE_PAGE_ERROR_PATH',false)->getString();
             $page_error_content = '';
 
             if (file_exists(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]))) {
                 $page_error_content = file_get_contents(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]));
             }
 
-            $gzip = $wutil->contains($get_defined_constants,'SWOOLE_GZIP',false)->getInteger();
-
             $http_server->set([
-                'worker_num' => $wutil->contains($get_defined_constants,'SWOOLE_WORKER_NUM',1)->getInteger(),
-                'reactor_num' => $wutil->contains($get_defined_constants,'SWOOLE_REACTOR_NUM',1)->getInteger(),
-                'daemonize' => $wutil->contains($get_defined_constants,'SWOOLE_DAEMONIZE',1)->getInteger(),
+                'worker_num' => $worker_num,
+                'reactor_num' => $reactor_num,
+                'daemonize' => $daemonize,
                 'backlog' => '',
-                'max_connection' => $wutil->contains($get_defined_constants,'SWOOLE_MAX_CONNECTION',1024)->getInteger(),
-                'max_request' => $wutil->contains($get_defined_constants,'SWOOLE_MAX_REQUEST',10)->getInteger(),
+                'max_connection' => $max_connection,
+                'max_request' => $max_request,
                 'log_file' => $log_path,
-                'ssl_cert_file' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_CERT_FILE',null)->getString(),
-                'ssl_key_file' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_KEY_FILE',null)->getString(),
-                'ssl_method' => $wutil->contains($get_defined_constants,'SWOOLE_SSL_METHOD',null)->getString(),
+                'ssl_cert_file' => $ssl_cert_file,
+                'ssl_key_file' => $ssl_key_file,
+                'ssl_method' => $ssl_method,
             ]);
 
             $http_server->on('connect',function(\swoole_http_server $http_server_client) use ($log_level) {
@@ -152,7 +167,7 @@ namespace Core {
                 print "\n------------------------------------------------------\n";
             });
 
-            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($request,$wutil) {
+            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($request,$wutil,$gzip) {
                 $_GET = $http_request->get ?? [];
                 $_POST = $http_request->post ?? [];
                 $_COOKIE = $http_request->cookie ?? [];
@@ -214,7 +229,7 @@ namespace Core {
                     }
                 }
 
-                if (!empty($gzip)) {
+                if (!is_null($gzip) && $gzip == 1) {
                     $http_response->gzip(1);
                 }
 
