@@ -18,10 +18,10 @@ namespace Core {
          */
         public function contains(iterable $input,string $key): self {
             if (is_array($input)) {
-                $this->return = isset($input[$key]) ? !empty($input[$key]) || $input[$key] === '0' ? $input[$key] : null : null;
+                $this->return = array_key_exists($key,$input) ? $input[$key] : null;
 
             } else if (is_object()) {
-                $this->return = isset($input->$key) ? !empty($input->$key) || $input->$key === '0' ? $input->$key : null : null;
+                $this->return = property_exists($key,$input) ? $input->$key : null;
             }
 
             return $this;
@@ -31,7 +31,7 @@ namespace Core {
          * @return string|null
          */
         public function getString(?string $string_default = null): ?string {
-            if (empty($this->return)) {
+            if (is_null($this->return)) {
                 return $string_default;
             }
 
@@ -42,7 +42,7 @@ namespace Core {
          * @return string|null
          */
         public function getInteger(?int $integer_default = null): ?int {
-            if (empty($this->return)) {
+            if (is_null($this->return)) {
                 return $integer_default;
             }
 
@@ -53,7 +53,7 @@ namespace Core {
          * @return string|null
          */
         public function getBoolean(?bool $boolean_default = null): ?bool {
-            if (empty($this->return)) {
+            if (is_null($this->return)) {
                 return $boolean_default;
             }
 
@@ -64,7 +64,7 @@ namespace Core {
          * @return array|null
          */
         public function getArray(?array $array_default = null): ?array {
-            if (empty($this->return)) {
+            if (is_null($this->return)) {
                 return $array_default;
             }
 
