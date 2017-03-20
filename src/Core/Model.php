@@ -44,29 +44,43 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
+         * @param bool $flag_type null
          * @return \stdClass
          */
-        protected static function primaryKey(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+        protected static function primaryKey(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = false): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = intval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
                 return $object;
             }
 
-            $value = $callback();
+            $value = $callback_value();
 
             if (is_null($value)) {
                 throw new \Error(vsprintf('"%s primaryKey" field can not be null',[$column,]));
             }
 
             if (!is_int($value)) {
-                throw new \Error(vsprintf('"%s primaryKey" field must be integer',[$column,]));
+                throw new \Error(vsprintf('"%s primaryKey" field must be int',[$column,]));
             }
 
             $object->value = $value;
@@ -75,16 +89,31 @@ namespace Core {
         }
         /**
          * @param array $rule
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
+         * @param bool $flag_type null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function foreignKey(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+
+        protected static function foreignKey(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = false): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = intval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
@@ -99,7 +128,7 @@ namespace Core {
                 throw new \Error(vsprintf('"%s foreignKey" field require one object',[$column,]));
             }
 
-            $value = $callback();
+            $value = $callback_value();
 
             $rule_null = null;
 
@@ -138,29 +167,37 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
+         * @param bool $flag_type null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function char(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+        protected static function char(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = false): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = strval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
                 return $object;
             }
 
-            $value = $callback();
-
-            if (empty($rule)) {
-                $object->value = $value;
-
-                return $object;
-            }
+            $value = $callback_value();
 
             $rule_null = null;
 
@@ -189,6 +226,10 @@ namespace Core {
                         throw new \Error(vsprintf('"%s char" field length is greater than "%s"',[$rule_length,$column]));
                     }
                 }
+
+                if (!is_string($value)) {
+                    throw new \Error(vsprintf('"%s char" field value "%s" can be string',[$column,$value]));
+                }
             }
 
             $object->value = $value;
@@ -197,29 +238,37 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
          * @return object
          * @throws \Error
          */
-        protected static function text(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+
+        protected static function text(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = false): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = strval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
                 return $object;
             }
 
-            $value = $callback();
-
-            if (empty($rule)) {
-                $object->value = $value;
-
-                return $object;
-            }
+            $value = $callback_value();
 
             $rule_null = null;
 
@@ -248,6 +297,10 @@ namespace Core {
                         throw new \Error(vsprintf('"%s text" field length is greater than "%s"',[$column,$rule_length,]));
                     }
                 }
+
+                if (!is_string($value)) {
+                    throw new \Error(vsprintf('"%s text" field value "%s" can be string',[$column,$value]));
+                }
             }
 
             $object->value = $value;
@@ -256,29 +309,37 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
+         * @param bool $flag_type null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function integer(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+        protected static function integer(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = false): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = intval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
                 return $object;
             }
 
-            $value = $callback();
-
-            if (empty($rule)) {
-                $object->value = $value;
-
-                return $object;
-            }
+            $value = $callback_value();
 
             $rule_null = null;
 
@@ -299,13 +360,17 @@ namespace Core {
 
             } else {
                 if (!empty($rule_length)) {
-                    if (!is_numeric($rule_length)) {
+                    if (!is_int($rule_length)) {
                         throw new \Error(vsprintf('rule key length must be an numeric, to field "%s integer"',[$column,]));
                     }
 
                     if (strlen($value) > intval($rule_length)) {
                         throw new \Error(vsprintf('"%s integer" field length is greater than "%s"',[$column,$rule_length,]));
                     }
+                }
+
+                if (!is_int($value)) {
+                    throw new \Error(vsprintf('"%s integer" field value "%s" can be int',[$column,$value,]));
                 }
             }
 
@@ -315,29 +380,37 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
+         * @param bool $flag_type null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function boolean(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+        protected static function boolean(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = false): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = boolval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
                 return $object;
             }
 
-            $value = $callback();
-
-            if (empty($rule)) {
-                $object->value = $value;
-
-                return $object;
-            }
+            $value = $callback_value();
 
             $rule_null = null;
 
@@ -349,6 +422,11 @@ namespace Core {
                 if (empty($rule_null)) {
                     throw new \Error(vsprintf('"%s boolean" field value can not be null',[$column,]));
                 }
+
+            } else {
+                if (!is_bool($value)) {
+                    throw new \Error(vsprintf('"%s boolean" field value "%s" can be boolean',[$column,$value,]));
+                }
             }
 
             $object->value = $value;
@@ -357,29 +435,37 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
+         * @param bool $flag_type null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function datetime(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+        protected static function datetime(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = false): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = strval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
                 return $object;
             }
 
-            $value = $callback();
-
-            if (empty($rule)) {
-                $object->value = $value;
-
-                return $object;
-            }
+            $value = $callback_value();
 
             $rule_null = null;
 
@@ -393,6 +479,10 @@ namespace Core {
                 }
 
             } else {
+                if (!is_string($value)) {
+                    throw new \Error(vsprintf('"%s datetime" field value "%s" can be string',[$column,$value]));
+                }
+
                 $filter_var_option = [
                     'options' => [
                         'default' => false,
@@ -410,29 +500,37 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
+         * @param bool $flag_type null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function date(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+        protected static function date(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = false): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = strval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
                 return $object;
             }
 
-            $value = $callback();
-
-            if (empty($rule)) {
-                $object->value = $value;
-
-                return $object;
-            }
+            $value = $callback_value();
 
             $rule_null = null;
 
@@ -442,10 +540,14 @@ namespace Core {
 
             if (is_null($value)) {
                 if (empty($rule_null)) {
-                    throw new \Error(vsprintf('"%s datetime" field value can not be null',[$column,]));
+                    throw new \Error(vsprintf('"%s date" field value can not be null',[$column,]));
                 }
 
             } else {
+                if (!is_string($value)) {
+                    throw new \Error(vsprintf('"%s date" field value "%s" can be string',[$column,$value]));
+                }
+
                 $filter_var_option = [
                     'options' => [
                         'default' => false,
@@ -463,29 +565,37 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
+         * @param bool $flag_type null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function time(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+        protected static function time(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = null): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = strval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
                 return $object;
             }
 
-            $value = $callback();
-
-            if (empty($rule)) {
-                $object->value = $value;
-
-                return $object;
-            }
+            $value = $callback_value();
 
             $rule_null = null;
 
@@ -499,6 +609,10 @@ namespace Core {
                 }
 
             } else {
+                if (!is_string($value)) {
+                    throw new \Error(vsprintf('"%s time" field value "%s" can be string',[$column,$value]));
+                }
+
                 $filter_var_option = [
                     'options' => [
                         'default' => false,
@@ -516,29 +630,37 @@ namespace Core {
         }
         /**
          * @param array $rule []
-         * @param callable $callback null
+         * @param callable $callback_value null
          * @param string $column
-         * @param bool $flag null
+         * @param bool $flag_value null
+         * @param bool $flag_type null
          * @return \stdClass
          * @throws \Error
          */
-        protected static function float(array $rule = [],?callable $callback = null,?string $column = null,?bool $flag = false): \stdClass {
+        protected static function float(?array $rule = [],?callable $callback_value = null,?string $column = null,?bool $flag_value = false,?bool $flag_type = false): \stdClass {
             $object = new \stdClass;
 
-            if (empty($flag)) {
+            if (!empty($flag_type)) {
+                $value = $callback_value();
+
+                if (is_null($value) || $value === '') {
+                    $object->value = $value;
+
+                } else {
+                    $object->value = floatval($value);
+                }
+
+                return $object;
+            }
+
+            if (empty($flag_value)) {
                 $object->method = __function__;
                 $object->rule = $rule;
 
                 return $object;
             }
 
-            $value = $callback();
-
-            if (empty($rule)) {
-                $object->value = $value;
-
-                return $object;
-            }
+            $value = $callback_value();
 
             $rule_null = null;
 
@@ -552,14 +674,8 @@ namespace Core {
                 }
 
             } else {
-                $filter_var_option = [
-                    'options' => [
-                        'default' => false,
-                        'decimal' => '.'],
-                    'flags' => []];
-
-                if (filter_var($value,FILTER_VALIDATE_FLOAT,$filter_var_option) === false) {
-                    throw new \Error(vsprintf('"%s float" field value "%s" incorrect',[$column,$value,]));
+                if (!is_float($value)) {
+                    throw new \Error(vsprintf('"%s float" field value "%s" can be float',[$column,$value]));
                 }
             }
 

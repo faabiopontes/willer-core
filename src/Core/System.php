@@ -95,8 +95,6 @@ namespace Core {
                 throw $error;
             }
 
-            print $content;
-
             return;
         }
         /**
@@ -207,7 +205,9 @@ namespace Core {
                     $controller = $object_route->controller;
                     $action = $object_route->action;
 
-                    $content = $controller->$action();
+                    $response = $controller->$action();
+
+                    $content = $response->getBody();
 
                 } catch (\Error $error) {
                     $date = new \DateTime('now');

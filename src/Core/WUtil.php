@@ -38,8 +38,19 @@ namespace Core {
             return $this->return;
         }
         /**
-         * @param int $integer_default null
+         * @param string $string_default null
          * @return string|null
+         */
+        public function getStringForce(?string $string_default = null): ?string {
+            if (is_null($this->return)) {
+                return $string_default;
+            }
+
+            return strval($this->return);
+        }
+        /**
+         * @param int $integer_default null
+         * @return int|null
          */
         public function getInteger(?int $integer_default = null): ?int {
             if (is_null($this->return)) {
@@ -49,8 +60,23 @@ namespace Core {
             return $this->return;
         }
         /**
+         * @param int $integer_default null
+         * @return int|null
+         */
+        public function getIntegerForce(?int $integer_default = null): ?int {
+            if (is_null($this->return)) {
+                return $integer_default;
+            }
+
+            if (!filter_var($this->return,FILTER_VALIDATE_INT)) {
+                throw new \Error(vsprintf('Value "%s" not int',[$this->return,]));
+            }
+
+            return intval($this->return);
+        }
+        /**
          * @param bool $boolean_default null
-         * @return string|null
+         * @return bool|null
          */
         public function getBoolean(?bool $boolean_default = null): ?bool {
             if (is_null($this->return)) {
@@ -58,6 +84,39 @@ namespace Core {
             }
 
             return $this->return;
+        }
+        /**
+         * @param bool $boolean_default null
+         * @return bool|null
+         */
+        public function getBooleanForce(?bool $boolean_default = null): ?bool {
+            if (is_null($this->return)) {
+                return $boolean_default;
+            }
+
+            return boolval($this->return);
+        }
+        /**
+         * @param float $float_default null
+         * @return float|null
+         */
+        public function getFloat(?float $float_default = null): ?float {
+            if (is_null($this->return)) {
+                return $float_default;
+            }
+
+            return $this->return;
+        }
+        /**
+         * @param float $float_default null
+         * @return float|null
+         */
+        public function getFloatForce(?float $float_default = null): ?float {
+            if (is_null($this->return)) {
+                return $float_default;
+            }
+
+            return floatval($this->return);
         }
         /**
          * @param array $array_default null

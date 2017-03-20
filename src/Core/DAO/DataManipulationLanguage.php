@@ -729,17 +729,23 @@ namespace Core\DAO {
                 $pdo_query->execute($query_value_list);
                 $pdo_query_fetch = $pdo_query->fetch(\PDO::FETCH_OBJ);
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
             foreach ($table_column as $column => $value) {
                 $table_column_str = vsprintf('%s__%s',[$table_name,$column]);
 
-                $this->$column = $pdo_query_fetch->$table_column_str;
+                $method = $table_schema[$column]->method;
+
+                $object_value = $this->$method(null,function() use($pdo_query_fetch,$table_column_str) {
+                    return $pdo_query_fetch->$table_column_str;
+                },null,null,true);
+
+                $this->$column = $object_value->value;
             }
 
-            $obj_column_list = $this->getTableColumn();
+            $obj_column_list = $table_column;
             $obj_schema_dict = $table_schema;
 
             $query_fetch = $pdo_query_fetch;
@@ -869,7 +875,7 @@ namespace Core\DAO {
 
                 $pdo_query->execute($query_value_list);
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
@@ -998,7 +1004,7 @@ namespace Core\DAO {
 
                 $query->execute($query_value);
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
@@ -1125,7 +1131,7 @@ namespace Core\DAO {
 
                 $pdo_query->execute($query_value);
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
 
             }
@@ -1303,7 +1309,7 @@ namespace Core\DAO {
                 $pdo_query_total->execute($query_value);
                 $pdo_query_total = $pdo_query_total->fetch(\PDO::FETCH_OBJ);
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
@@ -1326,7 +1332,7 @@ namespace Core\DAO {
                 $pdo_query->execute($query_value);
                 $query_fetch_all = $pdo_query->fetchAll(\PDO::FETCH_OBJ);
 
-            } catch (\PDOException | \Error $error) {
+            } catch (\Error $error) {
                 throw $error;
             }
 
@@ -1390,7 +1396,9 @@ namespace Core\DAO {
             $table_name = $obj->model->getTableName();
 
             foreach ($obj_column_list as $column => $value) {
-                if ($obj_schema_dict[$column]->method == 'foreignKey') {
+                $method = $obj_schema_dict[$column]->method;
+
+                if ($method == 'foreignKey') {
                     $obj_foreignkey = $obj_schema_dict[$column]->rule['table'];
 
                     $obj_foreignkey_class_name = $obj_foreignkey->getClassName();
@@ -1403,7 +1411,11 @@ namespace Core\DAO {
                     foreach ($obj_foreignkey_column_list as $column_ => $value_) {
                         $table_column = vsprintf('%s_%s__%s',[$table_name,$obj_foreignkey_table_name,$column_]);
 
-                        $obj_foreignkey->$column_ = $fetch->$table_column;
+                        $object_value = $this->$method(null,function() use($fetch,$table_column) {
+                            return $fetch->$table_column;
+                        },null,null,true);
+
+                        $obj_foreignkey->$column_ = $object_value->value;
                     }
 
                     $obj->model->$column = $obj_foreignkey;
