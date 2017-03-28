@@ -6,10 +6,10 @@ declare(strict_types=1);
  */
 namespace Core {
     /**
-     * Class WUtil
+     * Class Util
      * @var $return
      */
-    class WUtil {
+    class Util {
         private $return;
         /**
          * @param iterable $input

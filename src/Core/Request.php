@@ -3,10 +3,10 @@ declare(strict_types=1);
 /**
  * @author William Borba
  * @package Core
- * @uses Core\WUtil
+ * @uses Core\Util
  */
 namespace Core {
-    use Core\WUtil;
+    use Core\Util;
     /**
      * Class Request
      * @constant SESSION_KEY_DEFAULT 'wf'
@@ -194,9 +194,9 @@ namespace Core {
             $app_url_list = $this->getAppUrlList();
 
             if (empty($app_url_list)) {
-                $wutil = new WUtil;
+                $util = new Util;
 
-                $load_var = $wutil::load('config');
+                $load_var = $util::load('config');
 
                 $app_url_list = [];
 

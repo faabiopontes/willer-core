@@ -4,10 +4,10 @@ declare(strict_types=1);
  * @author William Borba
  * @package Core
  * @uses Core\Request
- * @uses Core\WUtil
+ * @uses Core\Util
  */
 namespace Core {
-    use Core\{Request,WUtil};
+    use Core\{Request,Util};
     /**
      * Class System
      * @constant EXTENSION_STATIC ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map']
@@ -28,10 +28,10 @@ namespace Core {
             $request = new Request();
             $request->cleanHttpSession();
 
-            $wutil = new WUtil;
+            $util = new Util;
 
             try {
-                $load_var = $wutil->load('config');
+                $load_var = $util->load('config');
 
             } catch (\Error $error) {
                 throw $error;
@@ -82,7 +82,7 @@ namespace Core {
             $request = new Request;
 
             try {
-                $request_uri = $wutil->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
+                $request_uri = $util->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
 
                 $object_route = $this->readyRoute($request_uri);
 
@@ -102,26 +102,26 @@ namespace Core {
          */
         public function readyWithSwoole(): void {
             $request = new Request;
-            $wutil = new WUtil;
+            $util = new Util;
 
             $get_defined_constants = get_defined_constants(true);
             $get_defined_constants_user = $get_defined_constants['user'];
 
             try {
-                $ip = $wutil->contains($get_defined_constants_user,'SWOOLE_IP')->getString();
-                $port = $wutil->contains($get_defined_constants_user,'SWOOLE_PORT')->getInteger();
-                $log_level = $wutil->contains($get_defined_constants_user,'SWOOLE_LOG_LEVEL')->getInteger(1);
-                $log_path = $wutil->contains($get_defined_constants_user,'SWOOLE_LOG_PATH')->getString();
-                $page_error_path = $wutil->contains($get_defined_constants_user,'SWOOLE_PAGE_ERROR_PATH')->getString();
-                $gzip = $wutil->contains($get_defined_constants_user,'SWOOLE_GZIP')->getInteger();
-                $worker_num = $wutil->contains($get_defined_constants_user,'SWOOLE_WORKER_NUM')->getInteger(1);
-                $reactor_num = $wutil->contains($get_defined_constants_user,'SWOOLE_REACTOR_NUM')->getInteger(1);
-                $daemonize = $wutil->contains($get_defined_constants_user,'SWOOLE_DAEMONIZE')->getInteger(1);
-                $max_connection = $wutil->contains($get_defined_constants_user,'SWOOLE_MAX_CONNECTION')->getInteger(1024);
-                $max_request = $wutil->contains($get_defined_constants_user,'SWOOLE_MAX_REQUEST')->getInteger(10);
-                $ssl_cert_file = $wutil->contains($get_defined_constants_user,'SWOOLE_SSL_CERT_FILE')->getString();
-                $ssl_key_file = $wutil->contains($get_defined_constants_user,'SWOOLE_SSL_KEY_FILE')->getString();
-                $ssl_method = $wutil->contains($get_defined_constants_user,'SWOOLE_SSL_METHOD')->getString();
+                $ip = $util->contains($get_defined_constants_user,'SWOOLE_IP')->getString();
+                $port = $util->contains($get_defined_constants_user,'SWOOLE_PORT')->getInteger();
+                $log_level = $util->contains($get_defined_constants_user,'SWOOLE_LOG_LEVEL')->getInteger(1);
+                $log_path = $util->contains($get_defined_constants_user,'SWOOLE_LOG_PATH')->getString();
+                $page_error_path = $util->contains($get_defined_constants_user,'SWOOLE_PAGE_ERROR_PATH')->getString();
+                $gzip = $util->contains($get_defined_constants_user,'SWOOLE_GZIP')->getInteger();
+                $worker_num = $util->contains($get_defined_constants_user,'SWOOLE_WORKER_NUM')->getInteger(1);
+                $reactor_num = $util->contains($get_defined_constants_user,'SWOOLE_REACTOR_NUM')->getInteger(1);
+                $daemonize = $util->contains($get_defined_constants_user,'SWOOLE_DAEMONIZE')->getInteger(1);
+                $max_connection = $util->contains($get_defined_constants_user,'SWOOLE_MAX_CONNECTION')->getInteger(1024);
+                $max_request = $util->contains($get_defined_constants_user,'SWOOLE_MAX_REQUEST')->getInteger(10);
+                $ssl_cert_file = $util->contains($get_defined_constants_user,'SWOOLE_SSL_CERT_FILE')->getString();
+                $ssl_key_file = $util->contains($get_defined_constants_user,'SWOOLE_SSL_KEY_FILE')->getString();
+                $ssl_method = $util->contains($get_defined_constants_user,'SWOOLE_SSL_METHOD')->getString();
 
             } catch (\Error $error) {
                 throw new \Error(vsprintf('Constants swoole incomplete',[$error->getMessage(),]));
@@ -170,7 +170,7 @@ namespace Core {
                 print "\n------------------------------------------------------\n";
             });
 
-            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($request,$wutil,$gzip) {
+            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($request,$util,$gzip) {
                 $_GET = $http_request->get ?? [];
                 $_POST = $http_request->post ?? [];
                 $_COOKIE = $http_request->cookie ?? [];
@@ -179,7 +179,7 @@ namespace Core {
 
                 $extension_static = self::EXTENSION_STATIC;
 
-                $request_uri = $wutil->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
+                $request_uri = $util->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
 
                 $parse_url_path = parse_url($request_uri,PHP_URL_PATH);
                 $extension = pathinfo($parse_url_path,PATHINFO_EXTENSION);

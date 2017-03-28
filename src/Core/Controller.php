@@ -4,10 +4,10 @@ declare(strict_types=1);
  * @author William Borba
  * @package Core
  * @uses Core\Request
- * @uses Core\WUtil
+ * @uses Core\Util
  */
 namespace Core {
-    use Core\{Request,WUtil};
+    use Core\{Request,Util};
     /**
      * Class Controller
      * @var object $request
@@ -46,9 +46,9 @@ namespace Core {
             $request_method = $request->getRequestMethod();
             $request_server = $request->getHttpServer();
 
-            $wutil = new WUtil;
+            $util = new Util;
 
-            if (empty($wutil->contains($request_server,'REQUEST_METHOD')->getString())) {
+            if (empty($util->contains($request_server,'REQUEST_METHOD')->getString())) {
                 throw new \Error('php $_SERVER["REQUEST_METHOD"] is empty');
             }
 
