@@ -130,6 +130,17 @@ namespace Core {
             return $this->return;
         }
         /**
+         * @param iterable $iterable_default null
+         * @return iterable|null
+         */
+        public function getIterable(?iterable $iterable_default = null): ?iterable {
+            if (is_null($this->return)) {
+                return $iterable_default;
+            }
+
+            return $this->return;
+        }
+        /**
          * Load vars from .json extension files, and return associative array.
          * @param string $application_path null
          * @param array $exclude_list []
