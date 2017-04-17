@@ -7,48 +7,54 @@ declare(strict_types=1);
 namespace Core\DAO {
     /**
      * Class Transaction
-     * @constant PDO_DRIVE ['mysql','pgsql','sqlite']
+     * @constant PDO_DRIVE_LIST ['mysql','pgsql','sqlite']
+     * @constant PDO_DRIVE_MYSQL 'mysql'
+     * @constant PDO_DRIVE_PGSQL 'pgsql'
+     * @constant PDO_DRIVE_SQLITE 'sqlite'
      * @var object $resource
      * @var string $database
      * @var int $last_insert_id
-     * @var string $database_path
+     * @var string $database_file
      */
     class Transaction {
-        private const PDO_DRIVE = ['mysql','pgsql','sqlite'];
+        private const PDO_DRIVE_LIST = ['mysql','pgsql','sqlite'];
+        private const PDO_DRIVE_MYSQL = 'mysql';
+        private const PDO_DRIVE_PGSQL = 'pgsql';
+        private const PDO_DRIVE_SQLITE = 'sqlite';
 
         private $resource;
         private $database;
         private $last_insert_id;
-        private $database_path;
+        private $database_file;
         /**
          * Transaction constructor.
          */
         public function __construct() {
-            if (empty(defined('DATABASE_PATH'))) {
-                throw new \Error('constant DATABASE_PATH not defined');
+            if (empty(defined('DATABASE_FILE'))) {
+                throw new \Error('constant DATABASE_FILE not defined');
             }
 
             if (empty(defined('DATABASE'))) {
                 throw new \Error('constant DATABASE not defined');
             }
 
-            if (!file_exists(DATABASE_PATH)) {
-                throw new \Error(vsprintf('database path dont find in "%s"',[DATABASE_PATH,]));
+            if (!file_exists(DATABASE_FILE)) {
+                throw new \Error(vsprintf('database path dont find in "%s"',[DATABASE_FILE,]));
             }
 
-            $database_path = json_decode(file_get_contents(DATABASE_PATH),true);
-            $this->setDatabasePath($database_path);
+            $database_file = json_decode(file_get_contents(DATABASE_FILE),true);
+            $this->setDatabasePath($database_file);
 
-            if (empty($database_path)) {
+            if (empty($database_file)) {
                 throw new \Error(vsprintf('json encode error in database path "%s"',[$this->getDatabasePath(),]));
             }
 
-            if (!array_key_exists(DATABASE,$database_path)) {
-                throw new \Error(vsprintf('database "%s" dont find in object "%s"',[DATABASE,print_r($database_path,true),]));
+            if (!array_key_exists(DATABASE,$database_file)) {
+                throw new \Error(vsprintf('database "%s" dont find in object "%s"',[DATABASE,print_r($database_file,true),]));
             }
 
-            if (!array_key_exists('driver',$database_path[DATABASE])) {
-                throw new \Error(vsprintf('database driver key not registered in database object "%s"',[print_r($database_path,true)]));
+            if (!array_key_exists('driver',$database_file[DATABASE])) {
+                throw new \Error(vsprintf('database driver key not registered in database object "%s"',[print_r($database_file,true)]));
             }
 
             $this->setDatabase(DATABASE);
@@ -87,14 +93,14 @@ namespace Core\DAO {
          * @return array
          */
         public function getDatabasePath(): array {
-            return $this->database_path;
+            return $this->database_file;
         }
         /**
-         * @param array $database_path
+         * @param array $database_file
          * @return self
          */
-        protected function setDatabasePath(array $database_path): self {
-            $this->database_path = $database_path;
+        protected function setDatabasePath(array $database_file): self {
+            $this->database_file = $database_file;
 
             return $this;
         }
@@ -119,13 +125,13 @@ namespace Core\DAO {
          */
         public function getDatabaseInfo(): array {
             $database = $this->getDatabase();
-            $database_path = $this->getDatabasePath();
+            $database_file = $this->getDatabasePath();
 
-            if (!array_key_exists($database,$database_path)) {
-                throw new \Error(vsprintf('database "%s" dont find in object "%s"',[$database,print_r($database_path,true),]));
+            if (!array_key_exists($database,$database_file)) {
+                throw new \Error(vsprintf('database "%s" dont find in object "%s"',[$database,print_r($database_file,true),]));
             }
 
-            return $database_path[$database];
+            return $database_file[$database];
         }
         /**
          * @return self
@@ -134,19 +140,19 @@ namespace Core\DAO {
         public function connect(): self {
             $database_info = $this->getDatabaseInfo();
 
-            if (!in_array($database_info['driver'],self::PDO_DRIVE)) {
+            if (!in_array($database_info['driver'],self::PDO_DRIVE_LIST)) {
                 throw new \Error(vsprintf('database driver "%s" not registered',[$database_info['driver'],]));
             }
 
             try {
-                if (in_array($database_info['driver'],['mysql','pgsql'])) {
+                if (in_array($database_info['driver'],[self::PDO_DRIVE_MYSQL,self::PDO_DRIVE_PGSQL])) {
                     $pdo = new \PDO(vsprintf('%s:host=%s;port=%s;dbname=%s',[$database_info['driver'],$database_info['host'],$database_info['port'],$database_info['name']]),$database_info['user'],$database_info['password']);
 
-                } else if ($database_info['driver'] == 'sqlite') {
+                } else if ($database_info['driver'] == self::PDO_DRIVE_SQLITE) {
                     $pdo = new \PDO(vsprintf('%s:%s',[$database_info['driver'],$database_info['host']]));
                 }
 
-                if ($database_info['driver'] == 'mysql') {
+                if ($database_info['driver'] == self::PDO_DRIVE_MYSQL) {
                     if ($database_info['autocommit'] == 0) {
                         $pdo->setAttribute(\PDO::ATTR_AUTOCOMMIT,0);
 

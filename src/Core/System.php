@@ -10,39 +10,67 @@ namespace Core {
     use Core\{Request,Util};
     /**
      * Class System
+     * @constant LOG_LEVEL_ONE = '1'
+     * @constant LOG_LEVEL_TWO = '2'
+     * @constant LOG_LEVEL_THRE = '3'
      * @constant EXTENSION_STATIC ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map']
      * @constant CONTENT_ERROR_DEFAULT 'No output response!'
+     * @constant CONFIG_FILE 'config'
+     * @constant APP_FILE 'app'
+     * @constant SWOOLE_LOG_LEVEL_DEFAULT 1
+     * @constant SWOOLE_SWOOLE_WORKER_NUM_DEFAULT 4
+     * @constant SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT 1
+     * @constant SWOOLE_SWOOLE_DAEMONIZE_DEFAULT 1
+     * @constant SWOOLE_SWOOLE_MAX_CONNECTION_DEFAULT 1024
+     * @constant SWOOLE_SWOOLE_MAX_REQUEST_DEFAULT 1024
      * @var $load_var
      */
     class System {
+        private const LOG_LEVEL_ONE = 1;
+        private const LOG_LEVEL_TWO = 2;
+        private const LOG_LEVEL_THRE = 3;
         private const EXTENSION_STATIC = ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map'];
         private const CONTENT_ERROR_DEFAULT = 'No output response!';
+        private const CONFIG_PATH = 'config';
+        private const CONFIG_FILE = 'config';
+        public const APP_FILE = 'app';
+        private const SWOOLE_LOG_LEVEL_DEFAULT = 1;
+        private const SWOOLE_SWOOLE_WORKER_NUM_DEFAULT = 4;
+        private const SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT = 1;
+        private const SWOOLE_SWOOLE_DAEMONIZE_DEFAULT = 1;
+        private const SWOOLE_SWOOLE_MAX_CONNECTION_DEFAULT = 1024;
+        private const SWOOLE_SWOOLE_MAX_REQUEST_DEFAULT = 1024;
 
         private $load_var;
         /**
          * System constructor.
          */
-        public function __construct() {
-            session_start();
-
-            $request = new Request();
-            $request->cleanHttpSession();
-
+        public function __construct() {}
+        /**
+         * @return self
+         */
+        public function readyLoadVar(): self {
             $util = new Util;
 
             try {
-                $load_var = $util->load('config');
+                $load_var = $util->load(vsprintf('%s/%s',[ROOT_PATH,self::CONFIG_PATH]));
 
             } catch (\Error $error) {
                 throw $error;
             }
 
             $this->setLoadVar($load_var);
+
+            return $this;
         }
         /**
          * @return array
          */
-        private function getLoadVar(): array {
+        public function getLoadVar(?string $filename = null): array {
+            if (!empty($filename) && is_array($this->load_var) && array_key_exists($filename,$this->load_var)) {
+                return $this->load_var[$filename];
+            }
+
             return $this->load_var;
         }
         /**
@@ -58,10 +86,17 @@ namespace Core {
          * @throws \Error
          */
         public function ready(): void {
+            session_start();
+
+            $request = new Request();
+            $request->cleanHttpSession();
+
+            $this->readyLoadVar();
+
             $load_var = $this->getLoadVar();
 
             if (!empty($load_var)) {
-                foreach ($load_var['config'] as $var_key => $var_value) {
+                foreach ($load_var[self::CONFIG_FILE] as $var_key => $var_value) {
                     if (!defined($var_key)) {
                         define($var_key,$var_value);
                     }
@@ -110,21 +145,21 @@ namespace Core {
             try {
                 $ip = $util->contains($get_defined_constants_user,'SWOOLE_IP')->getString();
                 $port = $util->contains($get_defined_constants_user,'SWOOLE_PORT')->getInteger();
-                $log_level = $util->contains($get_defined_constants_user,'SWOOLE_LOG_LEVEL')->getInteger(1);
+                $log_level = $util->contains($get_defined_constants_user,'SWOOLE_LOG_LEVEL')->getInteger(self::SWOOLE_LOG_LEVEL_DEFAULT);
                 $log_path = $util->contains($get_defined_constants_user,'SWOOLE_LOG_PATH')->getString();
                 $page_error_path = $util->contains($get_defined_constants_user,'SWOOLE_PAGE_ERROR_PATH')->getString();
                 $gzip = $util->contains($get_defined_constants_user,'SWOOLE_GZIP')->getInteger();
-                $worker_num = $util->contains($get_defined_constants_user,'SWOOLE_WORKER_NUM')->getInteger(1);
-                $reactor_num = $util->contains($get_defined_constants_user,'SWOOLE_REACTOR_NUM')->getInteger(1);
-                $daemonize = $util->contains($get_defined_constants_user,'SWOOLE_DAEMONIZE')->getInteger(1);
-                $max_connection = $util->contains($get_defined_constants_user,'SWOOLE_MAX_CONNECTION')->getInteger(1024);
-                $max_request = $util->contains($get_defined_constants_user,'SWOOLE_MAX_REQUEST')->getInteger(10);
+                $worker_num = $util->contains($get_defined_constants_user,'SWOOLE_WORKER_NUM')->getInteger(self::SWOOLE_SWOOLE_WORKER_NUM_DEFAULT);
+                $reactor_num = $util->contains($get_defined_constants_user,'SWOOLE_REACTOR_NUM')->getInteger(self::SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT);
+                $daemonize = $util->contains($get_defined_constants_user,'SWOOLE_DAEMONIZE')->getInteger(self::SWOOLE_SWOOLE_DAEMONIZE_DEFAULT);
+                $max_connection = $util->contains($get_defined_constants_user,'SWOOLE_MAX_CONNECTION')->getInteger(self::SWOOLE_SWOOLE_MAX_CONNECTION_DEFAULT);
+                $max_request = $util->contains($get_defined_constants_user,'SWOOLE_MAX_REQUEST')->getInteger(self::SWOOLE_SWOOLE_MAX_REQUEST_DEFAULT);
                 $ssl_cert_file = $util->contains($get_defined_constants_user,'SWOOLE_SSL_CERT_FILE')->getString();
                 $ssl_key_file = $util->contains($get_defined_constants_user,'SWOOLE_SSL_KEY_FILE')->getString();
                 $ssl_method = $util->contains($get_defined_constants_user,'SWOOLE_SSL_METHOD')->getString();
 
             } catch (\Error $error) {
-                throw new \Error(vsprintf('Constants swoole incomplete',[$error->getMessage(),]));
+                throw new \Error(vsprintf('Constants swoole incomplete(%s)',[$error->getMessage(),]));
             }
 
             $http_server = new \swoole_http_server($ip,$port);
@@ -156,7 +191,7 @@ namespace Core {
             ]);
 
             $http_server->on('connect',function(\swoole_http_server $http_server_client) use ($log_level) {
-                if (!empty($log_level) || $log_level < 2) {
+                if (empty($log_level) || $log_level < self::LOG_LEVEL_THRE) {
                     return;
                 }
 
@@ -167,10 +202,10 @@ namespace Core {
                 print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
                 print "Client stats...\n";
                 print_r($http_server_client->stats());
-                print "\n------------------------------------------------------\n";
+                print "\n------------------------------------------------------";
             });
 
-            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($request,$util,$gzip) {
+            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($request,$util,$gzip,$log_level) {
                 $_GET = $http_request->get ?? [];
                 $_POST = $http_request->post ?? [];
                 $_COOKIE = $http_request->cookie ?? [];
@@ -199,6 +234,22 @@ namespace Core {
                     return;
                 }
 
+                if (!empty($log_level) && $log_level == self::LOG_LEVEL_TWO) {
+                    $date = new \DateTime('now');
+
+                    print "\n------------------------------------------------------\n";
+                    print "Client connect...\n";
+                    print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
+                    print vsprintf("HTTP GET...\n%s",[print_r($request->getHttpGet(),true),]);
+                    print vsprintf("HTTP POST...\n%s",[print_r($request->getHttpPost(),true),]);
+                    print vsprintf("HTTP SESSION...\n%s",[print_r($request->getHttpSession(),true),]);
+                    print vsprintf("HTTP COOKIE...\n%s",[print_r($request->getHttpCookie(),true),]);
+                    print vsprintf("HTTP FILES...\n%s",[print_r($request->getHttpFiles(),true),]);
+                    print vsprintf("HTTP SERVER...\n%s",[print_r($request->getHttpServer(),true),]);
+                    print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
+                    print "\n------------------------------------------------------";
+                }
+
                 try {
                     $object_route = $this->readyRoute($request_uri);
 
@@ -225,7 +276,7 @@ namespace Core {
                     print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
                     print vsprintf("Error message...\n%s\n",[$error->getMessage(),]);
                     print vsprintf("Error trace...\n%s",[$error->getTraceAsString(),]);
-                    print "\n------------------------------------------------------\n";
+                    print "\n------------------------------------------------------";
 
                     $content = self::CONTENT_ERROR_DEFAULT;
 
@@ -269,11 +320,11 @@ namespace Core {
                 throw new \Error('constant ROOT_PATH not defined');
             }
 
-            if (!array_key_exists('app',$load_var)) {
+            if (!array_key_exists(self::APP_FILE,$load_var)) {
                 throw new \Error(vsprintf('file app.json not found in directory "%s/config"',[ROOT_PATH,]));
             }
 
-            foreach ($load_var['app'] as $app) {
+            foreach ($load_var[self::APP_FILE] as $app) {
                 $app_url_class = vsprintf('\Application\%s\Url',[$app]);
 
                 if (!class_exists($app_url_class,true)) {

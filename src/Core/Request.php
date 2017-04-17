@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @uses Core\Util
  */
 namespace Core {
-    use Core\Util;
+    use Core\{Util,System};
     /**
      * Class Request
      * @constant SESSION_KEY_DEFAULT 'wf'
@@ -125,24 +125,48 @@ namespace Core {
          * @return array
          */
         public function getHttpGet(): array {
+            array_walk_recursive($_GET,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_GET;
         }
         /**
          * @return array
          */
         public function getHttpPost(): array {
+            array_walk_recursive($_POST,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_POST;
         }
         /**
          * @return array
          */
         public function getHttpServer(): array {
+            array_walk_recursive($_SERVER,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_SERVER;
         }
         /**
          * @return array
          */
         public function getHttpSession(): array {
+            array_walk_recursive($_SESSION[self::SESSION_KEY_DEFAULT],function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_SESSION[self::SESSION_KEY_DEFAULT];
         }
         /**
@@ -176,12 +200,24 @@ namespace Core {
          * @return array
          */
         public function getHttpCookie(): array {
+            array_walk_recursive($_COOKIE,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_COOKIE;
         }
         /**
          * @return array
          */
         public function getHttpFiles(): array {
+            array_walk_recursive($_FILES,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_FILES;
         }
         /**
@@ -196,11 +232,14 @@ namespace Core {
             if (empty($app_url_list)) {
                 $util = new Util;
 
-                $load_var = $util::load('config');
+                $system = new System();
+                $system->readyLoadVar();
+
+                $load_var_app = $system->getLoadVar(System::APP_FILE);
 
                 $app_url_list = [];
 
-                foreach ($load_var['app'] as $app) {
+                foreach ($load_var_app as $app) {
                     $app_url_class = vsprintf('\Application\%s\Url',[$app]);
 
                     if (!class_exists($app_url_class,true)) {

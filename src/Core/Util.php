@@ -68,10 +68,6 @@ namespace Core {
                 return $integer_default;
             }
 
-            if (!filter_var($this->return,FILTER_VALIDATE_INT)) {
-                throw new \Error(vsprintf('Value "%s" not int',[$this->return,]));
-            }
-
             return intval($this->return);
         }
         /**
@@ -142,37 +138,16 @@ namespace Core {
         }
         /**
          * Load vars from .json extension files, and return associative array.
-         * @param string $application_path null
+         * @param string $application_path
          * @param array $exclude_list []
          * @return array
          */
-        public static function load(?string $application_path,array $exclude_list = []): ?array {
+        public static function load(string $application_path,array $exclude_list = []): ?array {
             $exclude_list = array_merge($exclude_list,['..','.']);
 
-            $scandir_root = array_diff(scandir(ROOT_PATH),$exclude_list);
-
-            $scandir_application = null;
-
-            if (!empty($application_path)) {
-                $scandir_application = array_diff(scandir(vsprintf('%s/%s',[ROOT_PATH,$application_path])),$exclude_list);
-            }
+            $scandir_application = array_diff(scandir($application_path),$exclude_list);
 
             $load_var = [];
-
-            foreach ($scandir_root as $file) {
-                $spl_file_info = new \SplFileInfo($file);
-
-                if ($spl_file_info->getExtension() == 'json') {
-                    $key = $spl_file_info->getBasename('.json');
-
-                    try {
-                        $load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s',[ROOT_PATH,$file])),true);
-
-                    } catch (\Error $error) {
-                        throw $error;
-                    }
-                }
-            }
 
             if (!empty($scandir_application)) {
                 foreach ($scandir_application as $file) {
@@ -182,7 +157,7 @@ namespace Core {
                         $key = $spl_file_info->getBasename('.json');
 
                         try {
-                            $load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s/%s',[ROOT_PATH,$application_path,$file])),true);
+                            $load_var[$key] = json_decode(file_get_contents(vsprintf('%s/%s',[$application_path,$file])),true);
 
                         } catch (\Error $error) {
                             throw $error;

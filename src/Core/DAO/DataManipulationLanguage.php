@@ -29,6 +29,8 @@ namespace Core\DAO {
      */
     abstract class DataManipulationLanguage {
         private const QUERY_LIMIT_DEFAULT = 1000;
+        private const LIKE_DIRECTION_LEFT = 'left';
+        private const LIKE_DIRECTION_RIGHT = 'right';
 
         private $transaction;
         private $db_escape;
@@ -341,7 +343,7 @@ namespace Core\DAO {
          * @throws \Error
          */
         protected function definePrimaryKey(): self {
-            $table_schema = $this->schema();
+            $table_schema = $this->getTableSchema();
 
             $column = null;
 
@@ -535,16 +537,33 @@ namespace Core\DAO {
         }
         /**
          * @param array $like
+         * @param string $direction null
          * @return self
          * @throws \Error
          */
-        public function like(array $like): self {
+        public function like(array $like,?string $direction = null): self {
             $like_value_list = [];
 
             if (empty($like)) {
                 $like_query = null;
 
             } else {
+                if (!empty($direction) && !in_array($direction,[self::LIKE_DIRECTION_LEFT,self::LIKE_DIRECTION_RIGHT])) {
+                    throw new \Error(vsprintf('direction parameter valid is "%s" or "%s"',[self::LIKE_DIRECTION_LEFT,self::LIKE_DIRECTION_RIGHT]));
+                }
+
+                $like_value_str = '%%%s%%';
+
+                if (!empty($direction)) {
+                    if ($direction == self::LIKE_DIRECTION_LEFT) {
+                        $like_value_str = '%%%s';
+
+                    } else if ($direction == self::LIKE_DIRECTION_RIGHT) {
+                        $like_value_str = '%s%%';
+
+                    }
+                }
+
                 $like_query = [];
 
                 foreach ($like as $key => $value) {
@@ -554,7 +573,7 @@ namespace Core\DAO {
                         throw new \Error(vsprintf('value for "%s" is null',[$key,]));
 
                     } else if (is_string($value) || is_numeric($value)) {
-                        $like_value_list[] = $value;
+                        $like_value_list[] = vsprintf($like_value_str,[$value,]);
 
                         $like_value = vsprintf('%s LIKE ?',[$key,]);
 
@@ -1408,14 +1427,15 @@ namespace Core\DAO {
 
                     $obj_foreignkey = new $obj_foreignkey_class_name($transaction);
 
-                    foreach ($obj_foreignkey_column_list as $column_ => $value_) {
-                        $table_column = vsprintf('%s_%s__%s',[$table_name,$obj_foreignkey_table_name,$column_]);
+                    foreach ($obj_foreignkey_column_list as $column_recursive => $value_recursive) {
+                        $method_recursive = $obj_foreignkey_schema_dict[$column_recursive]->method;
+                        $table_column = vsprintf('%s_%s__%s',[$table_name,$obj_foreignkey_table_name,$column_recursive]);
 
-                        $object_value = $this->$method(null,function() use($fetch,$table_column) {
+                        $object_value = $this->$method_recursive(null,function() use($fetch,$table_column) {
                             return $fetch->$table_column;
                         },null,null,true);
 
-                        $obj_foreignkey->$column_ = $object_value->value;
+                        $obj_foreignkey->$column_recursive = $object_value->value;
                     }
 
                     $obj->model->$column = $obj_foreignkey;
