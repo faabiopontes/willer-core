@@ -54,12 +54,12 @@ namespace Core\DAO {
          * DataManipulationLanguage constructor.
          * @param object $transaction \Core\DAO\Transaction|null
          */
-        public function __construct(?\Core\DAO\Transaction $transaction = null) {
+        public function __construct(\Core\DAO\Transaction $transaction) {
             if (empty($transaction)) {
                 throw new \Error(vsprintf('Transaction object not loaded, in model instance "%s"',[$this->name(),]));
             }
 
-            if (!$transaction instanceof Transaction) {
+            if (!$transaction instanceof \Core\DAO\Transaction) {
                 throw new \Error(vsprintf('incorrect loaded instance of Transaction, in model instance "%s"',[$this->name(),]));
             }
 

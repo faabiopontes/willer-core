@@ -17,12 +17,10 @@ namespace Core {
          * Model constructor.
          * @param object $transaction \Core\DAO\Transaction|null
          */
-        public function __construct(?\Core\DAO\Transaction $transaction = null) {
-            $this->definePrimaryKey();
+        public function __construct(\Core\DAO\Transaction $transaction) {
+            parent::__construct($transaction);
 
-            if (!empty($transaction)) {
-                parent::__construct($transaction);
-            }
+            $this->definePrimaryKey();
         }
         /**
          * @return array
