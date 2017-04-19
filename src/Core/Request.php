@@ -1,202 +1,262 @@
 <?php
+declare(strict_types=1);
 /**
-  * @author William Borba
-  * @package Core
-  * @uses Core\Exception\WException
-  * @uses Core\Util
-  */
+ * @author William Borba
+ * @package Core
+ * @uses Core\Util
+ */
 namespace Core {
-    use Core\Exception\WException;
-    use Core\Util;
+    use Core\{Util,System};
     /**
      * Class Request
-     * @package Core
-     * @property string $uri
-     * @property array $uri_argument
+     * @constant SESSION_KEY_DEFAULT 'wf'
+     * @var string $uri
+     * @var array $uri_argument
+     * @var array $request_method
+     * @var string $route_id
+     * @var array $app_url_list
      */
     class Request {
+        private const SESSION_KEY_DEFAULT = 'wf';
+
         private $uri;
         private $uri_argument;
         private $request_method;
         private $route_id;
+        private $app_url_list;
         /**
          * Request constructor.
-         * @param $uri_argument
          */
-        public function __construct($uri_argument = [],$request_method = null,$route_id = null) {
-            $this->setArgument($uri_argument);
-            $this->setRequestMethod($request_method);
-            $this->setRouteId($route_id);
-        }
+        public function __construct() {}
         /**
-         * @param null $key
-         * @return mixed
+         * @param string $key
+         * @return string
+         * @throws \Error
          */
-        public function getArgument($key = null) {
-            if (!empty($key) && !empty($this->uri_argument)) {
-                if (!array_key_exists($key,$this->uri_argument)) {
-                    return false;
+        public function getArgument(string $key): string {
+            $uri_argument = $this->getAllArgument();
 
-                } else {
-                    return $this->uri_argument[$key];
-                }
+            if (empty($uri_argument)) {
+                throw new \Error('URI arguments is empty');
             }
 
+            if (!array_key_exists($key,$uri_argument)) {
+                throw new \Error(vsprintf('URI arguments key "%s" dont find',[$key,]));
+            }
+
+            return $uri_argument[$key];
+        }
+        /**
+         * @return array
+         */
+        public function getAllArgument(): array {
             return $this->uri_argument;
         }
         /**
-         * @param $uri_argument
-         * @return $this
+         * @param array $uri_argument
+         * @return self
          */
-        public function setArgument($uri_argument) {
+        public function setArgument(array $uri_argument): self {
             $this->uri_argument = $uri_argument;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return string
          */
-        public function getUri() {
+        public function getUri(): string {
             return $this->uri;
         }
         /**
-         * @param $uri_argument
-         * @return $this
+         * @param string $uri
+         * @return self
          */
-        public function setUri($uri) {
+        public function setUri($uri): self {
             $this->uri = $uri;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getRequestMethod() {
+        public function getRequestMethod(): array {
             return $this->request_method;
         }
         /**
-         * @param $request_method
+         * @param array $request_method
          * @return $this
          */
-        public function setRequestMethod($request_method) {
+        public function setRequestMethod(array $request_method): self {
             $this->request_method = $request_method;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return string
          */
-        public function getRouteId() {
+        public function getRouteId(): string {
             return $this->route_id;
         }
         /**
-         * @param $route_id
-         * @return $this
+         * @param string $route_id
+         * @return self
          */
-        public function setRouteId($route_id) {
+        public function setRouteId($route_id): self {
             $this->route_id = $route_id;
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return array|null
          */
-        public function getHttpGet() {
+        public function getAppUrlList(): ?array {
+            return $this->app_url_list;
+        }
+        /**
+         * @param array $app_url_list null
+         * @return self
+         */
+        public function setAppUrlList(?array $app_url_list = null): self {
+            $this->app_url_list = $app_url_list;
+
+            return $this;
+        }
+        /**
+         * @return array
+         */
+        public function getHttpGet(): array {
+            array_walk_recursive($_GET,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_GET;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpPost() {
+        public function getHttpPost(): array {
+            array_walk_recursive($_POST,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_POST;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpServer() {
+        public function getHttpServer(): array {
+            array_walk_recursive($_SERVER,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_SERVER;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpSession($session_key = null) {
-            if (!empty($session_key)) {
-                if (isset($_SESSION['wf'][$session_key])) {
-                    return $_SESSION['wf'][$session_key];
-
-                } else {
-                    return $_SESSION['wf'][$session_key] = null;
+        public function getHttpSession(): array {
+            array_walk_recursive($_SESSION[self::SESSION_KEY_DEFAULT],function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
                 }
+            });
 
-            }
-
-            return $_SESSION['wf'];
+            return $_SESSION[self::SESSION_KEY_DEFAULT];
         }
         /**
-         * @return object $this
+         * @param array $session_key_value
+         * @return self
          */
-        public function setHttpSession($session_key,$session_value) {
-            $_SESSION['wf'][$session_key] = $session_value;
+        public function setHttpSession(array $session_key_value): self {
+            $_SESSION[self::SESSION_KEY_DEFAULT] = array_merge($_SESSION[self::SESSION_KEY_DEFAULT],$session_key_value);
 
             return $this;
         }
         /**
-         * @return object $this
+         * @param string $session_key
+         * @return self
          */
-        public function cleanHttpSession($session_key = null) {
+        public function cleanHttpSession(?string $session_key = null): self {
             if (!empty($session_key)) {
-                if (isset($_SESSION['wf'][$session_key])) {
-                    unset($_SESSION['wf'][$session_key]);
+                if (isset($_SESSION[self::SESSION_KEY_DEFAULT][$session_key])) {
+                    unset($_SESSION[self::SESSION_KEY_DEFAULT][$session_key]);
                 }
 
-            } else {
-                unset($_SESSION['wf']);
-
-                $_SESSION['wf'] = [];
             }
+
+            unset($_SESSION[self::SESSION_KEY_DEFAULT]);
+
+            $_SESSION[self::SESSION_KEY_DEFAULT] = [];
 
             return $this;
         }
         /**
-         * @return mixed
+         * @return array
          */
-        public function getHttpCookie() {
+        public function getHttpCookie(): array {
+            array_walk_recursive($_COOKIE,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
             return $_COOKIE;
         }
         /**
-         * @param $id
-         * @param array $url_match
-         * @return int|string
-         * @throws WException
+         * @return array
          */
-        public function getRoute($id, $url_match = []) {
-            $json_config_load = Util::load('config');
+        public function getHttpFiles(): array {
+            array_walk_recursive($_FILES,function(&$item,$key) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
 
-            if (empty(defined('ROOT_PATH'))) {
-                throw new WException('constant ROOT_PATH not defined');
-            }
+            return $_FILES;
+        }
+        /**
+         * @param string $id
+         * @param array $url_match []
+         * @return string
+         * @throws \Error
+         */
+        public function getRoute(string $id,array $url_match = []): string {
+            $app_url_list = $this->getAppUrlList();
 
-            if (!array_key_exists('app',$json_config_load)) {
-                throw new WException(vsprintf('file app.json not found in directory "%s/Config"',[ROOT_PATH,]));
-            }
+            if (empty($app_url_list)) {
+                $util = new Util;
 
-            $url_list = [];
+                $system = new System();
+                $system->readyLoadVar();
 
-            foreach ($json_config_load['app'] as $app) {
-                $app_url_class = vsprintf('\Application\%s\Url',[$app]);
+                $load_var_app = $system->getLoadVar(System::APP_FILE);
 
-                if (!class_exists($app_url_class,true)) {
-                    throw new WException(vsprintf('class "%s" not found',[$app_url_class,]));
+                $app_url_list = [];
+
+                foreach ($load_var_app as $app) {
+                    $app_url_class = vsprintf('\Application\%s\Url',[$app]);
+
+                    if (!class_exists($app_url_class,true)) {
+                        throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
+                    }
+
+                    $app_url_list = array_merge($app_url_list,$app_url_class::url());
                 }
 
-                $url_list = array_merge($url_list,$app_url_class::url());
+                $this->setAppUrlList($app_url_list);
             }
 
             $flag_id = false;
 
-            foreach ($url_list as $route => $url_config) {
+            foreach ($app_url_list as $route => $url_config) {
                 if (count($url_config) != 3) {
-                    throw new WException(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
+                    throw new \Error(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
                 }
 
                 $route = str_replace(' ','',$route);
@@ -209,7 +269,7 @@ namespace Core {
             }
 
             if (empty($flag_id)) {
-                throw new WException(vsprintf('route id %s dont exists',[$id,]));
+                throw new \Error(vsprintf('route id %s dont exists',[$id,]));
             }
 
             $route = str_replace(' ','',$route);
@@ -219,11 +279,13 @@ namespace Core {
 
             if (!empty($match)) {
                 if (empty($match[0])) {
-                    return URL_PREFIX.$route;
+                    $route = URL_PREFIX.$route;
+
+                    return $route;
 
                 } else {
                     if (empty($url_match) || count($url_match) != count($match[0])) {
-                        throw new WException(vsprintf('route id %s of format %s, contains vars missing',[$id,$route,]));
+                        throw new \Error(vsprintf('route id %s of format %s, contains vars missing',[$id,$route,]));
                     }
 
                     $route_split_list = explode('/',$route);
@@ -238,7 +300,7 @@ namespace Core {
                             $match = explode(':',$match[0]);
 
                             if (!array_key_exists($match[0],$url_match)) {
-                                throw new WException(vsprintf('var %s missing in route %s(%s)',[$match[0],$route,$id]));
+                                throw new \Error(vsprintf('var %s missing in route %s(%s)',[$match[0],$route,$id]));
                             }
 
                             $route_split_list[$key] = $url_match[$match[0]];
@@ -251,7 +313,7 @@ namespace Core {
                 }
             }
 
-            throw new WException(vsprintf('route id %s dont exists',[$id,]));
+            throw new \Error(vsprintf('route id %s dont exists',[$id,]));
         }
     }
 }

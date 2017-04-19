@@ -1,69 +1,71 @@
 <?php
+declare(strict_types=1);
 /**
  * @author William Borba
  * @package Core
- * @uses Core\Exception\WException
  * @uses Core\Request
+ * @uses Core\Util
  */
 namespace Core {
-    use Core\Exception\WException;
-    use Core\Request;
+    use Core\{Request,Util};
     /**
      * Class Controller
-     * @package Core
-     * @class abstract
-     * @property object $request
+     * @var object $request
      */
     abstract class Controller {
         private $request;
         /**
          * Controller constructor.
-         * @param null $request_method
+         * @param object $request Request
          */
         public function __construct(Request $request) {
             $this->setRequest($request);
             $this->requestMethodAccess();
         }
         /**
-         * @return mixed
+         * @return object
          */
-        protected function getRequest() {
+        protected function getRequest(): Request {
             return $this->request;
         }
         /**
-         * @param $request
-         * @return $this
+         * @param object $request
+         * @return self
          */
-        protected function setRequest($request) {
+        protected function setRequest(Request $request): self {
             $this->request = $request;
 
             return $this;
         }
         /**
-         * @param null $request_method
-         * @throws WException
+         * @return self
+         * @throws \Error
          */
-        private function requestMethodAccess() {
+        private function requestMethodAccess(): self {
             $request = $this->getRequest();
             $request_method = $request->getRequestMethod();
             $request_server = $request->getHttpServer();
 
-            if (empty(Util::get($request_server,'REQUEST_METHOD',null))) {
-                throw new WException('php $_SERVER["REQUEST_METHOD"] is empty');
+            $util = new Util;
+
+            if (empty($util->contains($request_server,'REQUEST_METHOD')->getString())) {
+                throw new \Error('php $_SERVER["REQUEST_METHOD"] is empty');
             }
 
             if (!empty($request_method)) {
                 if (is_array($request_method)) {
                     if (!in_array($request_server['REQUEST_METHOD'],$request_method)) {
-                        throw new WException(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],print_r($request_method,true)]));
+                        throw new \Error(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],print_r($request_method,true)]));
                     }
 
                 } else {
                     if ($request_server['REQUEST_METHOD'] != $request_method) {
-                        throw new WException(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],$request_method]));
+                        throw new \Error(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],$request_method]));
                     }
                 }
             }
+
+            return $this;
         }
     }
 }
