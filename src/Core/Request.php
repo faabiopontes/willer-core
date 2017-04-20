@@ -188,11 +188,11 @@ namespace Core {
                     unset($_SESSION[self::SESSION_KEY_DEFAULT][$session_key]);
                 }
 
+            } else {
+                unset($_SESSION[self::SESSION_KEY_DEFAULT]);
+
+                $_SESSION[self::SESSION_KEY_DEFAULT] = [];
             }
-
-            unset($_SESSION[self::SESSION_KEY_DEFAULT]);
-
-            $_SESSION[self::SESSION_KEY_DEFAULT] = [];
 
             return $this;
         }
