@@ -221,50 +221,73 @@ namespace Core {
             return $_FILES;
         }
         /**
+         * @return self
+         * @throws \Error
+         */
+        private function routeLoad(): self {
+            $util = new Util;
+
+            $system = new System();
+            $system->readyLoadVar();
+
+            $load_var_app = $system->getLoadVar(System::APP_FILE);
+
+            $app_url_list = [];
+
+            foreach ($load_var_app as $app) {
+                $app_url_class = vsprintf('\Application\%s\Url',[$app]);
+
+                if (!class_exists($app_url_class,true)) {
+                    throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
+                }
+
+                $app_url_list = array_merge($app_url_list,$app_url_class::url());
+            }
+
+            $this->setAppUrlList($app_url_list);
+
+            return $this;
+        }
+        /**
+         * @return array null
+         */
+        public function getRouteAll(): ?array {
+            $this->routeLoad();
+
+            $app_url_list = $this->getAppUrlList();
+
+            return $app_url_list;
+        }
+        /**
          * @param string $id
-         * @param array $url_match []
+         * @param array $url_match
          * @return string
          * @throws \Error
          */
-        public function getRoute(string $id,array $url_match = []): string {
+        public function getRoute(string $id,?array $url_match = null): string {
+            $this->routeLoad();
+
             $app_url_list = $this->getAppUrlList();
-
-            if (empty($app_url_list)) {
-                $util = new Util;
-
-                $system = new System();
-                $system->readyLoadVar();
-
-                $load_var_app = $system->getLoadVar(System::APP_FILE);
-
-                $app_url_list = [];
-
-                foreach ($load_var_app as $app) {
-                    $app_url_class = vsprintf('\Application\%s\Url',[$app]);
-
-                    if (!class_exists($app_url_class,true)) {
-                        throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
-                    }
-
-                    $app_url_list = array_merge($app_url_list,$app_url_class::url());
-                }
-
-                $this->setAppUrlList($app_url_list);
-            }
 
             $flag_id = false;
 
-            foreach ($app_url_list as $route => $url_config) {
-                if (count($url_config) != 3) {
-                    throw new \Error(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
+            foreach ($app_url_list as $group) {
+                if (!empty($flag_id)) {
+                    break;
                 }
 
-                $route = str_replace(' ','',$route);
+                foreach ($group as $route => $url_config) {
+                    if (count($url_config) != 3) {
+                        throw new \Error(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
+                    }
 
-                if ($id == $url_config[2]) {
-                    $flag_id = true;
+                    $route = str_replace(' ','',$route);
 
-                    break;
+                    if ($id == $url_config[2]) {
+                        $flag_id = true;
+
+                        break;
+                    }
                 }
             }
 
