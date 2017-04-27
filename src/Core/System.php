@@ -18,11 +18,11 @@ namespace Core {
      * @constant CONFIG_FILE 'config'
      * @constant APP_FILE 'app'
      * @constant SWOOLE_LOG_LEVEL_DEFAULT 1
-     * @constant SWOOLE_SWOOLE_WORKER_NUM_DEFAULT 4
-     * @constant SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT 1
+     * @constant SWOOLE_SWOOLE_WORKER_NUM_DEFAULT 8
+     * @constant SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT 8
      * @constant SWOOLE_SWOOLE_DAEMONIZE_DEFAULT 1
      * @constant SWOOLE_SWOOLE_MAX_CONNECTION_DEFAULT 1024
-     * @constant SWOOLE_SWOOLE_MAX_REQUEST_DEFAULT 1024
+     * @constant SWOOLE_SWOOLE_MAX_REQUEST_DEFAULT 9999999
      * @var $load_var
      */
     class System {
@@ -35,11 +35,11 @@ namespace Core {
         private const CONFIG_FILE = 'config';
         public const APP_FILE = 'app';
         private const SWOOLE_LOG_LEVEL_DEFAULT = 1;
-        private const SWOOLE_SWOOLE_WORKER_NUM_DEFAULT = 4;
-        private const SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT = 1;
+        private const SWOOLE_SWOOLE_WORKER_NUM_DEFAULT = 8;
+        private const SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT = 8;
         private const SWOOLE_SWOOLE_DAEMONIZE_DEFAULT = 1;
         private const SWOOLE_SWOOLE_MAX_CONNECTION_DEFAULT = 1024;
-        private const SWOOLE_SWOOLE_MAX_REQUEST_DEFAULT = 1024;
+        private const SWOOLE_SWOOLE_MAX_REQUEST_DEFAULT = 9999999;
 
         private $load_var;
         /**
