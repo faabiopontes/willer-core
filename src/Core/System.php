@@ -333,47 +333,45 @@ namespace Core {
 
                 $url_list = $app_url_class::url();
 
-                foreach ($url_list as $group) {
-                    foreach ($group as $route => $application_route) {
-                        if (count($application_route) != 3) {
-                            throw new \Error(vsprintf('route %s incorrect format. EX: "/home/page/test/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
-                        }
+                foreach ($url_list as $route => $application_route) {
+                    if (count($application_route) != 3) {
+                        throw new \Error(vsprintf('route %s incorrect format. EX: "/home/page/test/" => ["Home\index",[(GET|POST|PUT|DELETE)],["id_route" => "Label route id"]]',[$route,]));
+                    }
 
-                        $application_route[0] = vsprintf('%s\%s',[$app,$application_route[0]]);
+                    $application_route[0] = vsprintf('%s\%s',[$app,$application_route[0]]);
 
-                        $route = str_replace(' ','',$route);
-                        $route_split_list = explode('/',$route);
+                    $route = str_replace(' ','',$route);
+                    $route_split_list = explode('/',$route);
 
-                        foreach ($route_split_list as $key => $route_split) {
-                            $match = null;
+                    foreach ($route_split_list as $key => $route_split) {
+                        $match = null;
 
-                            preg_match('/{([a-z0-9.\-_]+):{1}?([\w^\-|\[\]\\+\(\)\/]+)?}/',$route_split,$match);
+                        preg_match('/{([a-z0-9.\-_]+):{1}?([\w^\-|\[\]\\+\(\)\/]+)?}/',$route_split,$match);
 
-                            if (!empty($match)) {
-                                $match[0] = str_replace(['{','}'],'',$match[0]);
-                                $match = explode(':',$match[0]);
+                        if (!empty($match)) {
+                            $match[0] = str_replace(['{','}'],'',$match[0]);
+                            $match = explode(':',$match[0]);
 
-                                if (!empty($match[1])) {
-                                    $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],$match[1],]);
+                            if (!empty($match[1])) {
+                                $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],$match[1],]);
 
-                                } else {
-                                    $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],'[a-z0-9]+',]);
-                                }
+                            } else {
+                                $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],'[a-z0-9]+',]);
                             }
                         }
+                    }
 
-                        $route_er = vsprintf('/^%s$/',[implode('\/',$route_split_list),]);
+                    $route_er = vsprintf('/^%s$/',[implode('\/',$route_split_list),]);
 
-                        if (preg_match($route_er,$request_uri,$match)) {
-                            try {
-                                $object_route = $this->urlMatch($application_route,$match);
+                    if (preg_match($route_er,$request_uri,$match)) {
+                        try {
+                            $object_route = $this->urlMatch($application_route,$match);
 
-                            } catch (\Error $error) {
-                                throw $error;
-                            }
-
-                            return $object_route;
+                        } catch (\Error $error) {
+                            throw $error;
                         }
+
+                        return $object_route;
                     }
                 }
             }

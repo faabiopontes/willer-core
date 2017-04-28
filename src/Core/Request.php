@@ -271,23 +271,18 @@ namespace Core {
 
             $flag_id = false;
 
-            foreach ($app_url_list as $group) {
-                if (!empty($flag_id)) {
-                    break;
+            foreach ($app_url_list as $route => $url_config) {
+
+                if (count($url_config) != 3) {
+                    throw new \Error(vsprintf('route "%s" incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],["id_route" => "Label route id"]]',[$route,]));
                 }
 
-                foreach ($group as $route => $url_config) {
-                    if (count($url_config) != 3) {
-                        throw new \Error(vsprintf('route %s incorrect format. EX: "/^\/home\/?$/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
-                    }
+                $route = str_replace(' ','',$route);
 
-                    $route = str_replace(' ','',$route);
+                if ($id == $url_config[2]) {
+                    $flag_id = true;
 
-                    if ($id == $url_config[2]) {
-                        $flag_id = true;
-
-                        break;
-                    }
+                    break;
                 }
             }
 
