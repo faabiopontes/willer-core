@@ -19,8 +19,6 @@ namespace Core {
          */
         public function __construct(\Core\DAO\Transaction $transaction) {
             parent::__construct($transaction);
-
-            $this->definePrimaryKey();
         }
         /**
          * @return array

@@ -343,6 +343,12 @@ namespace Core\DAO {
          * @throws \Error
          */
         protected function definePrimaryKey(): self {
+            $primary_key = $this->getPrimaryKey();
+
+            if (!empty($primary_key)) {
+                return $this;
+            }
+
             $table_schema = $this->getTableSchema();
 
             $column = null;
@@ -441,6 +447,7 @@ namespace Core\DAO {
                 if ($table->method == 'foreignKey') {
                     $table_foreign_key = $i;
                     $table_related = $table->rule['table'];
+                    $table_related->definePrimaryKey();
                     $table_related_table_name = $table_related->getTableName();
                     $table_related_table_column = $table_related->getTableColumn();
                     $table_related_primary_key = $table_related->getPrimaryKey();
@@ -639,6 +646,8 @@ namespace Core\DAO {
          * @throws \Error
          */
         public function get(array $where): self {
+            $this->definePrimaryKey();
+
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -792,6 +801,8 @@ namespace Core\DAO {
          * @throws \Error
          */
         public function save(?array $column = null): self {
+            $this->definePrimaryKey();
+
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -932,6 +943,8 @@ namespace Core\DAO {
          * @throws \Error
          */
         public function update(array $set): self {
+            $this->definePrimaryKey();
+
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -1041,6 +1054,8 @@ namespace Core\DAO {
          * @throws \Error
          */
         public function delete(?array $where = null): self {
+            $this->definePrimaryKey();
+
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -1169,6 +1184,8 @@ namespace Core\DAO {
          * @throws \Error
          */
         public function execute(?array $setting = null): \stdClass {
+            $this->definePrimaryKey();
+
             $transaction = $this->getTransaction();
 
             if (empty($transaction)) {
@@ -1420,6 +1437,7 @@ namespace Core\DAO {
                 if ($method == 'foreignKey') {
                     $obj_foreignkey = $obj_schema_dict[$column]->rule['table'];
 
+                    $obj_foreignkey->definePrimaryKey();
                     $obj_foreignkey_class_name = $obj_foreignkey->getClassName();
                     $obj_foreignkey_table_name = $obj_foreignkey->getTableName();
                     $obj_foreignkey_column_list = $obj_foreignkey->getTableColumn();
