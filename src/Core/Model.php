@@ -9,10 +9,11 @@ namespace Core {
     use Core\DAO\DataManipulationLanguage;
     /**
      * Class Model
-     * @constant RULE ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled']
+     * @constant RULE ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled','{
+']
      */
     abstract class Model extends DataManipulationLanguage {
-        private const RULE = ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled'];
+        private const RULE = ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled','readonly'];
         /**
          * Model constructor.
          * @param object $transaction \Core\DAO\Transaction|null
