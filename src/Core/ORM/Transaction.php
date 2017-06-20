@@ -2,9 +2,9 @@
 declare(strict_types=1);
 /**
  * @author William Borba
- * @package Core/DAO
+ * @package Core/ORM
  */
-namespace Core\DAO {
+namespace Core\ORM {
     /**
      * Class Transaction
      * @constant PDO_DRIVE_LIST ['mysql','pgsql','sqlite']

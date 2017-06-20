@@ -2,9 +2,9 @@
 declare(strict_types=1);
 /**
  * @author William Borba
- * @package Core/DAO
+ * @package Core/ORM
  */
-namespace Core\DAO {
+namespace Core\ORM {
     /**
      * Class DataManipulationLanguage
      * @constant QUERY_LIMIT_DEFAULT 1000
@@ -52,14 +52,14 @@ namespace Core\DAO {
         private $flag_new_or_update;
         /**
          * DataManipulationLanguage constructor.
-         * @param object $transaction \Core\DAO\Transaction|null
+         * @param object $transaction \Core\ORM\Transaction|null
          */
-        public function __construct(\Core\DAO\Transaction $transaction) {
+        public function __construct(\Core\ORM\Transaction $transaction) {
             if (empty($transaction)) {
                 throw new \Error(vsprintf('Transaction object not loaded, in model instance "%s"',[$this->name(),]));
             }
 
-            if (!$transaction instanceof \Core\DAO\Transaction) {
+            if (!$transaction instanceof \Core\ORM\Transaction) {
                 throw new \Error(vsprintf('incorrect loaded instance of Transaction, in model instance "%s"',[$this->name(),]));
             }
 
@@ -107,15 +107,15 @@ namespace Core\DAO {
         /**
          * @return object|null
          */
-        protected function getTransaction(): ?\Core\DAO\Transaction {
+        protected function getTransaction(): ?\Core\ORM\Transaction {
             return $this->transaction;
         }
 
         /**
-         * @param object $transaction \Core\DAO\Transaction
+         * @param object $transaction \Core\ORM\Transaction
          * @return self
          */
-        protected function setTransaction(\Core\DAO\Transaction $transaction): self {
+        protected function setTransaction(\Core\ORM\Transaction $transaction): self {
             $this->transaction = $transaction;
 
             return $this;
@@ -849,26 +849,29 @@ namespace Core\DAO {
                     throw new \Error(vsprintf('[save]field missing "%s"(not use table.column notation), check your schema, in model instance "%s"',[$key,$this->name(),]));
                 }
 
-                if ($primary_key != $key) {
-                    $method = $table_schema[$key]->method;
-                    $rule = $table_schema[$key]->rule;
+                if (empty($column) && $primary_key == $key) {
+                    continue;
 
-                    try {
-                        $object = $this->$method($rule,function() use($value) {
-                            return $value;
-                        },$key,true);
-
-                    } catch (\Error $error) {
-                        throw $error;
-                    }
-
-                    $set_escape[] = vsprintf('%s=?',[$key,]);
-                    $query_value_update_list[] = $object->value;
-
-                    $column_list[] = $key;
-                    $query_value_add_list[] = $object->value;
-                    $query_escape_list[] = '?';
                 }
+
+                $method = $table_schema[$key]->method;
+                $rule = $table_schema[$key]->rule;
+
+                try {
+                    $object = $this->$method($rule,function() use($value) {
+                        return $value;
+                    },$key,true);
+
+                } catch (\Error $error) {
+                    throw $error;
+                }
+
+                $set_escape[] = vsprintf('%s=?',[$key,]);
+                $query_value_update_list[] = $object->value;
+
+                $column_list[] = $key;
+                $query_value_add_list[] = $object->value;
+                $query_escape_list[] = '?';
             }
 
             $set_escape = implode(',',$set_escape);
@@ -1428,7 +1431,7 @@ namespace Core\DAO {
          * @param object $obj
          * @return stdClass
          */
-        private function relatedFetch(array $obj_column_list,array $obj_schema_dict,\stdClass $fetch,\Core\DAO\Transaction $transaction,\stdClass $obj): \stdClass {
+        private function relatedFetch(array $obj_column_list,array $obj_schema_dict,\stdClass $fetch,\Core\ORM\Transaction $transaction,\stdClass $obj): \stdClass {
             $table_name = $obj->model->getTableName();
 
             foreach ($obj_column_list as $column => $value) {

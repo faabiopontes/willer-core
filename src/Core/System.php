@@ -10,14 +10,9 @@ namespace Core {
     use Core\{Request,Util};
     /**
      * Class System
-     * @constant LOG_LEVEL_ONE = '1'
-     * @constant LOG_LEVEL_TWO = '2'
-     * @constant LOG_LEVEL_THRE = '3'
      * @constant EXTENSION_STATIC ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map']
      * @constant CONTENT_ERROR_DEFAULT 'No output response!'
      * @constant CONFIG_FILE 'config'
-     * @constant APP_FILE 'app'
-     * @constant SWOOLE_LOG_LEVEL_DEFAULT 1
      * @constant SWOOLE_SWOOLE_WORKER_NUM_DEFAULT 8
      * @constant SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT 8
      * @constant SWOOLE_SWOOLE_DAEMONIZE_DEFAULT 1
@@ -26,15 +21,11 @@ namespace Core {
      * @var $load_var
      */
     class System {
-        private const LOG_LEVEL_ONE = 1;
-        private const LOG_LEVEL_TWO = 2;
-        private const LOG_LEVEL_THRE = 3;
         private const EXTENSION_STATIC = ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map'];
         private const CONTENT_ERROR_DEFAULT = 'No output response!';
         private const CONFIG_PATH = 'config';
         private const CONFIG_FILE = 'config';
-        public const APP_FILE = 'app';
-        private const SWOOLE_LOG_LEVEL_DEFAULT = 1;
+        public const APP_PATH = 'App';
         private const SWOOLE_SWOOLE_WORKER_NUM_DEFAULT = 8;
         private const SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT = 8;
         private const SWOOLE_SWOOLE_DAEMONIZE_DEFAULT = 1;
@@ -136,7 +127,6 @@ namespace Core {
          * @return void
          */
         public function readyWithSwoole(): void {
-            $request = new Request;
             $util = new Util;
 
             $get_defined_constants = get_defined_constants(true);
@@ -145,7 +135,7 @@ namespace Core {
             try {
                 $ip = $util->contains($get_defined_constants_user,'SWOOLE_IP')->getString();
                 $port = $util->contains($get_defined_constants_user,'SWOOLE_PORT')->getInteger();
-                $log_level = $util->contains($get_defined_constants_user,'SWOOLE_LOG_LEVEL')->getInteger(self::SWOOLE_LOG_LEVEL_DEFAULT);
+                $log = $util->contains($get_defined_constants_user,'SWOOLE_LOG')->getInteger();
                 $log_path = $util->contains($get_defined_constants_user,'SWOOLE_LOG_PATH')->getString();
                 $page_error_path = $util->contains($get_defined_constants_user,'SWOOLE_PAGE_ERROR_PATH')->getString();
                 $gzip = $util->contains($get_defined_constants_user,'SWOOLE_GZIP')->getInteger();
@@ -164,8 +154,8 @@ namespace Core {
 
             $http_server = new \swoole_http_server($ip,$port);
 
-            if (!empty($log_level) && !empty($log_path)) {
-                $log_path = vsprintf('%s%s',[UPKEEP_PATH,$log_path,]);
+            if (!empty($log) && !empty($log_path)) {
+                $log_path = vsprintf('%s%s',[$log_path,]);
 
             } else {
                 $log_path = null;
@@ -173,8 +163,8 @@ namespace Core {
 
             $page_error_content = '';
 
-            if (file_exists(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]))) {
-                $page_error_content = file_get_contents(vsprintf('%s%s',[UPKEEP_PATH,$page_error_path]));
+            if (file_exists('%s',$page_error_path)) {
+                $page_error_content = file_get_contents($page_error_path);
             }
 
             $http_server->set([
@@ -190,8 +180,8 @@ namespace Core {
                 'ssl_method' => $ssl_method,
             ]);
 
-            $http_server->on('connect',function(\swoole_http_server $http_server_client) use ($log_level) {
-                if (empty($log_level) || $log_level < self::LOG_LEVEL_THRE) {
+            $http_server->on('connect',function(\swoole_http_server $http_server_client) use ($log) {
+                if (empty($log)) {
                     return;
                 }
 
@@ -202,10 +192,10 @@ namespace Core {
                 print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
                 print "Client stats...\n";
                 print_r($http_server_client->stats());
-                print "\n------------------------------------------------------";
+                print "\n------------------------------------------------------\n";
             });
 
-            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($request,$util,$gzip,$log_level) {
+            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($util,$gzip,$log) {
                 $_GET = $http_request->get ?? [];
                 $_POST = $http_request->post ?? [];
                 $_COOKIE = $http_request->cookie ?? [];
@@ -213,6 +203,8 @@ namespace Core {
                 $_SERVER = $http_request->server ? array_change_key_case($http_request->server,CASE_UPPER) : [];
 
                 $extension_static = self::EXTENSION_STATIC;
+
+                $request = new Request;
 
                 $request_uri = $util->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
 
@@ -234,7 +226,7 @@ namespace Core {
                     return;
                 }
 
-                if (!empty($log_level) && $log_level == self::LOG_LEVEL_TWO) {
+                if (!empty($log)) {
                     $date = new \DateTime('now');
 
                     print "\n------------------------------------------------------\n";
@@ -247,7 +239,7 @@ namespace Core {
                     print vsprintf("HTTP FILES...\n%s",[print_r($request->getHttpFiles(),true),]);
                     print vsprintf("HTTP SERVER...\n%s",[print_r($request->getHttpServer(),true),]);
                     print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
-                    print "\n------------------------------------------------------";
+                    print "\n------------------------------------------------------\n";
                 }
 
                 try {
@@ -320,111 +312,92 @@ namespace Core {
                 throw new \Error('constant ROOT_PATH not defined');
             }
 
-            if (!array_key_exists(self::APP_FILE,$load_var)) {
-                throw new \Error(vsprintf('file app.json not found in directory "%s/config"',[ROOT_PATH,]));
+            $app_url_class = vsprintf('\%s\Url',[self::APP_PATH,]);
+
+            if (!class_exists($app_url_class,true)) {
+                throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
             }
 
-            foreach ($load_var[self::APP_FILE] as $app) {
-                $app_url_class = vsprintf('\Application\%s\Url',[$app]);
+            $url_list = $app_url_class::url();
 
-                if (!class_exists($app_url_class,true)) {
-                    throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
+            foreach ($url_list as $route => $app_route) {
+                if (count($app_route) != 3) {
+                    throw new \Error(vsprintf('route %s incorrect format. EX: "/home/page/test/" => ["Home\index",[(GET|POST|PUT|DELETE)],"id_route"]',[$route,]));
                 }
 
-                $url_list = $app_url_class::url();
+                $route = str_replace(' ','',$route);
+                $route_split_list = explode('/',$route);
 
-                foreach ($url_list as $route => $application_route) {
-                    if (count($application_route) != 3) {
-                        throw new \Error(vsprintf('route %s incorrect format. EX: "/home/page/test/" => ["Home\index",[(GET|POST|PUT|DELETE)],["id_route" => "Label route id"]]',[$route,]));
-                    }
+                foreach ($route_split_list as $key => $route_split) {
+                    $match = null;
 
-                    $application_route[0] = vsprintf('%s\%s',[$app,$application_route[0]]);
+                    preg_match('/{([a-z0-9.\-_]+):{1}?([\w^\-|\[\]\\+\(\)\/]+)?}/',$route_split,$match);
 
-                    $route = str_replace(' ','',$route);
-                    $route_split_list = explode('/',$route);
+                    if (!empty($match)) {
+                        $match[0] = str_replace(['{','}'],'',$match[0]);
+                        $match = explode(':',$match[0]);
 
-                    foreach ($route_split_list as $key => $route_split) {
-                        $match = null;
+                        if (!empty($match[1])) {
+                            $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],$match[1],]);
 
-                        preg_match('/{([a-z0-9.\-_]+):{1}?([\w^\-|\[\]\\+\(\)\/]+)?}/',$route_split,$match);
-
-                        if (!empty($match)) {
-                            $match[0] = str_replace(['{','}'],'',$match[0]);
-                            $match = explode(':',$match[0]);
-
-                            if (!empty($match[1])) {
-                                $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],$match[1],]);
-
-                            } else {
-                                $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],'[a-z0-9]+',]);
-                            }
+                        } else {
+                            $route_split_list[$key] = vsprintf('(?<%s>%s)',[$match[0],'[a-z0-9]+',]);
                         }
                     }
+                }
 
-                    $route_er = vsprintf('/^%s$/',[implode('\/',$route_split_list),]);
+                $route_er = vsprintf('/^%s$/',[implode('\/',$route_split_list),]);
 
-                    if (preg_match($route_er,$request_uri,$match)) {
-                        try {
-                            $object_route = $this->urlMatch($application_route,$match);
+                if (preg_match($route_er,$request_uri,$match)) {
+                    try {
+                        $object_route = $this->urlMatch($app_route,$match);
 
-                        } catch (\Error $error) {
-                            throw $error;
-                        }
-
-                        return $object_route;
+                    } catch (\Error $error) {
+                        throw $error;
                     }
+
+                    return $object_route;
                 }
             }
 
             throw new \Error(vsprintf('request "%s" not found in Url.php',[$request_uri,]));
         }
         /**
-         * @param array $application_route
+         * @param array $app_route
          * @param array $match
          * @return object
          * @throws \Error
          */
-        private function urlMatch(array $application_route,array $match): \stdClass {
-            $application_route_explode = explode('@',$application_route[0]);
+        private function urlMatch(array $app_route,array $match): \stdClass {
+            $app_route_explode = explode('@',$app_route[0]);
 
-            if (count($application_route_explode) != 2) {
+            if (count($app_route_explode) != 2) {
                 throw new \Error('Route incorrect format');
             }
 
-            $application_route_list = explode('\\',$application_route_explode[0]);
-            $controller_action = $application_route_explode[1];
+            $app_route_list = explode('\\',$app_route_explode[0]);
+            $controller_action = $app_route_explode[1];
 
-            $bundle = array_shift($application_route_list);
-            $application_path = implode('\\',$application_route_list);
+            $app_path = implode('\\',$app_route_list);
 
-            $application = vsprintf('Application\\%s\\Controller\\%s',[$bundle,$application_path]);
+            $app = vsprintf('%s\\%s',[self::APP_PATH,$app_path]);
 
-            $uri = null;
-
-            if (!empty($match)) {
-                $uri = $match[0];
-                array_shift($match);
-            }
-
-            $request_method = $application_route[1];
-            $route_id = $application_route[2];
+            $route_id = $app_route[2];
 
             $request = new Request();
-            $request->setArgument($match);
-            $request->setRequestMethod($request_method);
+            $request->setAttribute($match);
             $request->setRouteId($route_id);
-            $request->setUri($uri);
 
-            $new_application = new $application($request);
+            $new_app = new $app($request);
 
-            if (empty(method_exists($new_application,$controller_action))) {
-                throw new \Error(vsprintf('method "%s" not found in class "%s"',[$controller_action,$application]));
+            if (empty(method_exists($new_app,$controller_action))) {
+                throw new \Error(vsprintf('method "%s" not found in class "%s"',[$controller_action,$app]));
             }
 
             $object_route = new \stdClass;
 
             try {
-                $object_route->controller = $new_application;
+                $object_route->controller = $new_app;
                 $object_route->action = $controller_action;
 
             } catch (\Error $error) {

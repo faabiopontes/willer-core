@@ -3,22 +3,21 @@ declare(strict_types=1);
 /**
  * @author William Borba
  * @package Core
- * @uses Core\DAO\DataManipulationLanguage
+ * @uses Core\ORM\DataManipulationLanguage
  */
 namespace Core {
-    use Core\DAO\DataManipulationLanguage;
+    use Core\ORM\DataManipulationLanguage;
     /**
      * Class Model
-     * @constant RULE ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled','{
-']
+     * @constant RULE ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled','readonly']
      */
     abstract class Model extends DataManipulationLanguage {
         private const RULE = ['null','length','table','label','option','multiple','hidden','filter','reference','password','disabled','readonly'];
         /**
          * Model constructor.
-         * @param object $transaction \Core\DAO\Transaction|null
+         * @param object $transaction \Core\ORM\Transaction|null
          */
-        public function __construct(\Core\DAO\Transaction $transaction) {
+        public function __construct(\Core\ORM\Transaction $transaction) {
             parent::__construct($transaction);
         }
         /**

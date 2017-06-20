@@ -6,72 +6,383 @@ declare(strict_types=1);
  * @uses Core\Util
  */
 namespace Core {
-    use Core\{Util,System};
+    use Core\{Util,System,Message,UploadedFile,Uri};
+    use Psr\Http\Message\ServerRequestInterface;
     /**
      * Class Request
+     * @see Message
+     * @see ServerRequestInterface
      * @constant SESSION_KEY_DEFAULT 'wf'
+     * @var array $http_get
+     * @var array $http_post
+     * @var array $http_server
+     * @var array $http_cookie
+     * @var array $http_file
      * @var string $uri
-     * @var array $uri_argument
+     * @var array $uri_attribute
      * @var array $request_method
      * @var string $route_id
      * @var array $app_url_list
      */
-    class Request {
+    class Request extends Message implements ServerRequestInterface {
         private const SESSION_KEY_DEFAULT = 'wf';
 
+        private $http_get = [];
+        private $http_post = [];
+        private $http_server = [];
+        private $http_cookie = [];
+        private $http_file = [];
         private $uri;
-        private $uri_argument;
+        private $uri_attribute;
         private $request_method;
+        private $method;
         private $route_id;
         private $app_url_list;
+        private $request_target;
         /**
-         * Request constructor.
+         * Request constructor
          */
-        public function __construct() {}
-        /**
-         * @param string $key
-         * @return string
-         * @throws \Error
-         */
-        public function getArgument(string $key): string {
-            $uri_argument = $this->getAllArgument();
+        public function __construct() {
+            $this->http_get = $this->setNullEmptyData($_GET);
+            $this->http_post = $this->setNullEmptyData($_POST);
+            $this->http_server = $this->setNullEmptyData($_SERVER);
+            $this->http_cookie = $this->setNullEmptyData($_COOKIE);
 
-            if (empty($uri_argument)) {
-                throw new \Error('URI arguments is empty');
-            }
+            $this->uploadFilePack($this->setNullEmptyData($_FILES));
 
-            if (!array_key_exists($key,$uri_argument)) {
-                throw new \Error(vsprintf('URI arguments key "%s" dont find',[$key,]));
-            }
+            $request_method = $util->contains($request_server,'REQUEST_METHOD')->getString();
 
-            return $uri_argument[$key];
+            $this->setMethod($request_method);
+
+            $uri = new Uri($this);
+            $this->setUri($uri);
         }
         /**
          * @return array
          */
-        public function getAllArgument(): array {
-            return $this->uri_argument;
+        public function getHttpGet(): array {
+            return $this->http_get;
         }
         /**
-         * @param array $uri_argument
+         * @return array
+         */
+        public function getQueryParams(): array {
+            return $this->getHttpGet();
+        }
+        /**
+         * @param string $name
+         * @param string $value
          * @return self
          */
-        public function setArgument(array $uri_argument): self {
-            $this->uri_argument = $uri_argument;
+        public function setHttpGet(string $name,string $value): self {
+            $this->http_get[$name] = $value;
 
             return $this;
         }
         /**
-         * @return string
+         * @param string $name
+         * @param array $list
+         * @return self
          */
-        public function getUri(): string {
+        public function setHttpGetArray(string $name,array $list): self {
+            $this->http_get[$name] = $list;
+
+            return $this;
+        }
+        /**
+         * @param array $http_get
+         * @return ServerRequestInterface
+         */
+        public function withQueryParams(array $http_get): ServerRequestInterface {
+            $clone = clone $this;
+            $clone->setHttpGet($http_get);
+
+            return $clone;
+        }
+        /**
+         * @return array
+         */
+        public function getHttpPost(): array {
+            return $this->http_post;
+        }
+        /**
+         * @return array
+         */
+        public function getParsedBody(): array {
+            return $this->getHttpPost();
+        }
+        /**
+         * @param string $name
+         * @param string $value
+         * @return self
+         */
+        public function setHttpPost(string $name,string $value): self {
+            $this->http_post[$name] = $value;
+
+            return $this;
+        }
+        /**
+         * @param string $name
+         * @param array $list
+         * @return self
+         */
+        public function setHttpPostArray(string $name,array $list): self {
+            $this->http_post[$name] = $list;
+
+            return $this;
+        }
+        /**
+         * @param array $http_post
+         * @return ServerRequestInterface
+         */
+        public function withParsedBody(array $http_post): ServerRequestInterface {
+            $clone = clone $this;
+            $clone->setHttpPost($http_post);
+
+            return $clone;
+        }
+        /**
+         * @return array
+         */
+        public function getHttpServer(): array {
+            return $this->http_server;
+        }
+        /**
+         * @return array
+         */
+        public function getServerParams(): array {
+            return $this->getHttpServer();
+        }
+        /**
+         * @param string $name
+         * @param string $value
+         * @return self
+         */
+        public function setHttpServer(string $name,string $value): self {
+            $this->http_server[$name] = $value;
+
+            return $this;
+        }
+        /**
+         * @param string $name
+         * @param array $list
+         * @return self
+         */
+        public function setHttpServerArray(string $name,array $list): self {
+            $this->http_server[$name] = $list;
+
+            return $this;
+        }
+        /**
+         * @return array
+         */
+        public function getHttpCookie(): array {
+            return $this->http_cookie;
+        }
+        /**
+         * @param string $name
+         * @param string $value
+         * @return self
+         */
+        public function setHttpCookie(string $name,string $value): self {
+            $this->http_cookie[$name] = $value;
+
+            return $this;
+        }
+        /**
+         * @param string $name
+         * @param array $list
+         * @return self
+         */
+        public function setHttpCookieArray(string $name,array $list): self {
+            $this->http_cookie[$name] = $list;
+
+            return $this;
+        }
+        /**
+         * @return ServerRequestInterface
+         */
+        public function withCookieParams(array $cookie): ServerRequestInterface {
+            $clone = clone $this;
+            $clone->cookie = $cookie;
+
+            return $clone;
+        }
+        /**
+         * @return array
+         */
+        public function getHttpFile(): array {
+            return $this->http_file;
+        }
+        /**
+         * @param array $file
+         * @return self
+         */
+        public function setHttpFile(array $file): self {
+            $this->http_file = $file;
+
+            return $this;
+        }
+        /**
+         * @param array $file
+         * @return self
+         */
+        private function uploadFilePack(array $file): self {
+            if (empty($file)) {
+                return $this;
+            }
+
+            $upload_file = [];
+
+            foreach ($file as $name => $value) {
+                $upload_file[$name] = [];
+
+                $file_count = count($value['name']);
+                $file_key = array_keys($value);
+
+                for ($i = 0;$i < $file_count;$i++) {
+                    foreach ($file_key as $key) {
+                        $upload_file[$name][$i][$key] = $value[$key][$i];
+                    }
+
+                    $upload_file[$name][$i] = new UploadedFile($upload_file[$name][$i]);
+                }
+            }
+
+            $this->setHttpFile($upload_file);
+
+            return $this;
+        }
+        /**
+         * @param array $file
+         * @return ServerRequestInterface
+         */
+        public function withUploadedFiles(array $file): ServerRequestInterface {
+            $clone = clone $this;
+            $clone->uploadFilePack($file);
+
+            return $clone;
+        }
+        /**
+         * @return array
+         */
+        public function getHttpSession(): array {
+            $_SESSION[self::SESSION_KEY_DEFAULT] = $this->setNullEmptyData($_SESSION[self::SESSION_KEY_DEFAULT]);
+
+            return $_SESSION[self::SESSION_KEY_DEFAULT];
+        }
+        /**
+         * @param array $session_key_value
+         * @return self
+         */
+        public function setHttpSession(array $session_key_value): self {
+            $_SESSION[self::SESSION_KEY_DEFAULT] = array_merge($_SESSION[self::SESSION_KEY_DEFAULT],$session_key_value);
+
+            return $this;
+        }
+        /**
+         * @param string $session_key
+         * @return self
+         */
+        public function cleanHttpSession(?string $name = null): self {
+            if (!empty($name)) {
+                if (isset($_SESSION[self::SESSION_KEY_DEFAULT][$name])) {
+                    unset($_SESSION[self::SESSION_KEY_DEFAULT][$name]);
+                }
+
+            } else {
+                unset($_SESSION[self::SESSION_KEY_DEFAULT]);
+
+                $_SESSION[self::SESSION_KEY_DEFAULT] = [];
+            }
+
+            return $this;
+        }
+        /**
+         * @return array
+         */
+        private function setNullEmptyData($data): array {
+            array_walk_recursive($data,function(&$item,$name) {
+                if ($item === '') {
+                    $item = null;
+                }
+            });
+
+            return $data;
+        }
+        /**
+         * @param string $name
+         * @param string $default null
+         * @return string
+         * @throws \Error
+         */
+        public function getAttribute(string $name,?string $default = null): ?string {
+            $uri_attribute = $this->getAllAttribute();
+
+            if (empty($uri_attribute)) {
+                throw new \Error('URI attributes is empty');
+            }
+
+            if (!array_key_exists($name,$uri_attribute)) {
+                return $default;
+            }
+
+            return $uri_attribute[$name];
+        }
+        /**
+         * @return array
+         */
+        public function getAllAttribute(): array {
+            return $this->uri_attribute;
+        }
+        /**
+         * @return array
+         */
+        public function getAttributes(): array {
+            return $this->getAllAttribute();
+        }
+        /**
+         * @param array $uri_attribute
+         * @return self
+         */
+        public function setAttribute(array $uri_attribute): self {
+            $this->uri_attribute = $uri_attribute;
+
+            return $this;
+        }
+        /**
+         * @param string $name
+         * @param string $value
+         * @return ServerRequestInterface
+         */
+        public function withAttribute(string $name,string $value): ServerRequestInterface {
+            $clone = clone $this;
+            $clone->uri_attribute[$name] = $value;
+
+            return $clone;
+        }
+        /**
+         * @param string $name
+         * @return ServerRequestInterface
+         */
+        public function withoutAttribute(string $name): ServerRequestInterface {
+            $clone = clone $this;
+
+            unset($clone->uri_attribute[$name]);
+
+            return $clone;
+        }
+        /**
+         * @return UriInterface
+         */
+        public function getUri(): UriInterface {
             return $this->uri;
         }
         /**
-         * @param string $uri
+         * @param UriInterface $uri
          * @return self
          */
-        public function setUri($uri): self {
+        public function setUri(UriInterface $uri): self {
             $this->uri = $uri;
 
             return $this;
@@ -90,6 +401,31 @@ namespace Core {
             $this->request_method = $request_method;
 
             return $this;
+        }
+        /**
+         * @return string
+         */
+        public function getMethod(): string {
+            return $this->method;
+        }
+        /**
+         * @param string $method
+         * @return $this
+         */
+        public function setMethod(string $method): self {
+            $this->method = $method;
+
+            return $this;
+        }
+        /**
+         * @param string $method
+         * @return ServerRequestInterface
+         */
+        public function withMethod(string $method): ServerRequestInterface {
+            $clone = clone $this;
+            $clone->setMethod($method);
+
+            return $clone;
         }
         /**
          * @return string
@@ -122,103 +458,44 @@ namespace Core {
             return $this;
         }
         /**
-         * @return array
+         * @return string
          */
-        public function getHttpGet(): array {
-            array_walk_recursive($_GET,function(&$item,$key) {
-                if ($item === '') {
-                    $item = null;
-                }
-            });
-
-            return $_GET;
+        public function getRequestTarget(): string {
+            return $this->request_target;
         }
         /**
-         * @return array
-         */
-        public function getHttpPost(): array {
-            array_walk_recursive($_POST,function(&$item,$key) {
-                if ($item === '') {
-                    $item = null;
-                }
-            });
-
-            return $_POST;
-        }
-        /**
-         * @return array
-         */
-        public function getHttpServer(): array {
-            array_walk_recursive($_SERVER,function(&$item,$key) {
-                if ($item === '') {
-                    $item = null;
-                }
-            });
-
-            return $_SERVER;
-        }
-        /**
-         * @return array
-         */
-        public function getHttpSession(): array {
-            array_walk_recursive($_SESSION[self::SESSION_KEY_DEFAULT],function(&$item,$key) {
-                if ($item === '') {
-                    $item = null;
-                }
-            });
-
-            return $_SESSION[self::SESSION_KEY_DEFAULT];
-        }
-        /**
-         * @param array $session_key_value
+         * @param string $request_target
          * @return self
          */
-        public function setHttpSession(array $session_key_value): self {
-            $_SESSION[self::SESSION_KEY_DEFAULT] = array_merge($_SESSION[self::SESSION_KEY_DEFAULT],$session_key_value);
+        public function setRequestTarget(string $request_target): self {
+            $this->request_target = $request_target;
 
             return $this;
         }
         /**
-         * @param string $session_key
-         * @return self
+         * @return string
          */
-        public function cleanHttpSession(?string $session_key = null): self {
-            if (!empty($session_key)) {
-                if (isset($_SESSION[self::SESSION_KEY_DEFAULT][$session_key])) {
-                    unset($_SESSION[self::SESSION_KEY_DEFAULT][$session_key]);
-                }
+        public function getRequestTarget(): string {
+            $uri = $this->getUri();
+            $http_get = $this->getHttpGet();
 
-            } else {
-                unset($_SESSION[self::SESSION_KEY_DEFAULT]);
+            $http_get = rawurlencode($http_get);
 
-                $_SESSION[self::SESSION_KEY_DEFAULT] = [];
-            }
+            $request_target = vsprintf('%s?%s',[$uri,$http_get,]);
 
-            return $this;
+            $this->setRequestTarget($request_target);
+
+            return $request_target;
         }
         /**
-         * @return array
+         * @param string $request_target
+         * @return ServerRequestInterface
          */
-        public function getHttpCookie(): array {
-            array_walk_recursive($_COOKIE,function(&$item,$key) {
-                if ($item === '') {
-                    $item = null;
-                }
-            });
+        public function withRequestTarget($request_target): ServerRequestInterface {
+            $clone = clone $this;
+            $clone->setRequestTarget($request_target);
 
-            return $_COOKIE;
-        }
-        /**
-         * @return array
-         */
-        public function getHttpFiles(): array {
-            array_walk_recursive($_FILES,function(&$item,$key) {
-                if ($item === '') {
-                    $item = null;
-                }
-            });
-
-            return $_FILES;
+            return clone;
         }
         /**
          * @return self
