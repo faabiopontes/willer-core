@@ -244,8 +244,6 @@ namespace Core {
                 throw new \Error('Stream write error');
             }
 
-            // $this->setStream($stream);
-
             return intval($stream_write);
         }
         /**
