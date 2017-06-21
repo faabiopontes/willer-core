@@ -7,9 +7,9 @@ declare(strict_types=1);
  */
 namespace Core {
     use Core\{Request};
-    use Psr\Http\Message\UriInterface;
+    // use Psr\Http\Message\UriInterface;
     /**
-     * @see UriInterface
+     * see UriInterface
      * @see Request
      * @var array $request
      * @var array $parse_url
@@ -22,7 +22,8 @@ namespace Core {
      * @var string $query
      * @var string $fragment
      */
-    class Uri implements UriInterface {
+    // class Uri implements UriInterface {
+    class Uri {
         private $request;
         private $parse_url;
         private $scheme;
@@ -41,11 +42,11 @@ namespace Core {
 
             $http_server = $request->getHttpServer();
 
-            if (array_key_exists('SCRIPT_FILENAME',$http_server) && empty($http_server['SCRIPT_FILENAME']) {
-                throw \Error('Global SERVER missing var "SCRIPT_FILENAME"');
+            if (!array_key_exists('REQUEST_URI',$http_server) || empty($http_server['REQUEST_URI'])) {
+                throw new \Error('Global SERVER missing var "REQUEST_URI"');
             }
 
-            $parse_url = parse_url($http_server['SCRIPT_FILENAME']);
+            $parse_url = parse_url($http_server['REQUEST_URI']);
 
             $this->setParseUrl($parse_url);
 
@@ -287,9 +288,11 @@ namespace Core {
         }
         /**
          * @param  string $scheme
-         * @return UriInterface
+         * return UriInterface
+         * @return Uri
          */
-        public function withScheme($scheme): UriInterface {
+        // public function withScheme($scheme): UriInterface {
+        public function withScheme($scheme): Uri {
             $clone = clone $this;
             $clone->setScheme($scheme);
 
@@ -298,9 +301,11 @@ namespace Core {
         /**
          * @param  string $user
          * @param  string $password
-         * @return UriInterface
+         * return UriInterface
+         * @return Uri
          */
-        public function withUserInfo(string $user,string $password = null): UriInterface {
+        // public function withUserInfo(string $user,string $password = null): UriInterface {
+        public function withUserInfo(string $user,string $password = null): Uri {
             $clone = clone $this;
             $clone->setUser($user);
             $clone->setPassword($password);
@@ -309,9 +314,11 @@ namespace Core {
         }
         /**
          * @param  string $host
-         * @return UriInterface
+         * return UriInterface
+         * @return Uri
          */
-        public function withHost(string $host): UriInterface {
+        // public function withHost(string $host): UriInterface {
+        public function withHost(string $host): Uri {
             $clone = clone $this;
             $clone->setHost($host);
 
@@ -319,9 +326,11 @@ namespace Core {
         }
         /**
          * @param  int $port
-         * @return UriInterface
+         * return UriInterface
+         * @return Uri
          */
-        public function withPort(int $port): UriInterface {
+        // public function withPort(int $port): UriInterface {
+        public function withPort(int $port): Uri {
             $clone = clone $this;
             $clone->setPort($port);
 
@@ -329,9 +338,11 @@ namespace Core {
         }
         /**
          * @param string $path
-         * @return UriInterface
+         * return UriInterface
+         * @return Uri
          */
-        public function withPath(string $path): UriInterface {
+        // public function withPath(string $path): UriInterface {
+        public function withPath(string $path): Uri {
             $clone = clone $this;
             $clone->setPath($path);
 
@@ -339,9 +350,11 @@ namespace Core {
         }
         /**
          * @param string $query
-         * @return UriInterface
+         * return UriInterface
+         * @return Uri
          */
-        public function withQuery(string $query): UriInterface {
+        // public function withQuery(string $query): UriInterface {
+        public function withQuery(string $query): Uri {
             $clone = clone $this;
             $clone->setQuery($query);
 
@@ -349,9 +362,11 @@ namespace Core {
         }
         /**
          * @param string $fragment
-         * @return UriInterface
+         * return UriInterface
+         * @return Uri
          */
-        public function withFragment(string $fragment): UriInterface {
+        // public function withFragment(string $fragment): UriInterface {
+        public function withFragment(string $fragment): Uri {
             $clone = clone $this;
             $clone->setFragment($fragment);
 

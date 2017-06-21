@@ -79,9 +79,6 @@ namespace Core {
         public function ready(): void {
             session_start();
 
-            $request = new Request();
-            $request->cleanHttpSession();
-
             $this->readyLoadVar();
 
             $load_var = $this->getLoadVar();
@@ -105,7 +102,8 @@ namespace Core {
                 return;
             }
 
-            $request = new Request;
+            $request = new Request();
+            $request->cleanHttpSession();
 
             try {
                 $request_uri = $util->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
@@ -154,17 +152,8 @@ namespace Core {
 
             $http_server = new \swoole_http_server($ip,$port);
 
-            if (!empty($log) && !empty($log_path)) {
-                $log_path = vsprintf('%s%s',[$log_path,]);
-
-            } else {
+            if (empty($log) || empty($log_path)) {
                 $log_path = null;
-            }
-
-            $page_error_content = '';
-
-            if (file_exists('%s',$page_error_path)) {
-                $page_error_content = file_get_contents($page_error_path);
             }
 
             $http_server->set([
@@ -195,7 +184,7 @@ namespace Core {
                 print "\n------------------------------------------------------\n";
             });
 
-            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($util,$gzip,$log) {
+            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($util,$gzip,$log,$page_error_path) {
                 $_GET = $http_request->get ?? [];
                 $_POST = $http_request->post ?? [];
                 $_COOKIE = $http_request->cookie ?? [];
@@ -204,9 +193,7 @@ namespace Core {
 
                 $extension_static = self::EXTENSION_STATIC;
 
-                $request = new Request;
-
-                $request_uri = $util->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
+                $request_uri = $util->contains($_SERVER,'REQUEST_URI','/')->getString();
 
                 $parse_url_path = parse_url($request_uri,PHP_URL_PATH);
                 $extension = pathinfo($parse_url_path,PATHINFO_EXTENSION);
@@ -232,12 +219,12 @@ namespace Core {
                     print "\n------------------------------------------------------\n";
                     print "Client connect...\n";
                     print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
-                    print vsprintf("HTTP GET...\n%s",[print_r($request->getHttpGet(),true),]);
-                    print vsprintf("HTTP POST...\n%s",[print_r($request->getHttpPost(),true),]);
-                    print vsprintf("HTTP SESSION...\n%s",[print_r($request->getHttpSession(),true),]);
-                    print vsprintf("HTTP COOKIE...\n%s",[print_r($request->getHttpCookie(),true),]);
-                    print vsprintf("HTTP FILES...\n%s",[print_r($request->getHttpFiles(),true),]);
-                    print vsprintf("HTTP SERVER...\n%s",[print_r($request->getHttpServer(),true),]);
+                    print vsprintf("HTTP GET...\n%s",[print_r($_GET,true),]);
+                    print vsprintf("HTTP POST...\n%s",[print_r($_POST,true),]);
+                    print vsprintf("HTTP SESSION...\n%s",[print_r($_SESSION,true),]);
+                    print vsprintf("HTTP COOKIE...\n%s",[print_r($_COOKIE,true),]);
+                    print vsprintf("HTTP FILES...\n%s",[print_r($_FILES,true),]);
+                    print vsprintf("HTTP SERVER...\n%s",[print_r($_SERVER,true),]);
                     print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
                     print "\n------------------------------------------------------\n";
                 }
@@ -250,7 +237,7 @@ namespace Core {
 
                     $response = $controller->$action();
 
-                    $content = $response->getBody();
+                    $content = $response->render();
 
                 } catch (\Error $error) {
                     $date = new \DateTime('now');
@@ -259,18 +246,22 @@ namespace Core {
                     print "Client connect...\n";
                     print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
                     print "Throw Exception...\n";
-                    print vsprintf("HTTP GET...\n%s",[print_r($request->getHttpGet(),true),]);
-                    print vsprintf("HTTP POST...\n%s",[print_r($request->getHttpPost(),true),]);
-                    print vsprintf("HTTP SESSION...\n%s",[print_r($request->getHttpSession(),true),]);
-                    print vsprintf("HTTP COOKIE...\n%s",[print_r($request->getHttpCookie(),true),]);
-                    print vsprintf("HTTP FILES...\n%s",[print_r($request->getHttpFiles(),true),]);
-                    print vsprintf("HTTP SERVER...\n%s",[print_r($request->getHttpServer(),true),]);
+                    print vsprintf("HTTP GET...\n%s",[print_r($_GET,true),]);
+                    print vsprintf("HTTP POST...\n%s",[print_r($_POST,true),]);
+                    print vsprintf("HTTP SESSION...\n%s",[print_r($_SESSION,true),]);
+                    print vsprintf("HTTP COOKIE...\n%s",[print_r($_COOKIE,true),]);
+                    print vsprintf("HTTP FILES...\n%s",[print_r($_FILES,true),]);
+                    print vsprintf("HTTP SERVER...\n%s",[print_r($_SERVER,true),]);
                     print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
                     print vsprintf("Error message...\n%s\n",[$error->getMessage(),]);
                     print vsprintf("Error trace...\n%s",[$error->getTraceAsString(),]);
                     print "\n------------------------------------------------------";
 
+                    // TODO
+                    // carregar HTML para pagina de erro
                     $content = self::CONTENT_ERROR_DEFAULT;
+
+                    $page_error_content = '';
 
                     if (!empty($page_error_content)) {
                         $content = $page_error_content;
@@ -383,10 +374,13 @@ namespace Core {
             $app = vsprintf('%s\\%s',[self::APP_PATH,$app_path]);
 
             $route_id = $app_route[2];
+            $request_method = $app_route[1];
 
             $request = new Request();
+            $request->cleanHttpSession();
             $request->setAttribute($match);
             $request->setRouteId($route_id);
+            $request->setRequestMethod($request_method);
 
             $new_app = new $app($request);
 

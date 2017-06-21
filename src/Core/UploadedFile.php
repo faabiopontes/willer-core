@@ -6,10 +6,10 @@ declare(strict_types=1);
  */
 namespace Core {
     use Core\Stream;
-    use Psr\Http\Message\UploadedFileInterface;
+    // use Psr\Http\Message\UploadedFileInterface;
     /**
      * Abstract Class UploadedFile
-     * @see UploadedFileInterface
+     * see UploadedFileInterface
      * @var array $file_meta
      * @var resource $stream
      * @var string $name
@@ -17,7 +17,8 @@ namespace Core {
      * @var int $error
      * @var int $size
      */
-    class UploadedFile implements UploadedFileInterface {
+    // class UploadedFile implements UploadedFileInterface {
+    class UploadedFile {
         private $file_meta;
         private $stream;
         private $name;

@@ -5,8 +5,8 @@ declare(strict_types=1);
  * @package Core
  */
 namespace Core {
-    use Psr\Http\Message\MessageInterface;
-    use Psr\Http\Message\StreamInterface;
+    // use Psr\Http\Message\MessageInterface;
+    // use Psr\Http\Message\StreamInterface;
     /**
      * Abstract Class Message
      * @see MessageInterface
@@ -14,7 +14,8 @@ namespace Core {
      * @var string $protocol_version '1.1'
      * @var string $stream
      */
-    abstract class Message implements MessageInterface {
+    // abstract class Message implements MessageInterface {
+    abstract class Message {
         private const PROTOCOL_VERSION_VALID = ['1.0','1.1','2.0'];
         private $protocol_version = '1.1';
         private $stream;
@@ -167,25 +168,31 @@ namespace Core {
             return $clone;
         }
         /**
-         * @return StreamInterface
+         * return StreamInterface
+         * @return Stream
          */
-        public function getStream(): StreamInterface {
+        // public function getStream(): StreamInterface {
+        public function getStream(): Stream {
             return $this->stream;
         }
         /**
-         * @param StreamInterface $stream null
+         * param StreamInterface $stream null
+         * @param Stream $stream null
          * @return self
          */
-        public function setStream(?StreamInterface $stream): self {
+        // public function setStream(?StreamInterface $stream): self {
+        public function setStream(?Stream $stream): self {
             $this->stream = $stream;
 
             return $this;
         }
         /**
-         * @param StreamInterface $stream
+         * param StreamInterface $stream
+         * @param Stream $stream
          * @return Response
          */
-        public function withStream(StreamInterface $stream): Response {
+        // public function withStream(StreamInterface $stream): Response {
+        public function withStream(Stream $stream): Response {
             $clone = clone $this;
             $clone->setStream($stream);
 

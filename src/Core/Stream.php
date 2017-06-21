@@ -5,17 +5,18 @@ declare(strict_types=1);
  * @package Core
  */
 namespace Core {
-    use Psr\Http\Message\StreamInterface;
+    // use Psr\Http\Message\StreamInterface;
     /**
      * Abstract Class Stream
-     * @see StreamInterface
+     * see StreamInterface
      * @constant MODE ['read' => ['r', 'r+', 'w+', 'a+', 'x+', 'c+'],'write' => ['r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']]
      * @var resource $stream
      */
-    class Stream implements StreamInterface {
+    // class Stream implements StreamInterface {
+    class Stream {
         private const MODE = [
-            'read' => ['r','r+','w+','a+','x+','c+'],
-            'write' => ['r+','w','w+','a','a+','x','x+','c','c+'],
+            'read' => ['r','r+','w+','a+','x+','c+','w+b'],
+            'write' => ['r+','w','w+','a','a+','x','x+','c','c+','w+b'],
         ];
 
         private $stream;
@@ -242,6 +243,8 @@ namespace Core {
             if ($stream_write === false) {
                 throw new \Error('Stream write error');
             }
+
+            // $this->setStream($stream);
 
             return intval($stream_write);
         }

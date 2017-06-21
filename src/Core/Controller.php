@@ -48,20 +48,14 @@ namespace Core {
 
             $util = new Util;
 
-            if (empty($util->contains($request_server,'REQUEST_METHOD')->getString())) {
-                throw new \Error('php $_SERVER["REQUEST_METHOD"] is empty');
-            }
+            if (is_array($request_method)) {
+                if (!in_array($request_server['REQUEST_METHOD'],$request_method)) {
+                    throw new \Error(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],print_r($request_method,true)]));
+                }
 
-            if (!empty($request_method)) {
-                if (is_array($request_method)) {
-                    if (!in_array($request_server['REQUEST_METHOD'],$request_method)) {
-                        throw new \Error(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],print_r($request_method,true)]));
-                    }
-
-                } else {
-                    if ($request_server['REQUEST_METHOD'] != $request_method) {
-                        throw new \Error(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],$request_method]));
-                    }
+            } else {
+                if ($request_server['REQUEST_METHOD'] != $request_method) {
+                    throw new \Error(vsprintf('request method "%s" is different "%s"',[$request_server['REQUEST_METHOD'],$request_method]));
                 }
             }
 

@@ -7,11 +7,12 @@ declare(strict_types=1);
  */
 namespace Core {
     use Core\{Util,System,Message,UploadedFile,Uri};
-    use Psr\Http\Message\ServerRequestInterface;
+    // use Psr\Http\Message\ServerRequestInterface;
+    // use Psr\Http\Message\UriInterface;
     /**
      * Class Request
      * @see Message
-     * @see ServerRequestInterface
+     * see ServerRequestInterface
      * @constant SESSION_KEY_DEFAULT 'wf'
      * @var array $http_get
      * @var array $http_post
@@ -24,7 +25,8 @@ namespace Core {
      * @var string $route_id
      * @var array $app_url_list
      */
-    class Request extends Message implements ServerRequestInterface {
+    // class Request extends Message implements ServerRequestInterface {
+    class Request extends Message {
         private const SESSION_KEY_DEFAULT = 'wf';
 
         private $http_get = [];
@@ -50,7 +52,11 @@ namespace Core {
 
             $this->uploadFilePack($this->setNullEmptyData($_FILES));
 
-            $request_method = $util->contains($request_server,'REQUEST_METHOD')->getString();
+            if (!array_key_exists('REQUEST_METHOD',$this->http_server) || empty($this->http_server['REQUEST_METHOD'])) {
+                throw new \Error('Global $_SERVER["REQUEST_METHOD"] is empty');
+            }
+
+            $request_method = $this->http_server['REQUEST_METHOD'];
 
             $this->setMethod($request_method);
 
@@ -91,9 +97,11 @@ namespace Core {
         }
         /**
          * @param array $http_get
-         * @return ServerRequestInterface
+         * return ServerRequestInterface
+         * @return Request
          */
-        public function withQueryParams(array $http_get): ServerRequestInterface {
+        // public function withQueryParams(array $http_get): ServerRequestInterface {
+        public function withQueryParams(array $http_get): Request {
             $clone = clone $this;
             $clone->setHttpGet($http_get);
 
@@ -133,9 +141,11 @@ namespace Core {
         }
         /**
          * @param array $http_post
-         * @return ServerRequestInterface
+         * return ServerRequestInterface
+         * @return Request
          */
-        public function withParsedBody(array $http_post): ServerRequestInterface {
+        // public function withParsedBody(array $http_post): ServerRequestInterface {
+        public function withParsedBody(array $http_post): Request {
             $clone = clone $this;
             $clone->setHttpPost($http_post);
 
@@ -200,9 +210,11 @@ namespace Core {
             return $this;
         }
         /**
-         * @return ServerRequestInterface
+         * return ServerRequestInterface
+         * @return Request
          */
-        public function withCookieParams(array $cookie): ServerRequestInterface {
+        // public function withCookieParams(array $cookie): ServerRequestInterface {
+        public function withCookieParams(array $cookie): Request {
             $clone = clone $this;
             $clone->cookie = $cookie;
 
@@ -255,9 +267,11 @@ namespace Core {
         }
         /**
          * @param array $file
-         * @return ServerRequestInterface
+         * return ServerRequestInterface
+         * @return Request
          */
-        public function withUploadedFiles(array $file): ServerRequestInterface {
+        // public function withUploadedFiles(array $file): ServerRequestInterface {
+        public function withUploadedFiles(array $file): Request {
             $clone = clone $this;
             $clone->uploadFilePack($file);
 
@@ -353,9 +367,11 @@ namespace Core {
         /**
          * @param string $name
          * @param string $value
-         * @return ServerRequestInterface
+         * return ServerRequestInterface
+         * @return Request
          */
-        public function withAttribute(string $name,string $value): ServerRequestInterface {
+        // public function withAttribute(string $name,string $value): ServerRequestInterface {
+        public function withAttribute(string $name,string $value): Request {
             $clone = clone $this;
             $clone->uri_attribute[$name] = $value;
 
@@ -363,9 +379,11 @@ namespace Core {
         }
         /**
          * @param string $name
-         * @return ServerRequestInterface
+         * return ServerRequestInterface
+         * @return Request
          */
-        public function withoutAttribute(string $name): ServerRequestInterface {
+        // public function withoutAttribute(string $name): ServerRequestInterface {
+        public function withoutAttribute(string $name): Request {
             $clone = clone $this;
 
             unset($clone->uri_attribute[$name]);
@@ -373,16 +391,20 @@ namespace Core {
             return $clone;
         }
         /**
-         * @return UriInterface
+         * return UriInterface
+         * @return Uri
          */
-        public function getUri(): UriInterface {
+        // public function getUri(): UriInterface {
+        public function getUri(): Uri {
             return $this->uri;
         }
         /**
-         * @param UriInterface $uri
+         * param UriInterface $uri
+         * @param Uri $uri
          * @return self
          */
-        public function setUri(UriInterface $uri): self {
+        // public function setUri(UriInterface $uri): self {
+        public function setUri(Uri $uri): self {
             $this->uri = $uri;
 
             return $this;
@@ -419,9 +441,11 @@ namespace Core {
         }
         /**
          * @param string $method
-         * @return ServerRequestInterface
+         * return ServerRequestInterface
+         * @return Request
          */
-        public function withMethod(string $method): ServerRequestInterface {
+        // public function withMethod(string $method): ServerRequestInterface {
+        public function withMethod(string $method): Request {
             $clone = clone $this;
             $clone->setMethod($method);
 
@@ -461,6 +485,9 @@ namespace Core {
          * @return string
          */
         public function getRequestTarget(): string {
+            // TODO
+            // $http_get = rawurlencode($http_get);
+            // $request_target = vsprintf('%s?%s',[$uri,$http_get,]);
             return $this->request_target;
         }
         /**
@@ -473,29 +500,16 @@ namespace Core {
             return $this;
         }
         /**
-         * @return string
-         */
-        public function getRequestTarget(): string {
-            $uri = $this->getUri();
-            $http_get = $this->getHttpGet();
-
-            $http_get = rawurlencode($http_get);
-
-            $request_target = vsprintf('%s?%s',[$uri,$http_get,]);
-
-            $this->setRequestTarget($request_target);
-
-            return $request_target;
-        }
-        /**
          * @param string $request_target
-         * @return ServerRequestInterface
+         * return ServerRequestInterface
+         * @return Request
          */
-        public function withRequestTarget($request_target): ServerRequestInterface {
+        // public function withRequestTarget(string $request_target): ServerRequestInterface {
+        public function withRequestTarget(string $request_target): Request {
             $clone = clone $this;
             $clone->setRequestTarget($request_target);
 
-            return clone;
+            return $clone;
         }
         /**
          * @return self

@@ -6,16 +6,19 @@ declare(strict_types=1);
  */
 namespace Core {
     use Core\{Message,Stream};
-    use Psr\Http\Message\ResponseInterface;
+    // use Psr\Http\Message\ResponseInterface;
+    // use Psr\Http\Message\StreamInterface;
+
     /**
      * Class Response
      * @see Message
-     * @see ResponseInterface
+     * see ResponseInterface
      * @constant MESSAGE_CODE_VALID [100,101,102,200,201,202,203,204,205,206,207,208,226,300,301,302,303,304,305,306,307,308,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,421,422,423,424,426,428,429,431,444,451,499,500,501,502,503,504,505,506,507,508,510,511,599]
      * @var int $code
      * @var string $reason_phrase
      */
-    class Response extends Message implements ResponseInterface {
+    // class Response extends Message implements ResponseInterface {
+    class Response extends Message {
         protected const MESSAGE_CODE_VALID = [
             //Informational 1xx
             100 => 'Continue',
@@ -93,11 +96,13 @@ namespace Core {
         /**
          * Response constructor
          * @param int $status 200
-         * @param StreamInterface|null $stream null
+         * param StreamInterface|null $stream null
+         * @param Stream|null $stream null
          */
-        public function __construct(int $code = 200,?StreamInterface $stream = null) {
+        // public function __construct(int $code = 200,?StreamInterface $stream = null) {
+        public function __construct(int $code = 200,?Stream $stream = null) {
             if (empty($stream)) {
-                $stream = new Stream(fopen('php://tmp','r+'));
+                $stream = new Stream(fopen('php://temp','r+'));
 
             }
 
@@ -165,12 +170,27 @@ namespace Core {
             return $clone;
         }
         /**
+         * @param string $string
+         * @return int
+         */
+        public function write(string $string): int {
+            $write_result = $this
+                ->getStream()
+                ->write($string);
+
+            return $write_result;
+        }
+        /**
          * @return string
          */
         public function render(): string {
-            $stream_content = $this
-                ->getStream()
-                ->getContents();
+            $stream = $this->getStream();
+
+            $stream->rewind();
+
+            $stream_content = $stream->getContents();
+
+            $stream->close();
 
             return $stream_content;
         }
