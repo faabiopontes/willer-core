@@ -134,8 +134,8 @@ namespace Core {
                 $ip = $util->contains($get_defined_constants_user,'SWOOLE_IP')->getString();
                 $port = $util->contains($get_defined_constants_user,'SWOOLE_PORT')->getInteger();
                 $log = $util->contains($get_defined_constants_user,'SWOOLE_LOG')->getInteger();
-                $log_path = $util->contains($get_defined_constants_user,'SWOOLE_LOG_PATH')->getString();
-                $page_error_path = $util->contains($get_defined_constants_user,'SWOOLE_PAGE_ERROR_PATH')->getString();
+                $log_file = $util->contains($get_defined_constants_user,'SWOOLE_LOG_FILE')->getString();
+                $page_error_file = $util->contains($get_defined_constants_user,'SWOOLE_PAGE_ERROR_FILE')->getString();
                 $gzip = $util->contains($get_defined_constants_user,'SWOOLE_GZIP')->getInteger();
                 $worker_num = $util->contains($get_defined_constants_user,'SWOOLE_WORKER_NUM')->getInteger(self::SWOOLE_SWOOLE_WORKER_NUM_DEFAULT);
                 $reactor_num = $util->contains($get_defined_constants_user,'SWOOLE_REACTOR_NUM')->getInteger(self::SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT);
@@ -152,8 +152,8 @@ namespace Core {
 
             $http_server = new \swoole_http_server($ip,$port);
 
-            if (empty($log) || empty($log_path)) {
-                $log_path = null;
+            if (empty($log) || empty($log_file)) {
+                $log_file = null;
             }
 
             $http_server->set([
@@ -163,7 +163,7 @@ namespace Core {
                 'backlog' => '',
                 'max_connection' => $max_connection,
                 'max_request' => $max_request,
-                'log_file' => $log_path,
+                'log_file' => $log_file,
                 'ssl_cert_file' => $ssl_cert_file,
                 'ssl_key_file' => $ssl_key_file,
                 'ssl_method' => $ssl_method,
@@ -184,7 +184,7 @@ namespace Core {
                 print "\n------------------------------------------------------\n";
             });
 
-            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($util,$gzip,$log,$page_error_path) {
+            $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($util,$gzip,$log,$page_error_file) {
                 $_GET = $http_request->get ?? [];
                 $_POST = $http_request->post ?? [];
                 $_COOKIE = $http_request->cookie ?? [];
