@@ -149,12 +149,12 @@ namespace Core {
                 if (!$value instanceof $rule['table']) {
                     throw new \Error(vsprintf('"%s foreignKey" field value must be an instance of the reference object',[$column,]));
                 }
-            }
 
-            $primary_key = $value->definePrimaryKey()->getPrimaryKey();
+                $primary_key = $value->definePrimaryKey()->getPrimaryKey();
 
-            if (empty($primary_key)) {
-                throw new \Error(vsprintf('"%s foreignKey" field error, dont find primaryKey field',[$column,]));
+                if (empty($primary_key)) {
+                    throw new \Error(vsprintf('"%s foreignKey" field error, dont find primaryKey field',[$column,]));
+                }
             }
 
             $object->value = $value->$primary_key;
