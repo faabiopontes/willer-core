@@ -12,7 +12,10 @@ namespace Core {
      * Class System
      * @constant EXTENSION_STATIC ['png','jpg','jpeg','gif','css','js','otf','eot','woff2','woff','ttf','svg','html','map']
      * @constant CONTENT_ERROR_DEFAULT 'No output response!'
+     * @constant CONFIG_PATH 'config'
      * @constant CONFIG_FILE 'config'
+     * @constant URL_FILE 'Url'
+     * @constant APP_PATH 'App'
      * @constant SWOOLE_SWOOLE_WORKER_NUM_DEFAULT 8
      * @constant SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT 8
      * @constant SWOOLE_SWOOLE_DAEMONIZE_DEFAULT 1
@@ -25,6 +28,7 @@ namespace Core {
         private const CONTENT_ERROR_DEFAULT = 'No output response!';
         private const CONFIG_PATH = 'config';
         private const CONFIG_FILE = 'config';
+        public const URL_FILE = 'Url';
         public const APP_PATH = 'App';
         private const SWOOLE_SWOOLE_WORKER_NUM_DEFAULT = 8;
         private const SWOOLE_SWOOLE_REACTOR_NUM_DEFAULT = 8;
@@ -33,10 +37,6 @@ namespace Core {
         private const SWOOLE_SWOOLE_MAX_REQUEST_DEFAULT = 9999999;
 
         private $load_var;
-        /**
-         * System constructor.
-         */
-        public function __construct() {}
         /**
          * @return self
          */
@@ -303,7 +303,7 @@ namespace Core {
                 throw new \Error('constant ROOT_PATH not defined');
             }
 
-            $app_url_class = vsprintf('\%s\Url',[self::APP_PATH,]);
+            $app_url_class = vsprintf('\%s\%s',[self::APP_PATH,self::URL_FILE]);
 
             if (!class_exists($app_url_class,true)) {
                 throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
@@ -351,7 +351,7 @@ namespace Core {
                 }
             }
 
-            throw new \Error(vsprintf('request "%s" not found in Url.php',[$request_uri,]));
+            throw new \Error(vsprintf('request "%s" not found in %s.php',[$request_uri,self::URL_FILE]));
         }
         /**
          * @param array $app_route

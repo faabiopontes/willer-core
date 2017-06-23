@@ -521,19 +521,13 @@ namespace Core {
             $system = new System();
             $system->readyLoadVar();
 
-            $load_var_app = $system->getLoadVar(System::APP_FILE);
+            $app_url_class = vsprintf('\%s\%s',[$system::APP_PATH,$system::URL_FILE]);
 
-            $app_url_list = [];
-
-            foreach ($load_var_app as $app) {
-                $app_url_class = vsprintf('\Application\%s\Url',[$app]);
-
-                if (!class_exists($app_url_class,true)) {
-                    throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
-                }
-
-                $app_url_list = array_merge($app_url_list,$app_url_class::url());
+            if (!class_exists($app_url_class,true)) {
+                throw new \Error(vsprintf('class "%s" not found',[$app_url_class,]));
             }
+
+            $app_url_list = $app_url_class::url();
 
             $this->setAppUrlList($app_url_list);
 
