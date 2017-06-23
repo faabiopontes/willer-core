@@ -151,7 +151,7 @@ namespace Core {
                 }
             }
 
-            $primary_key = $value->getPrimaryKey();
+            $primary_key = $value->definePrimaryKey()->getPrimaryKey();
 
             if (empty($primary_key)) {
                 throw new \Error(vsprintf('"%s foreignKey" field error, dont find primaryKey field',[$column,]));
