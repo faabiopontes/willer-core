@@ -454,11 +454,11 @@ namespace Core\ORM {
 
                     if (empty($join)) {
                         $join = 'INNER';
+                    }
 
-                        if (array_key_exists('null',$table->rule)) {
-                            if (!empty($table->rule['null'])) {
-                                $join = 'LEFT';
-                            }
+                    if (array_key_exists('null',$table->rule)) {
+                        if (!empty($table->rule['null'])) {
+                            $join = 'LEFT';
                         }
                     }
 
@@ -711,7 +711,7 @@ namespace Core\ORM {
             $column_list = array_merge($related_column,$column_list);
             $column_list = implode(',',$column_list);
 
-            $where = vsprintf('where %s',[implode(' AND ',$where_escape_list),]);
+            $where = vsprintf('WHERE %s',[implode(' AND ',$where_escape_list),]);
 
             $query_total = vsprintf('SELECT COUNT(1) total FROM %s %s %s',[$table_name_with_escape,$related_join,$where]);
             $query = vsprintf('SELECT %s FROM %s %s %s',[$column_list,$table_name_with_escape,$related_join,$where]);
@@ -766,7 +766,7 @@ namespace Core\ORM {
 
                 $method = $table_schema[$column]->method;
 
-                $object_value = $this->$method(null,function() use($pdo_query_fetch,$table_column_str) {
+                $object_value = $this->$method(null,function() use ($pdo_query_fetch,$table_column_str) {
                     return $pdo_query_fetch->$table_column_str;
                 },null,null,true);
 
@@ -858,7 +858,7 @@ namespace Core\ORM {
                 $rule = $table_schema[$key]->rule;
 
                 try {
-                    $object = $this->$method($rule,function() use($value) {
+                    $object = $this->$method($rule,function() use ($value) {
                         return $value;
                     },$key,true);
 
@@ -987,7 +987,7 @@ namespace Core\ORM {
                 $method = $table_schema[$key]->method;
                 $rule = $table_schema[$key]->rule;
 
-                $object = $this->$method($rule,function() use($value) {
+                $object = $this->$method($rule,function() use ($value) {
                     return $value;
                 },$key,true);
 
@@ -1246,7 +1246,7 @@ namespace Core\ORM {
             if (!empty($related) && !empty($related['join'])) {
                 $related_join = implode(' ',$related['join']);
 
-                foreach ($related['column'] as $i => $column) {
+                foreach ($related['column'] as $column) {
                     $related_column[] = implode(',',$column);
                 }
 
@@ -1383,7 +1383,7 @@ namespace Core\ORM {
                 $column_list = $this->getTableColumn();
                 $transaction = $this->getTransaction();
 
-                foreach ($query_fetch_all as $i => $query_fetch) {
+                foreach ($query_fetch_all as $query_fetch) {
                     $object = new \stdClass;
                     $object->model = new $class_name($transaction);
 
@@ -1452,7 +1452,7 @@ namespace Core\ORM {
                         $method_recursive = $obj_foreignkey_schema_dict[$column_recursive]->method;
                         $table_column = vsprintf('%s_%s__%s',[$table_name,$obj_foreignkey_table_name,$column_recursive]);
 
-                        $object_value = $this->$method_recursive(null,function() use($fetch,$table_column) {
+                        $object_value = $this->$method_recursive(null,function() use ($fetch,$table_column) {
                             return $fetch->$table_column;
                         },null,null,true);
 

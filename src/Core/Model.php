@@ -137,6 +137,8 @@ namespace Core {
                     throw new \Error(vsprintf('"%s foreignKey" field value can not be null',[$column,]));
                 }
 
+                $object->value = null;
+
             } else {
                 if (!is_object($value)) {
                     throw new \Error(vsprintf('"%s foreignKey" field value must be an object',[$column,]));
@@ -155,9 +157,9 @@ namespace Core {
                 if (empty($primary_key)) {
                     throw new \Error(vsprintf('"%s foreignKey" field error, dont find primaryKey field',[$column,]));
                 }
-            }
 
-            $object->value = $value->$primary_key;
+                $object->value = $value->$primary_key;
+            }
 
             return $object;
         }
