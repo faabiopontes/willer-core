@@ -342,7 +342,7 @@ namespace Core\ORM {
          * @return self
          * @throws \Error
          */
-        protected function definePrimaryKey(): self {
+        public function definePrimaryKey(): self {
             $primary_key = $this->getPrimaryKey();
 
             if (!empty($primary_key)) {

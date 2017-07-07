@@ -39,6 +39,32 @@ namespace Core {
             return get_object_vars($this);
         }
         /**
+         * @return string|null
+         */
+        public function getColumnReference(): ?string {
+            $schema = $this->schema();
+
+            if (empty($schema)) {
+                return null;
+            }
+
+            $reference = null;
+
+            foreach ($schema as $column => $object_schema) {
+                if (empty($reference) && $object_schema->method == 'char') {
+                    $reference = $column;
+                }
+
+                if (array_key_exists('reference',$object_schema->rule) && $object_schema->rule['reference'] === true) {
+                    $reference = $column;
+
+                    break;
+                }
+            }
+
+            return $reference;
+        }
+        /**
          * @param array $rule []
          * @param callable $callback_value null
          * @param string $column
@@ -152,7 +178,9 @@ namespace Core {
                     throw new \Error(vsprintf('"%s foreignKey" field value must be an instance of the reference object',[$column,]));
                 }
 
-                $primary_key = $value->definePrimaryKey()->getPrimaryKey();
+                $primary_key = $value
+                    ->definePrimaryKey()
+                    ->getPrimaryKey();
 
                 if (empty($primary_key)) {
                     throw new \Error(vsprintf('"%s foreignKey" field error, dont find primaryKey field',[$column,]));
