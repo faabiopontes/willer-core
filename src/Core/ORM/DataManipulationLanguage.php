@@ -1029,7 +1029,7 @@ namespace Core\ORM {
             $query = vsprintf('UPDATE %s SET %s %s',[$table_name_with_escape,$set_escape,$where]);
 
             try {
-                $query = $transaction_resource->prepare($query);
+                $pdo_query = $transaction_resource->prepare($query);
 
                 $transaction_resource_error_info = $transaction_resource->errorInfo();
 
@@ -1037,7 +1037,7 @@ namespace Core\ORM {
                     throw new \Error(vsprintf('[update]PDO error message "%s", in model instance "%s"',[$transaction_resource_error_info[2],$this->name(),]));
                 }
 
-                $query->execute($query_value);
+                $pdo_query->execute($query_value);
 
             } catch (\Error $error) {
                 throw $error;
