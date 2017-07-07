@@ -62,6 +62,8 @@ namespace Core {
 
             $uri = new Uri($this);
             $this->setUri($uri);
+
+            $this->setRequestTarget(http_build_query($this->http_get));
         }
         /**
          * @return array
@@ -485,9 +487,6 @@ namespace Core {
          * @return string
          */
         public function getRequestTarget(): string {
-            // TODO
-            // $http_get = rawurlencode($http_get);
-            // $request_target = vsprintf('%s?%s',[$uri,$http_get,]);
             return $this->request_target;
         }
         /**
