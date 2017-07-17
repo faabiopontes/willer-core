@@ -156,14 +156,26 @@ namespace Core {
         /**
          * @return array
          */
-        public function getHttpServer(): array {
+        public function getHttpServer(string $name): ?string {
+            $http_server = $this->getAllHttpServer();
+
+            if (!array_key_exists($name,$http_server)) {
+                return null;
+            }
+
+            return $http_server[$name];
+        }
+        /**
+         * @return array
+         */
+        public function getAllHttpServer(): array {
             return $this->http_server;
         }
         /**
          * @return array
          */
         public function getServerParams(): array {
-            return $this->getHttpServer();
+            return $this->getAllHttpServer();
         }
         /**
          * @param string $name

@@ -36,7 +36,23 @@ namespace Core {
         private const SWOOLE_SWOOLE_MAX_CONNECTION_DEFAULT = 1024;
         private const SWOOLE_SWOOLE_MAX_REQUEST_DEFAULT = 9999999;
 
+        private $swoole_http_response;
         private $load_var;
+        /**
+         * @param  \swoole_http_response $swoole_http_response
+         * @return self
+         */
+        private function setSwooleResponse(\swoole_http_response $swoole_http_response): self {
+            $this->swoole_http_response = $swoole_http_response;
+
+            return $this;
+        }
+        /**
+         * @return \swoole_http_response 
+         */
+        private function getSwooleResponse(): \swoole_http_response {
+            return $this->swoole_http_response;
+        }
         /**
          * @return self
          */
@@ -106,7 +122,7 @@ namespace Core {
             $request->cleanHttpSession();
 
             try {
-                $request_uri = $util->contains($request->getHttpServer(),'REQUEST_URI','/')->getString();
+                $request_uri = $util->contains($request->getAllHttpServer(),'REQUEST_URI','/')->getString();
 
                 $object_route = $this->readyRoute($request_uri);
 
@@ -169,27 +185,18 @@ namespace Core {
                 'ssl_method' => $ssl_method,
             ]);
 
-            $http_server->on('connect',function(\swoole_http_server $http_server_client) use ($log) {
-                if (empty($log)) {
-                    return;
-                }
-
-                $date = new \DateTime('now');
-
-                print "\n------------------------------------------------------\n";
-                print "Client connect...\n";
-                print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
-                print "Client stats...\n";
-                print_r($http_server_client->stats());
-                print "\n------------------------------------------------------\n";
-            });
-
             $http_server->on('Request',function(\swoole_http_request $http_request,\swoole_http_response $http_response) use ($util,$gzip,$log,$page_error_file) {
+                $this->setSwooleResponse($http_response);
+
                 $_GET = $http_request->get ?? [];
                 $_POST = $http_request->post ?? [];
                 $_COOKIE = $http_request->cookie ?? [];
                 $_FILES = $http_request->files ?? [];
                 $_SERVER = $http_request->server ? array_change_key_case($http_request->server,CASE_UPPER) : [];
+
+                if (!array_key_exists('QUERY_STRING',$_SERVER)) {
+                    $_SERVER['QUERY_STRING'] = null;
+                }
 
                 $extension_static = self::EXTENSION_STATIC;
 
@@ -213,27 +220,17 @@ namespace Core {
                     return;
                 }
 
-                if (!empty($log)) {
-                    $date = new \DateTime('now');
-
-                    print "\n------------------------------------------------------\n";
-                    print "Client connect...\n";
-                    print vsprintf("Date: [%s]\n",[$date->format('Y-m-d H:i:s u'),]);
-                    print vsprintf("HTTP GET...\n%s",[print_r($_GET,true),]);
-                    print vsprintf("HTTP POST...\n%s",[print_r($_POST,true),]);
-                    print vsprintf("HTTP SESSION...\n%s",[print_r($_SESSION,true),]);
-                    print vsprintf("HTTP COOKIE...\n%s",[print_r($_COOKIE,true),]);
-                    print vsprintf("HTTP FILES...\n%s",[print_r($_FILES,true),]);
-                    print vsprintf("HTTP SERVER...\n%s",[print_r($_SERVER,true),]);
-                    print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
-                    print "\n------------------------------------------------------\n";
-                }
-
                 try {
                     $object_route = $this->readyRoute($request_uri);
-
                     $controller = $object_route->controller;
                     $action = $object_route->action;
+                    $request = $object_route->request;
+
+                    $controller = new $controller($request);
+
+                    if (empty(method_exists($controller,$action))) {
+                        throw new \Error(vsprintf('method "%s" not found in class "%s"',[$controller_action,$app]));
+                    }
 
                     $response = $controller->$action();
 
@@ -255,6 +252,7 @@ namespace Core {
                     print vsprintf("HTTP HEADER...\n%s",[print_r($http_request->header,true),]);
                     print vsprintf("Error message...\n%s\n",[$error->getMessage(),]);
                     print vsprintf("Error trace...\n%s",[$error->getTraceAsString(),]);
+                    print vsprintf("Error dump...\n%s\n",[print_r($error,true),]);
                     print "\n------------------------------------------------------";
 
                     // TODO
@@ -270,6 +268,14 @@ namespace Core {
 
                 if (!is_null($gzip) && $gzip == 1) {
                     $http_response->gzip(1);
+                }
+
+                $response_header = $response->getHeaderList();
+
+                if (!empty($response_header)) {
+                    foreach ($response_header as $header_key => $header_value) {
+                        $http_response->header($header_key,$header_value);
+                    }
                 }
 
                 $http_response->end($content);
@@ -367,11 +373,11 @@ namespace Core {
             }
 
             $app_route_list = explode('\\',$app_route_explode[0]);
-            $controller_action = $app_route_explode[1];
+            $action = $app_route_explode[1];
 
             $app_path = implode('\\',$app_route_list);
 
-            $app = vsprintf('%s\\%s',[self::APP_PATH,$app_path]);
+            $controller = vsprintf('%s\\%s',[self::APP_PATH,$app_path]);
 
             $route_id = $app_route[2];
             $request_method = $app_route[1];
@@ -382,17 +388,12 @@ namespace Core {
             $request->setRouteId($route_id);
             $request->setRequestMethod($request_method);
 
-            $new_app = new $app($request);
-
-            if (empty(method_exists($new_app,$controller_action))) {
-                throw new \Error(vsprintf('method "%s" not found in class "%s"',[$controller_action,$app]));
-            }
-
             $object_route = new \stdClass;
 
             try {
-                $object_route->controller = $new_app;
-                $object_route->action = $controller_action;
+                $object_route->controller = $controller;
+                $object_route->action = $action;
+                $object_route->request = $request;
 
             } catch (\Error $error) {
                 throw $error;

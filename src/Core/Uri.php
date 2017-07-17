@@ -40,7 +40,7 @@ namespace Core {
         public function __construct(Request $request) {
             $this->setRequest($request);
 
-            $http_server = $request->getHttpServer();
+            $http_server = $request->getAllHttpServer();
 
             if (!array_key_exists('REQUEST_URI',$http_server) || empty($http_server['REQUEST_URI'])) {
                 throw new \Error('Global SERVER missing var "REQUEST_URI"');

@@ -19,6 +19,23 @@ namespace Core {
         private const PROTOCOL_VERSION_VALID = ['1.0','1.1','2.0'];
         private $protocol_version = '1.1';
         private $stream;
+        private $header = [];
+        /**
+         * @param string $key
+         * @param string $value
+         * @return self
+         */
+        private function appendHeader(string $key,string $value): self {
+            $this->header[$key] = $value;
+
+            return $this;
+        }
+        /**
+         * @return array
+         */
+        public function getHeaderList(): array {
+            return $this->header;
+        }
         /**
          * @return string
          */
@@ -114,6 +131,8 @@ namespace Core {
             if (is_null($replace)) {
                 $replace = false;
             }
+
+            $this->appendHeader($header,$value);
 
             header($header,$replace);
 
